@@ -22,7 +22,7 @@ public static class Simulations
         seed
     )
     {
-        DragCoefficient = 1e10,
+        DragCoefficient = 1,
     };
 
     private static Simulation TwoBodies(bool drag, int? seed = null) => new TwoBodies(
