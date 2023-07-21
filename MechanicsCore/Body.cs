@@ -79,7 +79,7 @@ public class Body
             return;
         }
 
-        var others = ComputeOtherForces(body1, body2);
+        var others = ComputeOtherForces(body1, body2, displacement, distance);
         others.Divide(m1, others); // convert others from a force to an acceleration
         a.Add(others, a);
     }
@@ -126,16 +126,16 @@ public class Body
         return agAtEngulfmentDistance * (distance / engulfmentDistance);
     }
 
-    private static Vector<double> ComputeOtherForces(Body body1, Body body2)
+    private static Vector<double> ComputeOtherForces(Body body1, Body body2, Vector<double> displacement, double distance)
     {
         var f = new DenseVector(3);
 
-        var fDrag = ComputeDragForce(body1, body2);
+        var fDrag = ComputeDragForce(body1, body2, displacement, distance);
         f.Add(fDrag, f);
         return f;
     }
 
-    private static Vector<double> ComputeDragForce(Body body1, Body body2)
+    private static Vector<double> ComputeDragForce(Body body1, Body body2, Vector<double> displacement, double distance)
     {
         var dragCoefficient = body1.Simulation.DragCoefficient;
         if (dragCoefficient == 0)
@@ -183,7 +183,12 @@ public class Body
             WillBounce(body1, body2, relativeVelocity, vector, true);
         }
 
-        return vector;
+        // Now we have computed the drag.
+        // However, I want things to be able to roll/slide past each other,
+        // so return only the radial component of drag.
+        var component = vector * displacement * displacement / distance / distance;
+
+        return component;
     }
 
     private static bool WillBounce(Body body1, Body body2, Vector<double> relativeVelocity, Vector<double> force, bool isDoubleCheck)
