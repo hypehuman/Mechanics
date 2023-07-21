@@ -156,23 +156,42 @@ public class Body
         vector.Multiply(fdMagnitude, vector);
 
         // DEBUG: Another way to compute the cap.
-        var nextAcceleration1 = vector / body1.Mass;
-        var nextAcceleration2 = -vector / body2.Mass;
+        if (!WillBounce(body1, body2, relativeVelocity, vector, false))
+        {
+            // Instead, apply a force sufficient to make both velocities the same while conserving momentum
+            // (assuming the opposite force is applied to body2)
+            var m1 = body1.Mass;
+            var m2 = body2.Mass;
+            var v1 = body1.Velocity;
+            var v2 = body2.Velocity;
+            var t = body1.Simulation.dt_step;
+            vector = ((m1 * v1 + m2 * v2) / (m1 + m2) - v1) * m1 / t;
+
+            // Check again!
+            WillBounce(body1, body2, relativeVelocity, vector, true);
+        }
+
+        return vector;
+    }
+
+    private static bool WillBounce(Body body1, Body body2, Vector<double> relativeVelocity, Vector<double> force, bool isDoubleCheck)
+    {
+        var nextAcceleration1 = force / body1.Mass;
+        var nextAcceleration2 = -force / body2.Mass;
         var changeInVelocity1 = nextAcceleration1 * body1.Simulation.dt_step;
         var changeInVelocity2 = nextAcceleration2 * body2.Simulation.dt_step;
         var nextVelocity1 = body1.Velocity + changeInVelocity1;
         var nextVelocity2 = body2.Velocity + changeInVelocity2;
         var nextRelativeVelocity = nextVelocity2 - nextVelocity1;
         var dot = relativeVelocity * nextRelativeVelocity;
-        if (dot < -0.001)
+        if (isDoubleCheck && dot < -0.0001)
         {
-            throw new Exception("The thing turned around. This should have been prevented by the capping formula.");
+            throw new Exception("They bounced off each other. This should have been prevented by the capping formula.");
         }
-        if (dot < 0)
+        if (isDoubleCheck && dot > 0.0001)
         {
-            // TODO : Make the correction here.
+            throw new Exception("They bounced the first time, but now they're still moving.");
         }
-
-        return vector;
+        return dot < 0;
     }
 }
