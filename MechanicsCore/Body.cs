@@ -134,29 +134,26 @@ public class Body
         var minRadius = Math.Min(body1.Radius, body2.Radius);
         var crossSectionalArea = Math.PI * minRadius * minRadius;
 
-        var fdMagnitudeNaive =
+        var fdMagnitude =
             0.5 *
             (body1.Density + body2.Density) *
             (relativeVelocity * relativeVelocity) *
             dragCoefficient * crossSectionalArea;
-
-        // In theory, fdMagnitudeNaive is the correct magnitude of the drag force.
-        // Also in theory, the higher DragCoefficient value is, the more the bodies should clump up.
-        // But in practice, at high DragCoefficients, further increasing DragCoefficients
-        // actually flings the bodies apart more.
-        // I think the instantaneous acceleration ends up being too high and then the time step is too long,
-        // whereas in theory, the acceleration should drop off rapidly within that time step.
-        // Therefore, we cap the force at an amount that would bring the bodies' relative velocity to zero in one time step.
-        var fdMagnitudeMax = body1.Mass * body2.Mass * relativeSpeed * body1.Simulation.dt_step / (body1.Mass + body2.Mass);
-        var fdMagnitude = Math.Min(fdMagnitudeMax, fdMagnitudeNaive);
 
         // compute the unit vector of the force's direction
         var vector = relativeVelocity / relativeSpeed;
         // compute the force vector
         vector.Multiply(fdMagnitude, vector);
 
-        // DEBUG: Another way to compute the cap.
-        if (!WillBounce(body1, body2, relativeVelocity, vector, false))
+        // In theory, vector is currently the correct drag force.
+        // Also in theory, the higher DragCoefficient value is, the more the bodies should clump up.
+        // But in practice, at high DragCoefficients, further increasing DragCoefficients
+        // actually flings the bodies apart more.
+        // I think the instantaneous acceleration ends up being too high and then the time step is too long,
+        // whereas in theory, the acceleration should drop off rapidly within that time step.
+        // Therefore, we cap the force at an amount that would bring the bodies' relative velocity to zero in one time step.
+
+        if (WillBounce(body1, body2, relativeVelocity, vector, false))
         {
             // Instead, apply a force sufficient to make both velocities the same while conserving momentum
             // (assuming the opposite force is applied to body2)
