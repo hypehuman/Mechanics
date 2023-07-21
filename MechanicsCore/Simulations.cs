@@ -20,10 +20,10 @@ public static class Simulations
     public static Simulation Falling_3_Random => Falling(3);
 
     private static Simulation Falling(int numBodies, int? seed = null) => new Falling(
-        Constants.EarthMoonDistance,
+        Constants.EarthMoonDistance * 10,
         numBodies,
         Constants.EarthMass,
-        Constants.EarthVolume,
+        Constants.EarthVolume * 1000,
         seed
     )
     {
