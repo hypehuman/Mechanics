@@ -5,6 +5,8 @@ public static class Simulations
     public static Simulation Default() => TwoBodies_NoDrag_0;
 
     public static Simulation SunEarthMoon => new SunEarthMoon();
+    public static Simulation Falling_Tiny_Random => Falling(16);
+    public static Simulation Falling_Tiny_0 => Falling(16, 0);
     public static Simulation Falling_Cheap_Random => Falling(128);
     public static Simulation Falling_Cheap_0 => Falling(128, 0);
     public static Simulation Falling_Expensive_Random => Falling(512);
@@ -26,6 +28,7 @@ public static class Simulations
     )
     {
         DragCoefficient = 1,
+        BuoyantGravity = true,
     };
 
     private static Simulation TwoBodies(bool drag, int? seed = null) => new TwoBodies(
@@ -36,5 +39,6 @@ public static class Simulations
     )
     {
         DragCoefficient = drag ? 1 : 0,
+        BuoyantGravity = true,
     };
 }

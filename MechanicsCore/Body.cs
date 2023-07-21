@@ -63,12 +63,11 @@ public class Body
         var m2 = body2.Mass;
         var r1 = body1.Radius;
         var r2 = body2.Radius;
-        var radii = r1 + r2;
 
-        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, radii);
+        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, body1.Simulation.BuoyantGravity);
         a.Add(ag, a);
 
-        if (distance > radii)
+        if (distance > r1 + r2)
         {
             // The bodies are not touching.
             return;
@@ -85,9 +84,10 @@ public class Body
         a.Add(others, a);
     }
 
-    private static Vector<double> ComputeGravitationalAcceleration(Vector<double> displacement, double distance, double m2, double radii)
+    private static Vector<double> ComputeGravitationalAcceleration(Vector<double> displacement, double distance, double m2, double r1, double r2, bool buoyant)
     {
-        if (distance >= radii)
+        var kissingDistance = r1 + r2;
+        if (distance >= kissingDistance)
         {
             // The bodies are not touching.
             // Acceleration due to gravity (Newton's law of gravitation) in scalar form:
@@ -98,17 +98,32 @@ public class Body
             // Ag = displacement*G*m2/distance^3
             return displacement * Constants.GravitationalConstant * m2 / (distance * distance * distance);
         }
-        else
+
+        var agAtKissingDistance = displacement * Constants.GravitationalConstant * m2 / (kissingDistance * kissingDistance * kissingDistance);
+
+        if (!buoyant)
         {
-            // The bodies are overlapping.
             // When you're inside an object, the gravity starts falling linearly with distance from the center.
             // Start with the force when the surfaces are barely touching:
-            // Ag = displacement*G*m2/radii^3
-            // Then scale it by (displacement/radii):
-            // Ag = displacement*distance*G*m2/radii^4
-            var radii_2 = radii * radii;
-            return displacement * distance * Constants.GravitationalConstant * m2 / (radii_2 * radii_2);
+            // Ag = displacement*G*m2/(r1+r2)^3
+            // Then scale it by displacement/(r1+r2):
+            return agAtKissingDistance * (distance / kissingDistance);
         }
+
+        // When you're inside an object, the gravity starts falling linearly.
+        // By the time you're fully engulfed, the gravity is the opposite of what it was when they were barely touching.
+        // From there it drops linearly, to zero when the centers are overlapping.
+        var engulfmentDistance = Math.Abs(r1 - r2);
+        var agAtEngulfmentDistance = -agAtKissingDistance;
+
+        if (distance > engulfmentDistance)
+        {
+            // the bodies are partially (but not fully) overlapping
+            return (distance - engulfmentDistance) / (kissingDistance - engulfmentDistance) * (agAtKissingDistance - agAtEngulfmentDistance) + agAtEngulfmentDistance;
+        }
+
+        // the smaller body is fully inside the larger
+        return agAtEngulfmentDistance * (distance / engulfmentDistance);
     }
 
     private static Vector<double> ComputeOtherForces(Body body1, Body body2)

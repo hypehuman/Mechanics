@@ -18,6 +18,7 @@ public abstract class Simulation
     #region Configurable
 
     public double DragCoefficient { get; set; }
+    public bool BuoyantGravity { get; set; }
 
     #endregion
 
