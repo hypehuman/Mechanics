@@ -21,11 +21,11 @@ public static class Simulations
         Constants.EarthMoonDistance,
         numBodies,
         Constants.EarthMass,
-        Constants.EarthVolume * 10000,
+        Constants.EarthVolume,
         seed
     )
     {
-        DragCoefficient = 1e10,
+        DragCoefficient = 1,
     };
 
     private static Simulation TwoBodies(bool drag, int? seed = null) => new TwoBodies(
