@@ -26,7 +26,7 @@
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Canvas
-                            HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
                             Width="0" Height="0"
                         >
                             <Canvas.RenderTransform>

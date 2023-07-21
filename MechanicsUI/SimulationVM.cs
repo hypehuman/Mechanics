@@ -61,7 +61,6 @@ public class SimulationVM : INotifyPropertyChanged
         dispatcher.InvokeAsync(() => DoAutoLeap(dispatcher), DispatcherPriority.Background);
     }
 
-
     public event PropertyChangedEventHandler? PropertyChanged;
     private static readonly PropertyChangedEventArgs SimTimeStringChangedArgs = new(nameof(SimTimeString));
     private static readonly PropertyChangedEventArgs CanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
@@ -90,8 +89,8 @@ public class SimulationVM : INotifyPropertyChanged
         yScale = -xScale;
         CanvasScaleX = xScale;
         CanvasScaleY = yScale;
-        CanvasTranslateX = -xMin * xScale;
-        CanvasTranslateY = -yMin * yScale;
+        CanvasTranslateX = -(xMin + xMax) / 2 * xScale;
+        CanvasTranslateY = -(yMin + yMax) / 2 * yScale;
         PropertyChanged?.Invoke(this, CanvasTranslateXChangedArgs);
         PropertyChanged?.Invoke(this, CanvasTranslateYChangedArgs);
         PropertyChanged?.Invoke(this, CanvasScaleXChangedArgs);

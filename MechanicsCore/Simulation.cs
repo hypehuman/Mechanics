@@ -57,7 +57,7 @@ public abstract class Simulation
     public string GetTimeString()
     {
         var secStr = $"t = {DoubleToString(t)} seconds";
-        if (t < 1d/1000)
+        if (t < 1d / 1000)
         {
             // TimeSpan.FromSeconds is only accurate to the nearest millisecond.
             return secStr;
@@ -66,7 +66,13 @@ public abstract class Simulation
         if (t < Constants.SecondsPerYear)
         {
             var ts = TimeSpan.FromSeconds(t);
-            return $"{secStr} = {ts}";
+            if (ts.TotalMinutes < 1)
+                return $"{secStr} = {ts.TotalSeconds:0.000} seconds";
+            if (ts.TotalHours < 1)
+                return $"{secStr} = {ts.TotalMinutes:0.000} minutes";
+            if (ts.TotalDays < 1)
+                return $"{secStr} = {ts.TotalHours:0.000} hours";
+            return $"{secStr} = {ts.TotalDays:0.000} days";
         }
 
         return $"{secStr} = {DoubleToString(t / Constants.SecondsPerYear)} years";
