@@ -11,7 +11,7 @@
 >
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top">
-            <TextBox Style="{StaticResource SelectableReadonlyText}" Text="{Binding Name, Mode=OneWay}" />
+            <TextBox Style="{StaticResource SelectableReadonlyText}" Text="{Binding Title, Mode=OneWay}" />
             <TextBox Style="{StaticResource SelectableReadonlyText}" Text="{Binding SimTimeString, Mode=OneWay}" />
             <StackPanel Orientation="Horizontal">
                 <Button Click="LeapButton_Click">Leap</Button>

@@ -10,7 +10,7 @@ namespace MechanicsUI;
 public class SimulationVM : INotifyPropertyChanged
 {
     public Simulation Model { get; }
-    public string Name { get; }
+    public string Title { get; }
     public BodyVM[] BodyVMs { get; }
     public string SimTimeString => Model.GetTimeString();
     public double CanvasTranslateX { get; private set; }
@@ -40,7 +40,7 @@ public class SimulationVM : INotifyPropertyChanged
     public SimulationVM(Simulation model, string name)
     {
         Model = model;
-        Name = name;
+        Title = name + (model is RandomSimulation rnd ? $" seed: {rnd.Seed}" : null);
         BodyVMs = Model.Bodies.Select(b => new BodyVM(b, Model)).ToArray();
     }
 

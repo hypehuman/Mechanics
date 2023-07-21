@@ -29,10 +29,11 @@ public partial class SimulationPickerView : UserControl
 
         var simWindow = new Window
         {
+            Title = simVm.Title,
             Content = new SimulationView
             {
                 DataContext = simVm
-            }
+            },
         };
         simWindow.Closed += delegate
         {
