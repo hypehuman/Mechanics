@@ -155,6 +155,18 @@ public class Body
         // compute the force vector
         vector.Multiply(fdMagnitude, vector);
 
+        // DEBUG: Another way to compute the cap.
+        var nextAcceleration1 = vector / body1.Mass;
+        var nextAcceleration2 = -vector / body2.Mass;
+        var nextVelocity1 = body1.Velocity + nextAcceleration1;
+        var nextVelocity2 = body2.Velocity + nextAcceleration2;
+        var nextRelativeVelocity = nextVelocity2 - nextVelocity1;
+        var nextRelativeSpeed = nextRelativeVelocity.L2Norm();
+        if (nextRelativeSpeed > relativeSpeed * 1.001)
+        {
+            throw new Exception("This should have been prevented by the capping.");
+        }
+
         return vector;
     }
 }

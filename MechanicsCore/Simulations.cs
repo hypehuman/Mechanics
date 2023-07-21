@@ -18,7 +18,7 @@ public static class Simulations
         Constants.EarthMoonDistance,
         numBodies,
         Constants.EarthMass,
-        Constants.EarthVolume,
+        Constants.EarthVolume * 10000,
         seed
     )
     {
