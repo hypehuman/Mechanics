@@ -10,8 +10,13 @@
         <local:SimulationPickerVM />
     </UserControl.DataContext>
     <StackPanel>
-        <ComboBox ItemsSource="{Binding SimulationNames}" SelectedItem="{Binding SelectedSimulationName}" />
         <CheckBox IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
-        <Button Click="LaunchButton_Click">Launch</Button>
+        <ListBox ItemsSource="{Binding SimulationNames}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Button Content="{Binding}" Click="Button_Click" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </StackPanel>
 </UserControl>

@@ -12,7 +12,7 @@ public class Falling : Simulation
     public override Vector<double> DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
 
-    public Falling(double systemRadius, int numBodies, double totalMass, double totalVolume, int? seedIn = null)
+    public Falling(double systemRadius, int numBodies, double totalMass, double totalVolume, double maxVelocity, int? seedIn = null)
     {
         var seed = seedIn ?? new Random().Next();
         System.Diagnostics.Debug.WriteLine($"{GetType().Name} seed: {seed}");
@@ -26,20 +26,28 @@ public class Falling : Simulation
         var bodies = new Body[numBodies];
         for (int i = 0; i < numBodies; i++)
         {
-            DenseVector position;
-            do
-            {
-                var x = (random.NextDouble() * 2 - 1) * systemRadius;
-                var y = (random.NextDouble() * 2 - 1) * systemRadius;
-                var z = (random.NextDouble() * 2 - 1) * systemRadius;
-                position = new DenseVector(new[] { x, y, z });
-            } while (position.L2Norm() > systemRadius);
+            var position = RandomPointInBall(random, systemRadius);
+            var velocity = maxVelocity == 0 ? null : RandomPointInBall(random, maxVelocity);
             bodies[i] = new Body(this,
                 mass: bodyMass,
                 radius: bodyRadius,
-                position: position
+                position: position,
+                velocity: velocity
             );
         }
         Bodies = bodies;
+    }
+
+    public static Vector<double> RandomPointInBall(Random random, double radius)
+    {
+        DenseVector v;
+        do
+        {
+            var x = (random.NextDouble() * 2 - 1) * radius;
+            var y = (random.NextDouble() * 2 - 1) * radius;
+            var z = (random.NextDouble() * 2 - 1) * radius;
+            v = new DenseVector(new[] { x, y, z });
+        } while (v.L2Norm() > radius);
+        return v;
     }
 }

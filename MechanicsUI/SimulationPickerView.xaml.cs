@@ -16,10 +16,15 @@ public partial class SimulationPickerView : UserControl
 
     private void LaunchButton_Click(object sender, RoutedEventArgs e)
     {
+    }
+
+    private void Button_Click(object sender, RoutedEventArgs e)
+    {
         var vm = ViewModel;
         if (vm == null)
             return;
 
+        vm.SelectedSimulationName = (string)((FrameworkElement)sender).DataContext;
         var simVm = vm.GetSimulationVM();
 
         var simWindow = new Window

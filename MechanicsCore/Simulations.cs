@@ -23,7 +23,8 @@ public static class Simulations
         Constants.EarthMoonDistance * 10,
         numBodies,
         Constants.EarthMass,
-        Constants.EarthVolume * 1000,
+        Constants.EarthVolume * 10000,
+        Constants.MoonOrbitEarthSpeed / Math.Sqrt(10),
         seed
     )
     {

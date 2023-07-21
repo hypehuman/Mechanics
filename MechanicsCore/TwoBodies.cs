@@ -29,14 +29,7 @@ public class TwoBodies : Simulation
             var bodyMass = totalMass * fraction;
             var bodyVolume = totalVolume * fraction;
             var bodyRadius = Math.Pow(bodyVolume * 3 / Math.PI, 1d / 3);
-            DenseVector position;
-            do
-            {
-                var x = (random.NextDouble() * 2 - 1) * systemRadius;
-                var y = (random.NextDouble() * 2 - 1) * systemRadius;
-                var z = (random.NextDouble() * 2 - 1) * systemRadius;
-                position = new DenseVector(new[] { x, y, z });
-            } while (position.L2Norm() > systemRadius);
+            var position = Falling.RandomPointInBall(random, systemRadius);
             bodies[i] = new Body(this,
                 mass: bodyMass,
                 radius: bodyRadius,
