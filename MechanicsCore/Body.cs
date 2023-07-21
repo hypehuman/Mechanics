@@ -158,13 +158,19 @@ public class Body
         // DEBUG: Another way to compute the cap.
         var nextAcceleration1 = vector / body1.Mass;
         var nextAcceleration2 = -vector / body2.Mass;
-        var nextVelocity1 = body1.Velocity + nextAcceleration1;
-        var nextVelocity2 = body2.Velocity + nextAcceleration2;
+        var changeInVelocity1 = nextAcceleration1 * body1.Simulation.dt_step;
+        var changeInVelocity2 = nextAcceleration2 * body2.Simulation.dt_step;
+        var nextVelocity1 = body1.Velocity + changeInVelocity1;
+        var nextVelocity2 = body2.Velocity + changeInVelocity2;
         var nextRelativeVelocity = nextVelocity2 - nextVelocity1;
-        var nextRelativeSpeed = nextRelativeVelocity.L2Norm();
-        if (nextRelativeSpeed > relativeSpeed * 1.001)
+        var dot = relativeVelocity * nextRelativeVelocity;
+        if (dot < -0.001)
         {
-            throw new Exception("This should have been prevented by the capping.");
+            throw new Exception("The thing turned around. This should have been prevented by the capping formula.");
+        }
+        if (dot < 0)
+        {
+            // TODO : Make the correction here.
         }
 
         return vector;
