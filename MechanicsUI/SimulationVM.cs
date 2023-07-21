@@ -10,6 +10,7 @@ namespace MechanicsUI;
 public class SimulationVM : INotifyPropertyChanged
 {
     public Simulation Model { get; }
+    public string Name { get; }
     public BodyVM[] BodyVMs { get; }
     public string SimTimeString => Model.GetTimeString();
     public double CanvasTranslateX { get; private set; }
@@ -17,6 +18,15 @@ public class SimulationVM : INotifyPropertyChanged
     public double CanvasScaleX { get; private set; } = 1;
     public double CanvasScaleY { get; private set; } = -1;
     bool _isAutoLeaping;
+    public bool IsAutoLeaping
+    {
+        get => _isAutoLeaping;
+        set
+        {
+            _isAutoLeaping = value;
+            DoAutoLeap(Dispatcher.CurrentDispatcher);
+        }
+    }
     private Size _availableSizePix;
     public Size AvailableSizePix
     {
@@ -27,9 +37,10 @@ public class SimulationVM : INotifyPropertyChanged
         }
     }
 
-    public SimulationVM(Simulation model)
+    public SimulationVM(Simulation model, string name)
     {
         Model = model;
+        Name = name;
         BodyVMs = Model.Bodies.Select(b => new BodyVM(b, Model)).ToArray();
     }
 
@@ -37,12 +48,6 @@ public class SimulationVM : INotifyPropertyChanged
     {
         Model.Leap();
         RefreshSim();
-    }
-
-    public void SetAutoLeap(Dispatcher dispatcher, bool value)
-    {
-        _isAutoLeaping = value;
-        DoAutoLeap(dispatcher);
     }
 
     private void DoAutoLeap(Dispatcher dispatcher)
@@ -111,7 +116,7 @@ public class SimulationVM : INotifyPropertyChanged
 public class DefaultSimulationVM : SimulationVM
 {
     public DefaultSimulationVM()
-        : base(Simulations.Default())
+        : base(Simulations.Default(), "Default")
     {
     }
 }

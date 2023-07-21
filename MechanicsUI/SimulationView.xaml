@@ -11,10 +11,11 @@
 >
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top">
-            <TextBlock Text="{Binding SimTimeString}" />
+            <TextBox Style="{StaticResource SelectableReadonlyText}" Text="{Binding Name, Mode=OneWay}" />
+            <TextBox Style="{StaticResource SelectableReadonlyText}" Text="{Binding SimTimeString, Mode=OneWay}" />
             <StackPanel Orientation="Horizontal">
                 <Button Click="LeapButton_Click">Leap</Button>
-                <ToggleButton Click="AutoLeapButton_Click">Auto-leap</ToggleButton>
+                <CheckBox IsChecked="{Binding IsAutoLeaping}">Auto-leap</CheckBox>
             </StackPanel>
         </StackPanel>
         <Border

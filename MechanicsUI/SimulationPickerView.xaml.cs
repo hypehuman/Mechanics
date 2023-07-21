@@ -32,7 +32,7 @@ public partial class SimulationPickerView : UserControl
         simWindow.Closed += delegate
         {
             // Stop the simulation from running in the background
-            simVm.SetAutoLeap(simWindow.Dispatcher, false);
+            simVm.IsAutoLeaping = false;
         };
         simWindow.Show();
     }

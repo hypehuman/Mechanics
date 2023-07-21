@@ -2,17 +2,20 @@
 
 public static class Simulations
 {
-    public static Simulation Default() => TwoBodies_NoDrag_Fixed;
+    public static Simulation Default() => TwoBodies_NoDrag_0;
 
     public static Simulation SunEarthMoon => new SunEarthMoon();
-    public static Simulation Falling_Cheap_Fixed => Falling(128, 0);
     public static Simulation Falling_Cheap_Random => Falling(128);
-    public static Simulation Falling_Expensive_Fixed => Falling(512, 0);
+    public static Simulation Falling_Cheap_0 => Falling(128, 0);
     public static Simulation Falling_Expensive_Random => Falling(512);
-    public static Simulation TwoBodies_NoDrag_Fixed => TwoBodies(false, 0);
+    public static Simulation Falling_Expensive_0 => Falling(512, 0);
     public static Simulation TwoBodies_NoDrag_Random => TwoBodies(false);
-    public static Simulation TwoBodies_WithDrag_Fixed => TwoBodies(true, 0);
+    public static Simulation TwoBodies_NoDrag_0 => TwoBodies(false, 0);
     public static Simulation TwoBodies_WithDrag_Random => TwoBodies(true);
+    public static Simulation TwoBodies_WithDrag_0 => TwoBodies(true, 0);
+    public static Simulation TwoBodies_WithDrag_916536409 => TwoBodies(true, 916536409);
+    public static Simulation Falling_2_Random => Falling(2);
+    public static Simulation Falling_3_Random => Falling(3);
 
     private static Simulation Falling(int numBodies, int? seed = null) => new Falling(
         Constants.EarthMoonDistance,

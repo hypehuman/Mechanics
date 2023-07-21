@@ -12,6 +12,8 @@ public class SimulationPickerVM
     public IReadOnlyList<string> SimulationNames => sSimulationNames;
     public string SelectedSimulationName { get; set; }
 
+    public bool AutoStart { get; set; }
+
     public SimulationPickerVM()
     {
         SelectedSimulationName = SimulationNames[0];
@@ -21,6 +23,9 @@ public class SimulationPickerVM
     {
         var sim = (Simulation)typeof(Simulations).GetProperty(SelectedSimulationName).GetValue(null)
             ?? throw new Exception("Reflected simulation was null");
-        return new SimulationVM(sim);
+        return new SimulationVM(sim, SelectedSimulationName)
+        {
+            IsAutoLeaping = AutoStart,
+        };
     }
 }
