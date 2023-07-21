@@ -12,26 +12,37 @@ public class Falling : RandomSimulation
     public override Vector<double> DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
 
-    public Falling(double systemRadius, int numBodies, double totalMass, double totalVolume, double maxVelocity, int? seed = null)
+    public Falling(double systemRadius, int numBodies, double systemMass, double totalVolume, double maxVelocity, int? seed = null)
         : base(seed)
     {
         DisplayBound1 = new DenseVector(new[] { systemRadius * 2, systemRadius * 2, systemRadius * 2 });
         DisplayBound0 = -DisplayBound1;
-        var bodyMass = totalMass / numBodies;
+        var bodyMass = systemMass / numBodies;
         var bodyVolume = totalVolume / numBodies;
         var bodyRadius = Math.Pow(bodyVolume * 3 / Math.PI, 1d / 3);
         var bodies = new Body[numBodies];
+        Vector<double> systemMomentum = new DenseVector(3);
         for (int i = 0; i < numBodies; i++)
         {
-            var position = RandomPointInBall(Random, systemRadius);
-            var velocity = maxVelocity == 0 ? null : RandomPointInBall(Random, maxVelocity);
+            var bodyPosition = RandomPointInBall(Random, systemRadius);
+            var bodyVelocity = maxVelocity == 0 ? null : RandomPointInBall(Random, maxVelocity);
             bodies[i] = new Body(this,
                 mass: bodyMass,
                 radius: bodyRadius,
-                position: position,
-                velocity: velocity
+                position: bodyPosition,
+                velocity: bodyVelocity
             );
+            var bodyMomentum = bodyMass * bodyVelocity;
+            systemMomentum.Add(bodyMomentum, systemMomentum);
         }
+
+        // Adjust our frame of reference such that the system's center of mass is at rest
+        var systemVelocity = systemMomentum / systemMass;
+        foreach (var body in bodies)
+        {
+            body.Velocity.Subtract(systemVelocity, body.Velocity);
+        }
+
         Bodies = bodies;
     }
 

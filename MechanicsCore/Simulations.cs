@@ -6,6 +6,7 @@ public static class Simulations
 
     public static Simulation SunEarthMoon => new SunEarthMoon();
     public static Simulation Falling_Tiny_0 => Falling(4, 0);
+    public static Simulation Falling_Tiny_287200931 => Falling(4, 287200931);
     public static Simulation Falling_Tiny_Random => Falling(4);
     public static Simulation Falling_Small_0 => Falling(16, 0);
     public static Simulation Falling_Small_Random => Falling(16);
