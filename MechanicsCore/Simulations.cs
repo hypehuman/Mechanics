@@ -4,7 +4,13 @@ public static class Simulations
 {
     public static Simulation Default() => TwoBodies_NoDrag_0;
 
+    public static Simulation TwoBodies_NoDrag_0 => TwoBodies(false, 0);
+    public static Simulation TwoBodies_NoDrag_Random => TwoBodies(false);
+    public static Simulation TwoBodies_WithDrag_0 => TwoBodies(true, 0);
+    public static Simulation TwoBodies_WithDrag_Random => TwoBodies(true);
+
     public static Simulation SunEarthMoon => new SunEarthMoon();
+
     public static Simulation Falling_Tiny_0 => Falling(4, 0);
     public static Simulation Falling_Tiny_287200931 => Falling(4, 287200931);
     public static Simulation Falling_Tiny_Random => Falling(4);
@@ -14,10 +20,6 @@ public static class Simulations
     public static Simulation Falling_Large_Random => Falling(128);
     public static Simulation Falling_Huge_0 => Falling(512, 0);
     public static Simulation Falling_Huge_Random => Falling(512);
-    public static Simulation TwoBodies_NoDrag_0 => TwoBodies(false, 0);
-    public static Simulation TwoBodies_NoDrag_Random => TwoBodies(false);
-    public static Simulation TwoBodies_WithDrag_0 => TwoBodies(true, 0);
-    public static Simulation TwoBodies_WithDrag_Random => TwoBodies(true);
 
     private static Simulation Falling(int numBodies, int? seed = null) => new Falling(
         Constants.EarthMoonDistance * 10,
