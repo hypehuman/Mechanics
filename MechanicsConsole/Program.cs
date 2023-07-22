@@ -1,4 +1,5 @@
 ﻿using MechanicsCore;
+using MechanicsCore.Rust.mechanics_fast;
 using System.Diagnostics;
 
 namespace MechanicsConsole;
@@ -7,6 +8,9 @@ internal class Program
 {
     static void Main(string[] args)
     {
+        Console.WriteLine("Calling Rust method:");
+        Console.WriteLine(mechanics_fast.add(3, 4));
+
         Console.WriteLine("Running performance tests:");
         TestPerformance(Simulations.TwoBodies_NoDrag_0);
         TestPerformance(Simulations.Falling_Huge_0);
