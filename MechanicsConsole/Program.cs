@@ -1,4 +1,5 @@
 ﻿using MechanicsCore;
+using System.Diagnostics;
 
 namespace MechanicsConsole;
 
@@ -6,12 +7,35 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        var model = Simulations.Default();
-        model.Dump();
-        while (model.t < Constants.SecondsPerYear)
+        Console.WriteLine("Running performance tests:");
+        TestPerformance(Simulations.TwoBodies_NoDrag_0);
+        TestPerformance(Simulations.Falling_Huge_0);
+
+        Console.WriteLine();
+        Console.WriteLine("Press Enter to start the simulation:");
+        Console.ReadLine();
+        Run(Simulations.Default());
+    }
+
+    private static void TestPerformance(Simulation sim)
+    {
+        var numLeaps = 0;
+        var sw = Stopwatch.StartNew();
+        while (sw.ElapsedMilliseconds < 10000)
         {
-            model.Leap();
-            model.Dump();
+            sim.Leap();
+            numLeaps++;
+        }
+        Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
+    }
+
+    private static void Run(Simulation sim)
+    {
+        sim.Dump();
+        while (sim.t < Constants.SecondsPerYear)
+        {
+            sim.Leap();
+            sim.Dump();
         }
     }
 }
