@@ -28,14 +28,14 @@ public abstract class Simulation
         // first compute all accelerations, then move bodies.
         var n = Bodies.Count;
         var a = new Vector<double>[n];
-        for (var i = 0; i < n; i++)
+        Parallel.For(0, n, i =>
         {
             a[i] = Bodies[i].ComputeAcceleration(Bodies);
-        };
-        for (var i = 0; i < n; i++)
+        });
+        Parallel.For(0, n, i =>
         {
             Bodies[i].Step(dt_step, a[i]);
-        };
+        });
 
         t += dt_step;
     }
