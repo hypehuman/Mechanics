@@ -15,6 +15,7 @@ public static class Simulations
     public static Simulation Falling_Tiny_287200931 => Falling(4, 287200931);
     public static Simulation Falling_Tiny_Random => Falling(4);
     public static Simulation Falling_Small_0 => Falling(16, 0);
+    public static Simulation Falling_Small_1002345669 => Falling(16, 0); // Something fun happened between 30 and 35 years.
     public static Simulation Falling_Small_Random => Falling(16);
     public static Simulation Falling_Large_0 => Falling(128, 0);
     public static Simulation Falling_Large_Random => Falling(128);
