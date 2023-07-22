@@ -4,7 +4,7 @@ namespace MechanicsCore;
 
 public abstract class Simulation
 {
-    private int sPrevBodyID;
+    private int sPrevBodyID = -1;
     public int NextBodyID => Interlocked.Increment(ref sPrevBodyID);
 
     public double t { get; private set; }

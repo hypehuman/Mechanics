@@ -1,7 +1,7 @@
 ﻿using MechanicsCore;
 using System;
 using System.ComponentModel;
-using System.Text;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -19,39 +19,73 @@ public class BodyVM : INotifyPropertyChanged
         Model = model;
         Simulation = simulation;
         RadiusPix = Math.Max(1, Model.DisplayRadius);
-        Fill = Model.Name switch
-        {
-            "Sun" => Brushes.Gold,
-            "Earth" => Brushes.LightSeaGreen,
-            "Moon" => Brushes.Silver,
-            _ => MakeHashBrush(Model.Name),
-        };
+        Fill = GetBrush();
     }
 
-    /// <summary>
-    /// Returns an arbitrary fully-saturated solid-color brush
-    /// whose hue depends on a hash of <paramref name="name"/>
-    /// </summary>
-    private static Brush MakeHashBrush(string name)
+    private Brush GetBrush()
     {
-        byte hash = 0;
-        int q = 33149;
-        foreach (byte b in Encoding.UTF8.GetBytes(name))
+        // Some magic names have specially selected brushes.
+        switch (Model.Name)
         {
-            hash += (byte)(b * q);
+            case "Sun": return Brushes.Gold;
+            case "Earth": return Brushes.LightSeaGreen;
+            case "Moon": return Brushes.Silver;
         }
 
-        var hue = hash / 255f;
-        var brush = new SolidColorBrush(HueToRGB(hue));
-        brush.Freeze();
+        // Get an arbitrary hue based on the model's ID.
+        var hueByte = GetArbitraryHue(Model.ID);
+        var brush = sBrushByHue[hueByte];
         return brush;
     }
 
-    private static Color HueToRGB(double h)
+    private static byte GetArbitraryHue(int id)
     {
-        var kr = (5 + h * 6) % 6;
-        var kg = (3 + h * 6) % 6;
-        var kb = (1 + h * 6) % 6;
+        // The first few IDs get nicely distributed contrasting hues.
+        if (id < 8)
+        {
+            var hue01 = id switch
+            {
+                0 => 0d / 8,
+                1 => 4d / 8,
+                2 => 2d / 8,
+                3 => 6d / 8,
+                4 => 1d / 8,
+                5 => 5d / 8,
+                6 => 3d / 8,
+                7 => 7d / 8,
+            };
+            var hueByte = (byte)(hue01 * 256);
+            return hueByte;
+        }
+
+        // Then we start hashing them.
+        return Hash8(BitConverter.GetBytes(id));
+    }
+
+    private static byte Hash8(byte[] input)
+    {
+        byte hash = 0;
+        int q = 33149;
+        foreach (byte b in input)
+        {
+            hash += (byte)(b * q);
+        }
+        return hash;
+    }
+
+    private static readonly Brush[] sBrushByHue = Enumerable.Range(0, 256).Select(hueByte =>
+    {
+        var hue01 = hueByte / 256d;
+        var brush = new SolidColorBrush(HueToRGB(hue01));
+        brush.Freeze();
+        return brush;
+    }).ToArray();
+
+    private static Color HueToRGB(double hue01)
+    {
+        var kr = (5 + hue01 * 6) % 6;
+        var kg = (3 + hue01 * 6) % 6;
+        var kb = (1 + hue01 * 6) % 6;
 
         var r = 1 - Math.Max(Min3(kr, 4 - kr, 1), 0);
         var g = 1 - Math.Max(Min3(kg, 4 - kg, 1), 0);

@@ -6,6 +6,7 @@ namespace MechanicsCore;
 public class Body
 {
     public Simulation Simulation { get; }
+    public int ID { get; }
     public string Name { get; }
     public double Mass { get; set; }
     public double Radius { get; set; }
@@ -14,10 +15,11 @@ public class Body
     public double Volume => 4d / 3 * Math.PI * Radius * Radius * Radius;
     public double Density => Mass / Volume;
 
-    public Body(Simulation simulation, string? name = null, double mass = 0, double radius = 0, double? displayRadius = null, Vector<double>? position = null, Vector<double>? velocity = null)
+    public Body(Simulation simulation, string name = "b", double mass = 0, double radius = 0, double? displayRadius = null, Vector<double>? position = null, Vector<double>? velocity = null)
     {
         Simulation = simulation;
-        Name = name ?? Simulation.NextBodyID.ToString();
+        ID = Simulation.NextBodyID;
+        Name = name;
         Mass = mass;
         Radius = radius;
         DisplayRadius = displayRadius ?? radius;

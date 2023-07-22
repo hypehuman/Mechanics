@@ -40,7 +40,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Path Fill="{Binding Fill}">
+                        <Path Opacity="0.75" Fill="{Binding Fill}">
                             <Path.Data>
                                 <EllipseGeometry
                                     Center="{Binding CenterPix}" 
