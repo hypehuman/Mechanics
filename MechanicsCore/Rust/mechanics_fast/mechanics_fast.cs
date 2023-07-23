@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using MechanicsCore.Rust.cgmath;
+using System.Runtime.InteropServices;
 
 namespace MechanicsCore.Rust.mechanics_fast;
 
@@ -9,4 +10,7 @@ public static class mechanics_fast
 {
     [DllImport("mechanics_fast.dll")]
     public static extern int add(int a, int b);
+
+    [DllImport("mechanics_fast.dll")]
+    public static extern Vector3_64 compute_gravitational_acceleration(double[] displacement, double m2);
 }
