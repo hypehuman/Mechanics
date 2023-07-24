@@ -1,5 +1,6 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
+using MechanicsCore.Rust.mechanics_fast;
 
 namespace MechanicsCore;
 
@@ -98,7 +99,7 @@ public class Body
             // Ag = (displacement/|displacement|)*G*m2/distance^2
             // Since |displacement| is the distance, this simplifies to:
             // Ag = displacement*G*m2/distance^3
-            return displacement * Constants.GravitationalConstant * m2 / (distance * distance * distance);
+            return mechanics_fast.compute_gravitational_acceleration(displacement.AsArray(), m2).ToMathNet();
         }
 
         var agAtKissingDistance = displacement * Constants.GravitationalConstant * m2 / (kissingDistance * kissingDistance * kissingDistance);

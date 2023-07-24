@@ -48,8 +48,11 @@ public abstract class Simulation
         }
     }
 
-    private static string DoubleToString(double d) => $"{d:0.000e00}";
+    public static string DoubleToString(double d) => $"{d:0.000e00}";
 
+    /// <summary>
+    /// If you change this, also change <see cref="Rust.cgmath.Vector3_64{T}.ToString"/>
+    /// </summary>
     private static string VectToString(Vector<double> v) => string.Join(", ", v.Select(DoubleToString));
 
     private static string HeadingVectToString(Vector<double> v) => string.Join(", ", v.Select(x => $"{x:0.00}"));
