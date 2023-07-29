@@ -59,6 +59,14 @@ public abstract class Simulation
 
     private static string HeadingVectToString(Vector<double> v) => string.Join(", ", v.Select(x => $"{x:0.00}"));
 
+    public virtual IEnumerable<string> GetConfigLines()
+    {
+        if (GravityConfig != GravityType.None)
+            yield return $"Gravity: {GravityConfig}";
+        if (DragCoefficient != 0)
+            yield return $"Drag coefficient: {DragCoefficient}";
+    }
+
     public string GetTimeString()
     {
         var secStr = $"t = {DoubleToString(t)} seconds";
@@ -83,7 +91,7 @@ public abstract class Simulation
         return $"{secStr} = {DoubleToString(t / Constants.SecondsPerYear)} years";
     }
 
-    public void Dump()
+    public void DumpState()
     {
         Console.WriteLine(GetTimeString());
         foreach (var b in Bodies)

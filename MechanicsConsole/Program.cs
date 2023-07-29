@@ -8,14 +8,14 @@ internal class Program
     static void Main(string[] args)
     {
         Console.WriteLine("Running performance tests:");
-        TestPerformance(Simulations.SunEarthMoon);
-        TestPerformance(Simulations.TwoBodies_NoDrag_0);
-        TestPerformance(Simulations.Falling_Huge_0);
+        TestPerformance(PreconfiguredSimulations.SunEarthMoon_Pointlike);
+        TestPerformance(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0);
+        TestPerformance(PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0);
 
         Console.WriteLine();
         Console.WriteLine("Press Enter to start the simulation:");
         Console.ReadLine();
-        Run(Simulations.Default());
+        Run(PreconfiguredSimulations.Default());
     }
 
     private static void TestPerformance(Simulation sim)
@@ -32,11 +32,11 @@ internal class Program
 
     private static void Run(Simulation sim)
     {
-        sim.Dump();
+        sim.DumpState();
         while (sim.t < Constants.SecondsPerYear)
         {
             sim.Leap();
-            sim.Dump();
+            sim.DumpState();
         }
     }
 }

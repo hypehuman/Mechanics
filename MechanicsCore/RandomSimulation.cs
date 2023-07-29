@@ -10,4 +10,12 @@ public abstract class RandomSimulation : Simulation
         Seed = seed ?? new Random().Next();
         Random = new Random(Seed);
     }
+
+    public override IEnumerable<string> GetConfigLines()
+    {
+        yield return $"Seed: {Seed}";
+
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+    }
 }

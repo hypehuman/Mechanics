@@ -2,29 +2,22 @@
 
 public static class Simulations
 {
-    public static Simulation Default() => TwoBodies_NoDrag_0;
+    public static Simulation TwoBodies(int? seed = null) => new TwoBodies(
+        Constants.EarthRadius * 2,
+        Constants.EarthMass,
+        Constants.EarthVolume,
+        seed
+    );
 
-    public static Simulation TwoBodies_NoDrag_0 => TwoBodies(false, 0);
-    public static Simulation TwoBodies_NoDrag_Random => TwoBodies(false);
-    public static Simulation TwoBodies_WithDrag_0 => TwoBodies(true, 0);
-    public static Simulation TwoBodies_WithDrag_Random => TwoBodies(true);
+    /// <summary>
+    /// Seed is unused, but this signature is important so that it can be found via reflection.
+    /// </summary>
+    public static Simulation SunEarthMoon(int? seed = null) => new SunEarthMoon();
 
-    public static Simulation SunEarthMoon => new SunEarthMoon()
-    {
-        DragCoefficient = 0,
-        GravityConfig = GravityType.Newton_Pointlike,
-    };
-
-    public static Simulation Falling_Tiny_0 => Falling(4, 0);
-    public static Simulation Falling_Tiny_287200931 => Falling(4, 287200931);
-    public static Simulation Falling_Tiny_Random => Falling(4);
-    public static Simulation Falling_Small_0 => Falling(16, 0);
-    public static Simulation Falling_Small_1002345669 => Falling(16, 0); // Something fun happened between 30 and 35 years.
-    public static Simulation Falling_Small_Random => Falling(16);
-    public static Simulation Falling_Large_0 => Falling(128, 0);
-    public static Simulation Falling_Large_Random => Falling(128);
-    public static Simulation Falling_Huge_0 => Falling(512, 0);
-    public static Simulation Falling_Huge_Random => Falling(512);
+    public static Simulation Falling_Tiny(int? seed = null) => Falling(4, seed);
+    public static Simulation Falling_Small(int? seed = null) => Falling(16, seed);
+    public static Simulation Falling_Large(int? seed = null) => Falling(128, seed);
+    public static Simulation Falling_Huge(int? seed = null) => Falling(512, seed);
 
     private static Simulation Falling(int numBodies, int? seed = null) => new Falling(
         Constants.EarthMoonDistance * 10,
@@ -33,20 +26,5 @@ public static class Simulations
         Constants.EarthVolume * 10000,
         Constants.MoonOrbitEarthSpeed / Math.Sqrt(10),
         seed
-    )
-    {
-        DragCoefficient = 1,
-        GravityConfig = GravityType.Newton_Buoyant,
-    };
-
-    private static Simulation TwoBodies(bool drag, int? seed = null) => new TwoBodies(
-        Constants.EarthRadius * 2,
-        Constants.EarthMass,
-        Constants.EarthVolume,
-        seed
-    )
-    {
-        DragCoefficient = drag ? 1 : 0,
-        GravityConfig = GravityType.Newton_Buoyant,
-    };
+    );
 }
