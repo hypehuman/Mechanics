@@ -1,4 +1,4 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using MathNet.Spatial.Euclidean;
 
 namespace MechanicsCore;
 
@@ -10,8 +10,8 @@ public abstract class Simulation
     public double t { get; private set; }
     public abstract double dt_step { get; }
     protected abstract int steps_per_leap { get; }
-    public abstract Vector<double> DisplayBound0 { get; }
-    public abstract Vector<double> DisplayBound1 { get; }
+    public abstract Vector3D DisplayBound0 { get; }
+    public abstract Vector3D DisplayBound1 { get; }
 
     public abstract IReadOnlyList<Body> Bodies { get; }
 
@@ -29,7 +29,7 @@ public abstract class Simulation
         // To make deterministic, parallelizable, and order-insensitive:
         // first compute all accelerations, then move bodies.
         var n = Bodies.Count;
-        var a = new Vector<double>[n];
+        var a = new Vector3D[n];
         for (var i = 0; i < n; i++)
         {
             a[i] = Bodies[i].ComputeAcceleration(Bodies);
@@ -52,12 +52,9 @@ public abstract class Simulation
 
     public static string DoubleToString(double d) => $"{d:0.000e00}";
 
-    /// <summary>
-    /// If you change this, also change <see cref="Rust.cgmath.Vector3_64{T}.ToString"/>
-    /// </summary>
-    private static string VectToString(Vector<double> v) => string.Join(", ", v.Select(DoubleToString));
+    private static string VectToString(Vector3D v) => $"{DoubleToString(v.X)}, {DoubleToString(v.Y)}, {DoubleToString(v.Z)}";
 
-    private static string HeadingVectToString(Vector<double> v) => string.Join(", ", v.Select(x => $"{x:0.00}"));
+    private static string HeadingVectToString(Vector3D v) => $"{v.X:0.00}, {v.Y:0.00}, {v.Z:0.00}";
 
     public virtual IEnumerable<string> GetConfigLines()
     {
@@ -103,7 +100,7 @@ public abstract class Simulation
             var a = Bodies[i];
             var b = Bodies[i + 1];
             var displacement = b.Position - a.Position;
-            var distance = displacement.L2Norm();
+            var distance = displacement.Length;
             var heading = displacement / distance;
             Console.WriteLine($"{a.Name}->{b.Name} : {DoubleToString(distance)} ({HeadingVectToString(heading)})");
         }

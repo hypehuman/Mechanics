@@ -86,8 +86,8 @@ public class SimulationVM : INotifyPropertyChanged
 
     private void RefreshBounds()
     {
-        Sort(Model.DisplayBound0[0], Model.DisplayBound1[0], out var xMin, out var xMax);
-        Sort(Model.DisplayBound0[1], Model.DisplayBound1[1], out var yMin, out var yMax);
+        Sort(Model.DisplayBound0.X, Model.DisplayBound1.X, out var xMin, out var xMax);
+        Sort(Model.DisplayBound0.Y, Model.DisplayBound1.Y, out var yMin, out var yMax);
         var systemWidth = xMax - xMin;
         var systemHeight = yMax - yMin;
         var xScale = _availableSizePix.Width / systemWidth;

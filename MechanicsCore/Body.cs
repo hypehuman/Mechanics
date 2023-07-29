@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Double;
+﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.Rust.mechanics_fast;
 
 namespace MechanicsCore;
@@ -16,7 +15,7 @@ public class Body
     public double Volume => Constants.SphereRadiusToVolume(Radius);
     public double Density => Mass / Volume;
 
-    public Body(Simulation simulation, string name = "b", double mass = 0, double radius = 0, double? displayRadius = null, Vector<double>? position = null, Vector<double>? velocity = null)
+    public Body(Simulation simulation, string name = "b", double mass = 0, double radius = 0, double? displayRadius = null, Vector3D position = default, Vector3D velocity = default)
     {
         Simulation = simulation;
         ID = Simulation.NextBodyID;
@@ -24,41 +23,34 @@ public class Body
         Mass = mass;
         Radius = radius;
         DisplayRadius = displayRadius ?? radius;
-        Position = position ?? new DenseVector(3);
-        Velocity = velocity ?? new DenseVector(3);
+        Position = position;
+        Velocity = velocity;
     }
 
-    public Vector<double> Position { get; set; }
-    public Vector<double> Velocity { get; set; }
+    public Vector3D Position { get; set; }
+    public Vector3D Velocity { get; set; }
 
-    public double X => Position[0];
-    public double Y => Position[1];
-    public double Z => Position[2];
-
-    public Vector<double> ComputeAcceleration(IEnumerable<Body> allBodies)
+    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies)
     {
-        var a = new DenseVector(3);
+        var a = default(Vector3D);
         foreach (var body2 in allBodies)
         {
             if (body2 == this)
             {
                 continue;
             }
-            AddAccelerationOn1DueTo2(this, body2, a);
+            a += GetAccelerationOn1DueTo2(this, body2);
         }
         return a;
     }
 
-    public void Step(double dt, Vector<double> a)
+    public void Step(double dt, Vector3D a)
     {
-        var v = Velocity;
-        v.Add(a * dt, v);
-
-        var p = Position;
-        p.Add(v * dt, p);
+        Velocity += dt * a;
+        Position += dt * Velocity;
     }
 
-    private static void AddAccelerationOn1DueTo2(Body body1, Body body2, Vector<double> a)
+    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2)
     {
         var sim = body1.Simulation;
         var displacement = body2.Position - body1.Position;
@@ -67,38 +59,35 @@ public class Body
         if (sim.TakeSimpleShortcut)
         {
             // Shortcut for simpler simulations
-            var a12 = ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2);
-            a.Add(a12, a);
-            return;
+            return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2);
         }
 
-        var distance = displacement.L2Norm();
+        var distance = displacement.Length;
         var m1 = body1.Mass;
         var r1 = body1.Radius;
         var r2 = body2.Radius;
 
         var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, body1.Simulation.GravityConfig);
-        a.Add(ag, a);
 
         if (distance > r1 + r2)
         {
             // The bodies are not touching.
-            return;
+            return ag;
         }
 
         if (m1 == 0 || m2 == 0)
         {
             // avoid infinities
-            return;
+            return ag;
         }
 
         var others = ComputeOtherForces(body1, body2, displacement, distance);
-        others.Divide(m1, others); // convert others from a force to an acceleration
-        a.Add(others, a);
+        others /= m1; // convert others from a force to an acceleration
+        return ag + others;
     }
 
-    private static Vector<double> ComputeGravitationalAcceleration(
-        Vector<double> displacement,
+    private static Vector3D ComputeGravitationalAcceleration(
+        Vector3D displacement,
         double distance,
         double m2,
         double r1,
@@ -109,7 +98,7 @@ public class Body
         switch (gravity)
         {
             case GravityType.None:
-                return new SparseVector(3);
+                return default;
             case GravityType.Newton_Pointlike:
                 return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
         }
@@ -121,7 +110,7 @@ public class Body
             return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
         }
 
-        var agAtKissingDistance = displacement * Constants.GravitationalConstant * m2 / (kissingDistance * kissingDistance * kissingDistance);
+        var agAtKissingDistance = Constants.GravitationalConstant * m2 * displacement / (kissingDistance * kissingDistance * kissingDistance);
 
         switch (gravity)
         {
@@ -130,7 +119,7 @@ public class Body
                 // Start with the force when the surfaces are barely touching:
                 // Ag = displacement*G*m2/(r1+r2)^3
                 // Then scale it by displacement/(r1+r2):
-                return agAtKissingDistance * (distance / kissingDistance);
+                return (distance / kissingDistance) * agAtKissingDistance;
 
             case GravityType.Newton_Buoyant:
                 // When you're inside an object, the gravity starts falling linearly.
@@ -146,23 +135,23 @@ public class Body
                 }
 
                 // the smaller body is fully inside the larger
-                return agAtEngulfmentDistance * (distance / engulfmentDistance);
+                return (distance / engulfmentDistance) * agAtEngulfmentDistance;
         }
 
         throw Utils.OutOfRange(nameof(gravity), gravity);
     }
 
-    private static Vector<double> ComputePointlikeNewtonianGravitationalAcceleration(Vector<double> displacement, double m2)
+    private static Vector3D ComputePointlikeNewtonianGravitationalAcceleration(Vector3D displacement, double m2)
     {
 #if DISABLE_RUST
-        var distance = displacement.L2Norm();
+        var distance = displacement.Length;
         return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
 #else
-        return mechanics_fast.compute_gravitational_acceleration(displacement.AsArray(), m2).ToMathNet();
+        return mechanics_fast.compute_gravitational_acceleration(displacement, m2);
 #endif
     }
 
-    private static Vector<double> ComputePointlikeNewtonianGravitationalAcceleration(Vector<double> displacement, double m2, double distance)
+    private static Vector3D ComputePointlikeNewtonianGravitationalAcceleration(Vector3D displacement, double m2, double distance)
     {
         // Acceleration due to gravity (Newton's law of gravitation) in scalar form:
         // Ag = G*m2/distance^2
@@ -173,30 +162,26 @@ public class Body
 #if DISABLE_RUST
         return Constants.GravitationalConstant * m2 * displacement / (distance * distance * distance);
 #else
-        return mechanics_fast.compute_gravitational_acceleration(displacement.AsArray(), m2).ToMathNet();
+        return mechanics_fast.compute_gravitational_acceleration(displacement, m2);
 #endif
     }
 
-    private static Vector<double> ComputeOtherForces(Body body1, Body body2, Vector<double> displacement, double distance)
+    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance)
     {
-        var f = new DenseVector(3);
-
-        var fDrag = ComputeDragForce(body1, body2, displacement, distance);
-        f.Add(fDrag, f);
-        return f;
+        return ComputeDragForce(body1, body2, displacement, distance);
     }
 
-    private static Vector<double> ComputeDragForce(Body body1, Body body2, Vector<double> displacement, double distance)
+    private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance)
     {
         var dragCoefficient = body1.Simulation.DragCoefficient;
         if (dragCoefficient == 0)
         {
-            return new SparseVector(3);
+            return default;
         }
 
         // Assume the bodies are fully overlapping, which might not actually be true.
         var relativeVelocity = body2.Velocity - body1.Velocity;
-        var relativeSpeed = relativeVelocity.L2Norm();
+        var relativeSpeed = relativeVelocity.Length;
         var minRadius = Math.Min(body1.Radius, body2.Radius);
         var crossSectionalArea = Math.PI * minRadius * minRadius;
 
@@ -207,9 +192,9 @@ public class Body
             dragCoefficient * crossSectionalArea;
 
         // compute the unit vector of the force's direction
-        var vector = relativeVelocity / relativeSpeed;
+        var fdDirectionUnit = relativeVelocity / relativeSpeed;
         // compute the force vector
-        vector.Multiply(fdMagnitude, vector);
+        var fd = fdMagnitude * fdDirectionUnit;
 
         // In theory, vector is currently the correct drag force.
         // Also in theory, the higher DragCoefficient value is, the more the bodies should clump up.
@@ -219,7 +204,7 @@ public class Body
         // whereas in theory, the acceleration should drop off rapidly within that time step.
         // Therefore, we cap the force at an amount that would bring the bodies' relative velocity to zero in one time step.
 
-        if (WillBounce(body1, body2, relativeVelocity, vector, false))
+        if (WillBounce(body1, body2, relativeVelocity, fd, false))
         {
             // Instead, apply a force sufficient to make both velocities the same while conserving momentum
             // (assuming the opposite force is applied to body2)
@@ -228,27 +213,27 @@ public class Body
             var v1 = body1.Velocity;
             var v2 = body2.Velocity;
             var t = body1.Simulation.dt_step;
-            vector = ((m1 * v1 + m2 * v2) / (m1 + m2) - v1) * m1 / t;
+            fd = m1 / t * ((m1 * v1 + m2 * v2) / (m1 + m2) - v1);
 
             // Check again!
-            WillBounce(body1, body2, relativeVelocity, vector, true);
+            WillBounce(body1, body2, relativeVelocity, fd, true);
         }
 
         // Now we have computed the drag.
         // However, I want things to be able to roll/slide past each other,
         // so return only the radial component of drag.
-        var component = vector * displacement * displacement / distance / distance;
+        var component = fd * displacement * displacement / distance / distance;
 
         // Will be NaN if the relative velocity was 0.
-        return double.IsFinite(component.L2Norm()) ? component : new SparseVector(3);
+        return double.IsFinite(component.Length) ? component : default;
     }
 
-    private static bool WillBounce(Body body1, Body body2, Vector<double> relativeVelocity, Vector<double> force, bool isDoubleCheck)
+    private static bool WillBounce(Body body1, Body body2, Vector3D relativeVelocity, Vector3D force, bool isDoubleCheck)
     {
         var nextAcceleration1 = force / body1.Mass;
         var nextAcceleration2 = -force / body2.Mass;
-        var changeInVelocity1 = nextAcceleration1 * body1.Simulation.dt_step;
-        var changeInVelocity2 = nextAcceleration2 * body2.Simulation.dt_step;
+        var changeInVelocity1 = body1.Simulation.dt_step * nextAcceleration1;
+        var changeInVelocity2 = body2.Simulation.dt_step * nextAcceleration2;
         var nextVelocity1 = body1.Velocity + changeInVelocity1;
         var nextVelocity2 = body2.Velocity + changeInVelocity2;
         var nextRelativeVelocity = nextVelocity2 - nextVelocity1;

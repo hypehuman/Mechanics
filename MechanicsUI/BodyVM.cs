@@ -99,15 +99,15 @@ public class BodyVM : INotifyPropertyChanged
         return Math.Min(Math.Min(a, b), c);
     }
 
-    public Point CenterPix => new(Model.X, Model.Y);
+    public Point CenterPix => new(Model.Position.X, Model.Position.Y);
 
     public int PanelZIndex
     {
         get
         {
             // Compute Z scaled to the range [0,1] relative to the simulation bounds.
-            var z = Model.Z;
-            SimulationVM.Sort(Simulation.DisplayBound0[2], Simulation.DisplayBound1[2], out var zMin, out var zMax);
+            var z = Model.Position.Z;
+            SimulationVM.Sort(Simulation.DisplayBound0.Z, Simulation.DisplayBound1.Z, out var zMin, out var zMax);
             var relativeZ = (z - zMin) / (zMax - zMin);
 
             // special cases if out of bounds

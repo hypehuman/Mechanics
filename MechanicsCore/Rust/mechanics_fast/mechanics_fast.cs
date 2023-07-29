@@ -1,4 +1,4 @@
-﻿using MechanicsCore.Rust.cgmath;
+﻿using MathNet.Spatial.Euclidean;
 using System.Runtime.InteropServices;
 
 namespace MechanicsCore.Rust.mechanics_fast;
@@ -9,5 +9,5 @@ namespace MechanicsCore.Rust.mechanics_fast;
 public static class mechanics_fast
 {
     [DllImport("mechanics_fast.dll")]
-    public static extern Vector3_64 compute_gravitational_acceleration(double[] displacement, double m2);
+    public static extern Vector3D compute_gravitational_acceleration(Vector3D displacement, double m2);
 }
