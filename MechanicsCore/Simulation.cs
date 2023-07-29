@@ -17,10 +17,12 @@ public abstract class Simulation
 
     #region Configurable
 
+    public GravityType GravityConfig { get; set; }
     public double DragCoefficient { get; set; }
-    public bool BuoyantGravity { get; set; }
 
     #endregion
+
+    public bool TakeSimpleShortcut => GravityConfig == GravityType.Newton_Pointlike && DragCoefficient == 0;
 
     private void Step()
     {

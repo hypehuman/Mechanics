@@ -60,14 +60,24 @@ public class Body
 
     private static void AddAccelerationOn1DueTo2(Body body1, Body body2, Vector<double> a)
     {
+        var sim = body1.Simulation;
         var displacement = body2.Position - body1.Position;
+        var m2 = body2.Mass;
+
+        if (sim.TakeSimpleShortcut)
+        {
+            // Shortcut for simpler simulations
+            var a12 = ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2);
+            a.Add(a12, a);
+            return;
+        }
+
         var distance = displacement.L2Norm();
         var m1 = body1.Mass;
-        var m2 = body2.Mass;
         var r1 = body1.Radius;
         var r2 = body2.Radius;
 
-        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, body1.Simulation.BuoyantGravity);
+        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, body1.Simulation.GravityConfig);
         a.Add(ag, a);
 
         if (distance > r1 + r2)
@@ -87,46 +97,84 @@ public class Body
         a.Add(others, a);
     }
 
-    private static Vector<double> ComputeGravitationalAcceleration(Vector<double> displacement, double distance, double m2, double r1, double r2, bool buoyant)
+    private static Vector<double> ComputeGravitationalAcceleration(
+        Vector<double> displacement,
+        double distance,
+        double m2,
+        double r1,
+        double r2,
+        GravityType gravity
+    )
     {
+        switch (gravity)
+        {
+            case GravityType.None:
+                return new SparseVector(3);
+            case GravityType.Newton_Pointlike:
+                return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
+        }
+
         var kissingDistance = r1 + r2;
         if (distance >= kissingDistance)
         {
-            // The bodies are not touching.
-            // Acceleration due to gravity (Newton's law of gravitation) in scalar form:
-            // Ag = G*m2/distance^2
-            // To make it a vector, we need to multiply by the unit vector of the displacement (displacement/|displacement|):
-            // Ag = (displacement/|displacement|)*G*m2/distance^2
-            // Since |displacement| is the distance, this simplifies to:
-            // Ag = displacement*G*m2/distance^3
-            return mechanics_fast.compute_gravitational_acceleration(displacement.AsArray(), m2).ToMathNet();
+            // The bodies are not touching, which means we can treat them as points.
+            return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
         }
 
         var agAtKissingDistance = displacement * Constants.GravitationalConstant * m2 / (kissingDistance * kissingDistance * kissingDistance);
 
-        if (!buoyant)
+        switch (gravity)
         {
-            // When you're inside an object, the gravity starts falling linearly with distance from the center.
-            // Start with the force when the surfaces are barely touching:
-            // Ag = displacement*G*m2/(r1+r2)^3
-            // Then scale it by displacement/(r1+r2):
-            return agAtKissingDistance * (distance / kissingDistance);
+            case GravityType.Newton_LinearAfterTouching:
+                // When you're inside an object, the gravity starts falling linearly with distance from the center.
+                // Start with the force when the surfaces are barely touching:
+                // Ag = displacement*G*m2/(r1+r2)^3
+                // Then scale it by displacement/(r1+r2):
+                return agAtKissingDistance * (distance / kissingDistance);
+
+            case GravityType.Newton_Buoyant:
+                // When you're inside an object, the gravity starts falling linearly.
+                // By the time you're fully engulfed, the gravity is the opposite of what it was when they were barely touching.
+                // From there it drops linearly, to zero when the centers are overlapping.
+                var engulfmentDistance = Math.Abs(r1 - r2);
+                var agAtEngulfmentDistance = -agAtKissingDistance;
+
+                if (distance > engulfmentDistance)
+                {
+                    // the bodies are partially (but not fully) overlapping
+                    return (distance - engulfmentDistance) / (kissingDistance - engulfmentDistance) * (agAtKissingDistance - agAtEngulfmentDistance) + agAtEngulfmentDistance;
+                }
+
+                // the smaller body is fully inside the larger
+                return agAtEngulfmentDistance * (distance / engulfmentDistance);
         }
 
-        // When you're inside an object, the gravity starts falling linearly.
-        // By the time you're fully engulfed, the gravity is the opposite of what it was when they were barely touching.
-        // From there it drops linearly, to zero when the centers are overlapping.
-        var engulfmentDistance = Math.Abs(r1 - r2);
-        var agAtEngulfmentDistance = -agAtKissingDistance;
+        throw Utils.OutOfRange(nameof(gravity), gravity);
+    }
 
-        if (distance > engulfmentDistance)
-        {
-            // the bodies are partially (but not fully) overlapping
-            return (distance - engulfmentDistance) / (kissingDistance - engulfmentDistance) * (agAtKissingDistance - agAtEngulfmentDistance) + agAtEngulfmentDistance;
-        }
+    private static Vector<double> ComputePointlikeNewtonianGravitationalAcceleration(Vector<double> displacement, double m2)
+    {
+#if DISABLE_RUST
+        var distance = displacement.L2Norm();
+        return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
+#else
+        return mechanics_fast.compute_gravitational_acceleration(displacement.AsArray(), m2).ToMathNet();
+#endif
+    }
 
-        // the smaller body is fully inside the larger
-        return agAtEngulfmentDistance * (distance / engulfmentDistance);
+    private static Vector<double> ComputePointlikeNewtonianGravitationalAcceleration(Vector<double> displacement, double m2, double distance)
+    {
+        // Acceleration due to gravity (Newton's law of gravitation) in scalar form:
+        // Ag = G*m2/distance^2
+        // To make it a vector, we need to multiply by the unit vector of the displacement (displacement/|displacement|):
+        // Ag = (displacement/|displacement|)*G*m2/distance^2
+        // Since |displacement| is the distance, this simplifies to:
+        // Ag = displacement*G*m2/distance^3
+#if DISABLE_RUST
+        return Constants.GravitationalConstant * m2 * displacement / (distance * distance * distance);
+#else
+        return mechanics_fast.compute_gravitational_acceleration(displacement.AsArray(), m2).ToMathNet();
+#endif
     }
 
     private static Vector<double> ComputeOtherForces(Body body1, Body body2, Vector<double> displacement, double distance)

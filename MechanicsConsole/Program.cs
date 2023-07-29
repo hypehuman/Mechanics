@@ -8,6 +8,7 @@ internal class Program
     static void Main(string[] args)
     {
         Console.WriteLine("Running performance tests:");
+        TestPerformance(Simulations.SunEarthMoon);
         TestPerformance(Simulations.TwoBodies_NoDrag_0);
         TestPerformance(Simulations.Falling_Huge_0);
 

@@ -9,7 +9,11 @@ public static class Simulations
     public static Simulation TwoBodies_WithDrag_0 => TwoBodies(true, 0);
     public static Simulation TwoBodies_WithDrag_Random => TwoBodies(true);
 
-    public static Simulation SunEarthMoon => new SunEarthMoon();
+    public static Simulation SunEarthMoon => new SunEarthMoon()
+    {
+        DragCoefficient = 0,
+        GravityConfig = GravityType.Newton_Pointlike,
+    };
 
     public static Simulation Falling_Tiny_0 => Falling(4, 0);
     public static Simulation Falling_Tiny_287200931 => Falling(4, 287200931);
@@ -32,7 +36,7 @@ public static class Simulations
     )
     {
         DragCoefficient = 1,
-        BuoyantGravity = true,
+        GravityConfig = GravityType.Newton_Buoyant,
     };
 
     private static Simulation TwoBodies(bool drag, int? seed = null) => new TwoBodies(
@@ -43,6 +47,6 @@ public static class Simulations
     )
     {
         DragCoefficient = drag ? 1 : 0,
-        BuoyantGravity = true,
+        GravityConfig = GravityType.Newton_Buoyant,
     };
 }
