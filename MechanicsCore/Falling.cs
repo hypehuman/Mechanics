@@ -14,11 +14,13 @@ public class Falling : RandomSimulation
     public Falling(double systemRadius, int numBodies, double systemMass, double totalVolume, double maxVelocity, int? seed = null)
         : base(seed)
     {
-        DisplayBound1 = new(systemRadius * 2, systemRadius * 2, systemRadius * 2 );
-        DisplayBound0 = -DisplayBound1;
         var bodyMass = systemMass / numBodies;
         var bodyVolume = totalVolume / numBodies;
         var bodyRadius = Constants.SphereVolumeToRadius(bodyVolume);
+        var solidRadius = Constants.SphereVolumeToRadius(totalVolume); // the radius we would get if all the bodies were to combine into one
+        var bound = (systemRadius + solidRadius) * 2;
+        DisplayBound1 = new(bound, bound, bound);
+        DisplayBound0 = -DisplayBound1;
         var bodies = new Body[numBodies];
         Vector3D systemMomentum = default;
         for (int i = 0; i < numBodies; i++)

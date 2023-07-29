@@ -15,7 +15,9 @@ public class TwoBodies : RandomSimulation
         : base(seed)
     {
         var numBodies = 2;
-        DisplayBound1 = new(systemRadius * 2, systemRadius * 2, systemRadius * 2);
+        var solidRadius = Constants.SphereVolumeToRadius(totalVolume); // the radius we would get if all the bodies were to combine into one
+        var bound = (systemRadius + solidRadius) * 2;
+        DisplayBound1 = new(bound, bound, bound);
         DisplayBound0 = -DisplayBound1;
         var bodies = new Body[numBodies];
         var fraction0 = Random.NextDouble();
