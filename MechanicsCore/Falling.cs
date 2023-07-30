@@ -4,8 +4,8 @@ namespace MechanicsCore;
 
 public class Falling : RandomSimulation
 {
-    public override double dt_step => 512;
-    protected override int steps_per_leap => 1;
+    public override double dt_step => 16;
+    protected override int steps_per_leap => 128;
 
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
