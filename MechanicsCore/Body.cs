@@ -191,7 +191,8 @@ public class Body
         // so return only the radial component of drag.
         var component = vector * displacement * displacement / distance / distance;
 
-        return component;
+        // Will be NaN if the relative velocity was 0.
+        return double.IsFinite(component.L2Norm()) ? component : new SparseVector(3);
     }
 
     private static bool WillBounce(Body body1, Body body2, Vector<double> relativeVelocity, Vector<double> force, bool isDoubleCheck)
