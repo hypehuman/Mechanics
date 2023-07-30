@@ -62,7 +62,9 @@ public static class PreconfiguredSimulations
         }
     }
 
-    // Around 4.5 years, forms a three-body "planet" with a one-body "moon".
+    // Around 3 days, forms a two-body "planet" with two one-body "moons".
+    // Around 70 days, forms a three-body "planet" with a one-body "moon".
+    // Around 2.5 years, collapses into a single four-body "planet".
     public static Simulation Falling_Buoyant_Drag_Tiny_287200931
     {
         get
@@ -79,18 +81,6 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.Falling_Small(0);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
-            sim.DragCoefficient = 1;
-            return sim;
-        }
-    }
-
-    // Something fun happened between 30 and 35 years.
-    public static Simulation Falling_Buoyant_Drag_Small_1002345669
-    {
-        get
-        {
-            var sim = Simulations.Falling_Small(1002345669);
             sim.GravityConfig = GravityType.Newton_Buoyant;
             sim.DragCoefficient = 1;
             return sim;

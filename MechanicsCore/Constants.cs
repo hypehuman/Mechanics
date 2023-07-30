@@ -18,6 +18,10 @@ public static class Constants
 
     public const double MoonMass = 7.34767309e22;
 
+    public const double MoonVolume = 2.1968e19;
+
+    public static readonly double MoonRadius = SphereVolumeToRadius(MoonVolume);
+
     public const double MoonOrbitEarthSpeed = 1.022e3;
 
     public const double EarthVolume = 1.03e21;
