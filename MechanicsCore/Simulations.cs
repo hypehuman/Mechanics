@@ -20,11 +20,11 @@ public static class Simulations
     public static Simulation Falling_Huge(int? seed = null) => Falling(512, seed);
 
     private static Simulation Falling(int numBodies, int? seed = null) => new Falling(
-        Constants.EarthMoonDistance * 10,
+        1,
         numBodies,
         Constants.EarthMass,
-        Constants.EarthVolume * 10000,
-        Constants.MoonOrbitEarthSpeed / Math.Sqrt(10),
+        Constants.EarthVolume,
+        1,
         seed
     );
 }
