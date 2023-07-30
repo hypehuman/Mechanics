@@ -35,8 +35,9 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="Gravity: " />
-                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding Gravity}" ItemsSource="{Binding GravityStyles}" />
+                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding Gravity}" ItemsSource="{Binding GravityTypes}" />
                     </StackPanel>
+                    <CheckBox IsChecked="{Binding CombineIfOverlapping}">Combine bodies if overlapping</CheckBox>
                     <CheckBox IsChecked="{Binding EnableDrag}">Drag</CheckBox>
                 </StackPanel>
                 <Separator Height="10" />

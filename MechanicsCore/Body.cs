@@ -11,8 +11,20 @@ public class Body
     public double Mass { get; set; }
     public double Radius { get; set; }
     public double DisplayRadius { get; set; }
+    public bool Exists { get; set; } = true;
 
-    public double Volume => Constants.SphereRadiusToVolume(Radius);
+    public double Volume
+    {
+        get => Constants.SphereRadiusToVolume(Radius);
+        set => Radius = Constants.SphereVolumeToRadius(value);
+    }
+
+    public double DisplayVolume
+    {
+        get => Constants.SphereRadiusToVolume(DisplayRadius);
+        set => DisplayRadius = Constants.SphereVolumeToRadius(value);
+    }
+
     public double Density => Mass / Volume;
 
     public Body(Simulation simulation, string name = "b", double mass = 0, double radius = 0, double? displayRadius = null, Vector3D position = default, Vector3D velocity = default)
@@ -35,7 +47,7 @@ public class Body
         var a = default(Vector3D);
         foreach (var body2 in allBodies)
         {
-            if (body2 == this)
+            if (!body2.Exists || body2 == this)
             {
                 continue;
             }

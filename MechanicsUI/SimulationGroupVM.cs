@@ -63,9 +63,11 @@ public class ConfigurableSimulationGroupVM : SimulationGroupVM
     private static readonly IReadOnlyList<string> sSimulationNames = typeof(Simulations).GetMethods().Where(m => m.ReturnType == typeof(Simulation)).Select(p => p.Name).ToArray();
     public override IReadOnlyList<string> SimulationNames => sSimulationNames;
 
-    private static readonly IReadOnlyList<GravityType> sGravityStyles = Enum.GetValues<GravityType>();
-    public static IReadOnlyList<GravityType> GravityStyles => sGravityStyles;
+    private static readonly IReadOnlyList<GravityType> sGravityTypes = Enum.GetValues<GravityType>();
+    public static IReadOnlyList<GravityType> GravityTypes => sGravityTypes;
     public GravityType Gravity { get; set; } = GravityType.Newton_Pointlike;
+
+    public bool CombineIfOverlapping { get; set; }
 
     public bool EnableDrag { get; set; }
 
@@ -86,6 +88,7 @@ public class ConfigurableSimulationGroupVM : SimulationGroupVM
         base.ConfigureSimulation(sim);
 
         sim.GravityConfig = Gravity;
+        sim.CombineIfOverlapping = CombineIfOverlapping;
         sim.DragCoefficient = EnableDrag ? 1 : 0;
     }
 

@@ -14,7 +14,7 @@ public class SimulationVM : INotifyPropertyChanged
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
     public BodyVM[] BodyVMs { get; }
-    public string SimTimeString => Model.GetTimeString();
+    public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
     public double CanvasTranslateX { get; private set; }
     public double CanvasTranslateY { get; private set; }
     public double CanvasScaleX { get; private set; } = 1;
@@ -69,7 +69,7 @@ public class SimulationVM : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    private static readonly PropertyChangedEventArgs SimTimeStringChangedArgs = new(nameof(SimTimeString));
+    private static readonly PropertyChangedEventArgs StateSummaryChangedArgs = new(nameof(StateSummary));
     private static readonly PropertyChangedEventArgs CanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
     private static readonly PropertyChangedEventArgs CanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
     private static readonly PropertyChangedEventArgs CanvasScaleXChangedArgs = new(nameof(CanvasScaleX));
@@ -77,7 +77,7 @@ public class SimulationVM : INotifyPropertyChanged
 
     private void RefreshSim()
     {
-        PropertyChanged?.Invoke(this, SimTimeStringChangedArgs);
+        PropertyChanged?.Invoke(this, StateSummaryChangedArgs);
         foreach (var bodyVM in BodyVMs)
         {
             bodyVM.Refresh();

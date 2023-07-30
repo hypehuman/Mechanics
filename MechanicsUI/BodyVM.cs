@@ -11,14 +11,13 @@ public class BodyVM : INotifyPropertyChanged
 {
     public Body Model { get; }
     public Simulation Simulation { get; }
-    public double RadiusPix { get; }
+    public double RadiusPix => Model.DisplayRadius;
     public Brush Fill { get; }
 
     public BodyVM(Body model, Simulation simulation)
     {
         Model = model;
         Simulation = simulation;
-        RadiusPix = Math.Max(1, Model.DisplayRadius);
         Fill = GetBrush();
     }
 
@@ -99,12 +98,17 @@ public class BodyVM : INotifyPropertyChanged
         return Math.Min(Math.Min(a, b), c);
     }
 
-    public Point CenterPix => new(Model.Position.X, Model.Position.Y);
+    public Point CenterPix => Model.Exists ? new(Model.Position.X, Model.Position.Y) : new(double.NaN, double.NaN);
 
     public int PanelZIndex
     {
         get
         {
+            if (!Model.Exists)
+            {
+                return 0;
+            }
+
             // Compute Z scaled to the range [0,1] relative to the simulation bounds.
             var z = Model.Position.Z;
             SimulationVM.Sort(Simulation.DisplayBound0.Z, Simulation.DisplayBound1.Z, out var zMin, out var zMax);
@@ -129,10 +133,12 @@ public class BodyVM : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     private static readonly PropertyChangedEventArgs CenterPointChangedArgs = new(nameof(CenterPix));
     private static readonly PropertyChangedEventArgs PanelZIndexChangedArgs = new(nameof(PanelZIndex));
+    private static readonly PropertyChangedEventArgs RadiusPixChangedArgs = new(nameof(RadiusPix));
 
     public void Refresh()
     {
         PropertyChanged?.Invoke(this, CenterPointChangedArgs);
         PropertyChanged?.Invoke(this, PanelZIndexChangedArgs);
+        PropertyChanged?.Invoke(this, RadiusPixChangedArgs);
     }
 }
