@@ -13,7 +13,7 @@ public class Body
     public double Radius { get; set; }
     public double DisplayRadius { get; set; }
 
-    public double Volume => 4d / 3 * Math.PI * Radius * Radius * Radius;
+    public double Volume => Constants.SphereRadiusToVolume(Radius);
     public double Density => Mass / Volume;
 
     public Body(Simulation simulation, string name = "b", double mass = 0, double radius = 0, double? displayRadius = null, Vector<double>? position = null, Vector<double>? velocity = null)

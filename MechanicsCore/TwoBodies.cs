@@ -25,7 +25,7 @@ public class TwoBodies : RandomSimulation
             var fraction = i == 0 ? fraction0 : 1 - fraction0;
             var bodyMass = totalMass * fraction;
             var bodyVolume = totalVolume * fraction;
-            var bodyRadius = Math.Pow(bodyVolume * 3 / Math.PI, 1d / 3);
+            var bodyRadius = Constants.SphereVolumeToRadius(bodyVolume);
             var position = Falling.RandomPointInBall(Random, systemRadius);
             bodies[i] = new Body(this,
                 mass: bodyMass,

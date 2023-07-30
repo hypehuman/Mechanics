@@ -19,7 +19,7 @@ public class Falling : RandomSimulation
         DisplayBound0 = -DisplayBound1;
         var bodyMass = systemMass / numBodies;
         var bodyVolume = totalVolume / numBodies;
-        var bodyRadius = Math.Pow(bodyVolume * 3 / Math.PI, 1d / 3);
+        var bodyRadius = Constants.SphereVolumeToRadius(bodyVolume);
         var bodies = new Body[numBodies];
         Vector<double> systemMomentum = new DenseVector(3);
         for (int i = 0; i < numBodies; i++)

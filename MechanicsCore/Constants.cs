@@ -24,5 +24,14 @@ public static class Constants
 
     public static readonly double EarthRadius = SphereVolumeToRadius(EarthVolume);
 
-    public static double SphereVolumeToRadius(double volume) => Math.Pow(volume * 3 / Math.PI, 1d / 3);
+    private const double FourThirdsPi = 4 * Math.PI / 3;
+
+    /// <summary>
+    /// Precompute the inverse of <see cref="FourThirdsPi"/> because multiplication is faster than division.
+    /// </summary>
+    private const double ThreeOverFourPi = 1 / FourThirdsPi;
+
+    public static double SphereRadiusToVolume(double radius) => FourThirdsPi * radius * radius * radius;
+
+    public static double SphereVolumeToRadius(double volume) => Math.Cbrt(volume * ThreeOverFourPi);
 }
