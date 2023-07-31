@@ -9,9 +9,18 @@ public static class Simulations
         seed
     );
 
-    /// <summary>
-    /// Seed is unused, but this signature is important so that it can be found via reflection.
-    /// </summary>
+    public static Simulation Line3Moons(int? seed = null) => new Line(
+        3,
+        Constants.MoonMass,
+        Constants.MoonRadius
+    );
+
+    public static Simulation Line4Moons(int? seed = null) => new Line(
+        4,
+        Constants.MoonMass,
+        Constants.MoonRadius
+    );
+
     public static Simulation SunEarthMoon(int? seed = null) => new SunEarthMoon();
 
     public static Simulation Falling_Tiny(int? seed = null) => Falling(4, seed);
