@@ -42,6 +42,8 @@ public class Body
     public Vector3D Position { get; set; }
     public Vector3D Velocity { get; set; }
 
+    public Vector3D ComputeMomentum() => Mass * Velocity;
+
     public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies)
     {
         var a = default(Vector3D);

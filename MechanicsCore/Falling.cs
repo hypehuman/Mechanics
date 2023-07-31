@@ -22,7 +22,6 @@ public class Falling : RandomSimulation
         DisplayBound1 = new(bound, bound, bound);
         DisplayBound0 = -DisplayBound1;
         var bodies = new Body[numBodies];
-        Vector3D systemMomentum = default;
         for (int i = 0; i < numBodies; i++)
         {
             var bodyPosition = RandomPointInBall(Random, systemRadius);
@@ -33,18 +32,9 @@ public class Falling : RandomSimulation
                 position: bodyPosition,
                 velocity: bodyVelocity
             );
-            var bodyMomentum = bodyMass * bodyVelocity;
-            systemMomentum += bodyMomentum;
         }
-
-        // Adjust our frame of reference such that the system's center of mass is at rest
-        var systemVelocity = systemMomentum / systemMass;
-        foreach (var body in bodies)
-        {
-            body.Velocity -= systemVelocity;
-        }
-
         Bodies = bodies;
+        BodySystem.SetNetZeroMomentum(bodies);
     }
 
     public static Vector3D RandomPointInBall(Random random, double radius)

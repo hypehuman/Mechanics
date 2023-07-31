@@ -36,4 +36,6 @@ public static class Simulations
         Constants.MoonOrbitEarthSpeed / Math.Sqrt(10),
         seed
     );
+
+    public static Simulation MoonFromRing(int? seed = null) => new MoonFromRing(1024, seed);
 }
