@@ -18,6 +18,7 @@ public abstract class Simulation
     #region Configurable
 
     public GravityType GravityConfig { get; set; }
+    public static double BuoyantGravityRatio => 1; // Increasing this to 10 lets us line up more moons without them collapsing in on each other.
     public double DragCoefficient { get; set; }
 
     #endregion
