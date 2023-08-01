@@ -1,4 +1,6 @@
-﻿namespace MechanicsCore;
+﻿using System.Security.Cryptography;
+
+namespace MechanicsCore;
 
 internal class BodyColors
 {
@@ -102,13 +104,9 @@ internal class BodyColors
 
     private static byte Hash8(byte[] input)
     {
-        byte hash = 0;
-        int q = 33149;
-        foreach (byte b in input)
-        {
-            hash += (byte)(b * q);
-        }
-        return hash;
+        var hash256 = SHA256.HashData(input);
+        var hash8 = hash256[0];
+        return hash8;
     }
 
     #endregion
