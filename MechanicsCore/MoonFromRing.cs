@@ -6,7 +6,7 @@ public class MoonFromRing : RandomSimulation
 {
     private readonly int _numMoonFragments;
 
-    public override double dt_step => 8;
+    public override double dt_step => 1;
     protected override int steps_per_leap => 128;
 
     public override Vector3D DisplayBound0 { get; }
