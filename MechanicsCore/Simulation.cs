@@ -202,14 +202,19 @@ public abstract class Simulation
 
     public virtual IEnumerable<string> GetConfigLines()
     {
+        yield return $"Step time: {DoubleToString(dt_step)}";
+
         if (GravityConfig != GravityType.None)
             yield return $"Gravity: {GravityConfig}";
+
+        if (GravityConfig == GravityType.Newton_Buoyant)
+            yield return $"Buoyant gravity ratio: {DoubleToString(BuoyantGravityRatio)}";
 
         if (CombineIfOverlapping)
             yield return "Combine bodies if they overlap";
 
         if (DragCoefficient != 0)
-            yield return $"Drag coefficient: {DragCoefficient}";
+            yield return $"Drag coefficient: {DoubleToString(DragCoefficient)}";
     }
 
     public IEnumerable<string> GetStateSummaryLines()

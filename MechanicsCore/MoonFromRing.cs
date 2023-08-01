@@ -4,6 +4,8 @@ namespace MechanicsCore;
 
 public class MoonFromRing : RandomSimulation
 {
+    private readonly int _numMoonFragments;
+
     public override double dt_step => 8;
     protected override int steps_per_leap => 128;
 
@@ -14,14 +16,16 @@ public class MoonFromRing : RandomSimulation
     public MoonFromRing(int numMoonFragments, int? seed = null)
         : base(seed)
     {
+        _numMoonFragments = numMoonFragments;
+
         DisplayBound1 = new(Constants.EarthMoonDistance * 1.1, Constants.EarthMoonDistance * 1.1, Constants.EarthRadius * 1.1);
         DisplayBound0 = -DisplayBound1;
-        var fragmentMass = Constants.MoonMass / numMoonFragments;
-        var fragmentVolume = Constants.MoonVolume / numMoonFragments;
+        var fragmentMass = Constants.MoonMass / _numMoonFragments;
+        var fragmentVolume = Constants.MoonVolume / _numMoonFragments;
         var fragmentRadius = Constants.SphereVolumeToRadius(fragmentVolume);
         var fragmentDisplayRadius = Constants.SphereVolumeToRadius(fragmentVolume * 1000);
-        var bodies = new Body[numMoonFragments + 1];
-        for (int i = 0; i < numMoonFragments; i++)
+        var bodies = new Body[_numMoonFragments + 1];
+        for (int i = 0; i < _numMoonFragments; i++)
         {
             var angle01 = Random.NextDouble();
             var angleRad = angle01 * 2 * Math.PI;
@@ -35,7 +39,7 @@ public class MoonFromRing : RandomSimulation
                 velocity: new(Constants.MoonOrbitEarthSpeed * -sin, Constants.MoonOrbitEarthSpeed * cos, 0)
             );
         }
-        bodies[numMoonFragments] = new(this,
+        bodies[_numMoonFragments] = new(this,
             name: "Earth",
             color: BodyColors.Earth,
             mass: Constants.EarthMass,
@@ -43,5 +47,13 @@ public class MoonFromRing : RandomSimulation
         );
         Bodies = bodies;
         BodySystem.SetNetZeroMomentum(bodies);
+    }
+
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"Number of Moon fragments: {_numMoonFragments}";
     }
 }

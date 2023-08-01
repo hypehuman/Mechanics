@@ -4,6 +4,10 @@ namespace MechanicsCore;
 
 public class Line : Simulation
 {
+    private readonly int _numBodies;
+    private readonly double _bodyMass;
+    private readonly double _bodyRadius;
+
     public override double dt_step => 1;
     protected override int steps_per_leap => 128;
 
@@ -13,17 +17,31 @@ public class Line : Simulation
 
     public Line(int numBodies, double bodyMass, double bodyRadius)
     {
-        var bodies = new Body[numBodies];
-        for (var i = 0; i < numBodies; i++)
+        _numBodies = numBodies;
+        _bodyMass = bodyMass;
+        _bodyRadius = bodyRadius;
+
+        var bodies = new Body[_numBodies];
+        for (var i = 0; i < _numBodies; i++)
         {
             bodies[i] = new Body(this,
-                mass: bodyMass,
-                radius: bodyRadius,
-                position: new((i * 2 + 1) * bodyRadius, 0, 0)
+                mass: _bodyMass,
+                radius: _bodyRadius,
+                position: new((i * 2 + 1) * _bodyRadius, 0, 0)
             );
         }
         Bodies = bodies;
-        DisplayBound0 = new(0, -bodyRadius, -bodyRadius);
-        DisplayBound1 = new(numBodies * 2 * bodyRadius, bodyRadius, bodyRadius);
+        DisplayBound0 = new(0, -_bodyRadius, -_bodyRadius);
+        DisplayBound1 = new(_numBodies * 2 * _bodyRadius, _bodyRadius, _bodyRadius);
+    }
+
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"Number of bodies: {_numBodies}";
+        yield return $"Body mass: {DoubleToString(_bodyMass)}";
+        yield return $"Body radius: {DoubleToString(_bodyRadius)}";
     }
 }

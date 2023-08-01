@@ -4,6 +4,12 @@ namespace MechanicsCore;
 
 public class Falling : RandomSimulation
 {
+    private readonly double _systemRadius;
+    private readonly int _numBodies;
+    private readonly double _totalMass;
+    private readonly double _totalVolume;
+    private readonly double _maxVelocity;
+
     public override double dt_step => 8;
     protected override int steps_per_leap => 128;
 
@@ -11,21 +17,27 @@ public class Falling : RandomSimulation
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
 
-    public Falling(double systemRadius, int numBodies, double systemMass, double totalVolume, double maxVelocity, int? seed = null)
+    public Falling(double systemRadius, int numBodies, double totalMass, double totalVolume, double maxVelocity, int? seed = null)
         : base(seed)
     {
-        var bodyMass = systemMass / numBodies;
-        var bodyVolume = totalVolume / numBodies;
+        _systemRadius = systemRadius;
+        _numBodies = numBodies;
+        _totalMass = totalMass;
+        _totalVolume = totalVolume;
+        _maxVelocity = maxVelocity;
+
+        var bodyMass = _totalMass / _numBodies;
+        var bodyVolume = _totalVolume / _numBodies;
         var bodyRadius = Constants.SphereVolumeToRadius(bodyVolume);
-        var solidRadius = Constants.SphereVolumeToRadius(totalVolume); // the radius we would get if all the bodies were to combine into one
-        var bound = (systemRadius + solidRadius) * 2;
+        var solidRadius = Constants.SphereVolumeToRadius(_totalVolume); // the radius we would get if all the bodies were to combine into one
+        var bound = (_systemRadius + solidRadius) * 2;
         DisplayBound1 = new(bound, bound, bound);
         DisplayBound0 = -DisplayBound1;
-        var bodies = new Body[numBodies];
-        for (int i = 0; i < numBodies; i++)
+        var bodies = new Body[_numBodies];
+        for (int i = 0; i < _numBodies; i++)
         {
-            var bodyPosition = RandomPointInBall(Random, systemRadius);
-            var bodyVelocity = maxVelocity == 0 ? default : RandomPointInBall(Random, maxVelocity);
+            var bodyPosition = RandomPointInBall(Random, _systemRadius);
+            var bodyVelocity = _maxVelocity == 0 ? default : RandomPointInBall(Random, _maxVelocity);
             bodies[i] = new Body(this,
                 mass: bodyMass,
                 radius: bodyRadius,
@@ -48,5 +60,17 @@ public class Falling : RandomSimulation
             v = new(x, y, z);
         } while (v.Length > radius);
         return v;
+    }
+
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"System radius: {DoubleToString(_systemRadius)}";
+        yield return $"Number of bodies: {_numBodies}";
+        yield return $"Total mass: {DoubleToString(_totalMass)}";
+        yield return $"Total volume: {DoubleToString(_totalVolume)}";
+        yield return $"Max velocity: {DoubleToString(_maxVelocity)}";
     }
 }

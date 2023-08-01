@@ -4,6 +4,8 @@ namespace MechanicsCore;
 
 public class ColorWheel : Simulation
 {
+    private readonly Func<int, BodyColor> _getColor;
+
     public override double dt_step => 0;
     protected override int steps_per_leap => 0;
 
@@ -13,6 +15,8 @@ public class ColorWheel : Simulation
 
     public ColorWheel(Func<int, BodyColor> getColor)
     {
+        _getColor = getColor;
+
         const int numWheels = 3;
         const int numColorsPerWheel = 256;
         const double bodyRadius = Math.PI / numColorsPerWheel;
@@ -28,7 +32,7 @@ public class ColorWheel : Simulation
             for (var bodyJ = 0; bodyJ < numColorsPerWheel; bodyJ++)
             {
                 var colorI = wheelI * numColorsPerWheel + bodyJ;
-                var color = getColor(colorI);
+                var color = _getColor(colorI);
                 var angle01 = (double)bodyJ / numColorsPerWheel;
                 var angleRad = angle01 * 2 * Math.PI;
                 var cos = Math.Cos(angleRad);
@@ -45,4 +49,12 @@ public class ColorWheel : Simulation
     }
 
     private static double GetWheelRadius(int wheelI, double bodyRadius) => 1 + wheelI * 2 * bodyRadius;
+
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"Color getter: {_getColor.Method.Name}";
+    }
 }
