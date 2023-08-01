@@ -32,6 +32,7 @@ public class MoonFromRing : RandomSimulation
             var cos = Math.Cos(angleRad);
             var sin = Math.Sin(angleRad);
             bodies[i] = new(this,
+                color: BodyColors.GetCloseCyclicColor((int)(angle01 * 256)),
                 mass: fragmentMass,
                 radius: fragmentRadius,
                 displayRadius: fragmentDisplayRadius,
