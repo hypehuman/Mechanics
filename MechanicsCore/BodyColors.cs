@@ -50,12 +50,12 @@ internal class BodyColors
     #region Spaced Cyclic Colors
 
     /// <summary>
-    /// Returns colors with high contrast between adjacent values.
-    /// Repeats after a while.
+    /// Returns colors with high contrast between small groups of adjacent values.
+    /// Repeats every 256 values.
     /// </summary>
     public static BodyColor GetSpacedCyclicColor(int id)
     {
-        const double increment = (Constants.GoldenRatio - 1) * 256;
+        const double increment = 99;
         var hueByte = (byte)((increment * id) % 256);
         return sSatBrightColorsByHue[hueByte];
     }

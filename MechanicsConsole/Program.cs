@@ -9,8 +9,6 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        ColorSpacing.FindBestColorSpacing();
-
         Console.WriteLine("Running performance tests:");
 
         Vector3D displacement = new(1, 1, 1);
