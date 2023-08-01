@@ -51,42 +51,13 @@ internal class BodyColors
 
     /// <summary>
     /// Returns colors with high contrast between adjacent values.
-    /// Repeats every 256 values.
+    /// Repeats after a while.
     /// </summary>
     public static BodyColor GetSpacedCyclicColor(int id)
     {
-        var hueByte = sSpacedBytes[id % 256];
+        const double increment = (Constants.GoldenRatio - 1) * 256;
+        var hueByte = (byte)((increment * id) % 256);
         return sSatBrightColorsByHue[hueByte];
-    }
-
-    private static readonly IReadOnlyList<byte> sSpacedBytes = GetSpaced01s(256).Select(d => d * 256).Select(Convert.ToByte).ToArray();
-
-    private static double[] GetSpaced01s(int n)
-    {
-        var result = new double[n];
-        // start from 1, since the value at i=0 is 0 by default
-        int i = 1;
-        for (int setI = 0; true; setI++)
-        {
-            foreach (var value in GetNextRotated(setI, result))
-            {
-                result[i++] = value;
-                if (i == n)
-                {
-                    return result;
-                }
-            }
-        }
-    }
-
-    private static IEnumerable<double> GetNextRotated(int setI, IReadOnlyList<double> precomputed)
-    {
-        var n = 1 << setI;
-        var offset = 0.5 / n;
-        for (int i = 0; i < n; i++)
-        {
-            yield return (offset + precomputed[i]) % 1;
-        }
     }
 
     #endregion
