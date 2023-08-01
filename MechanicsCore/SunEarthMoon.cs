@@ -21,6 +21,7 @@ public class SunEarthMoon : Simulation
         bodies = new[] {
             new Body(this,
                 name: "Sun",
+                color: BodyColors.Sun,
                 mass: Constants.SunMass,
                 displayRadius: Constants.SunEarthDistance / 64,
                 position: default,
@@ -29,6 +30,7 @@ public class SunEarthMoon : Simulation
             ),
             new Body(this,
                 name: "Earth",
+                color: BodyColors.Earth,
                 mass: Constants.EarthMass,
                 displayRadius: Constants.EarthMoonDistance - moonDisplayRadius,
                 position: new(Constants.SunEarthDistance, 0, 0),
@@ -36,6 +38,7 @@ public class SunEarthMoon : Simulation
             ),
             new Body(this,
                 name: "Moon",
+                color: BodyColors.Moon,
                 mass: Constants.MoonMass,
                 displayRadius: moonDisplayRadius,
                 position: new(Constants.SunEarthDistance + Constants.EarthMoonDistance, 0, 0),

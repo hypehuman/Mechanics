@@ -37,6 +37,7 @@ public class MoonFromRing : RandomSimulation
         }
         bodies[numMoonFragments] = new(this,
             name: "Earth",
+            color: BodyColors.Earth,
             mass: Constants.EarthMass,
             radius: Constants.EarthRadius
         );

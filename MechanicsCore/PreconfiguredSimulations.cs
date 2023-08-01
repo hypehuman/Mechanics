@@ -108,4 +108,8 @@ public static class PreconfiguredSimulations
             return sim;
         }
     }
+
+    public static Simulation ColorWheel_CloseCyclic { get; } = new ColorWheel(BodyColors.GetCloseCyclicColor);
+    public static Simulation ColorWheel_SpacedCyclic { get; } = new ColorWheel(BodyColors.GetSpacedCyclicColor);
+    public static Simulation ColorWheel_HashedPseudorandom { get; } = new ColorWheel(BodyColors.GetHashedPseudorandomColor);
 }

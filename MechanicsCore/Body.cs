@@ -8,6 +8,7 @@ public class Body
     public Simulation Simulation { get; }
     public int ID { get; }
     public string Name { get; }
+    public BodyColor Color { get; set; }
     public double Mass { get; set; }
     public double Radius { get; set; }
     public double DisplayRadius { get; set; }
@@ -27,11 +28,12 @@ public class Body
 
     public double Density => Mass / Volume;
 
-    public Body(Simulation simulation, string name = "b", double mass = 0, double radius = 0, double? displayRadius = null, Vector3D position = default, Vector3D velocity = default)
+    public Body(Simulation simulation, string? name = null, BodyColor? color = null, double mass = 0, double radius = 0, double? displayRadius = null, Vector3D position = default, Vector3D velocity = default)
     {
         Simulation = simulation;
         ID = Simulation.NextBodyID;
-        Name = name;
+        Name = name ?? ID.ToString();
+        Color = color ?? BodyColors.GetSpacedCyclicColor(ID);
         Mass = mass;
         Radius = radius;
         DisplayRadius = displayRadius ?? radius;
