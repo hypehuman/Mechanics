@@ -11,18 +11,19 @@ public class BodyVM : INotifyPropertyChanged
     public Body Model { get; }
     public Simulation Simulation { get; }
     public double RadiusPix => Model.DisplayRadius;
-    public Brush Fill { get; }
+    private BodyColor _latestColor; // brushes are expensive, so only make a new one if necessary
+    public Brush Fill { get; private set; }
 
     public BodyVM(Body model, Simulation simulation)
     {
         Model = model;
         Simulation = simulation;
-        Fill = MakeBrush();
+        Fill = MakeBrush(Model.Color);
     }
 
-    private Brush MakeBrush()
+    private static Brush MakeBrush(BodyColor bc)
     {
-        var winMediaColor = Color.FromRgb(Model.Color.R, Model.Color.G, Model.Color.B);
+        var winMediaColor = Color.FromRgb(bc.R, bc.G, bc.B);
         var brush = new SolidColorBrush(winMediaColor);
         brush.Freeze();
         return brush;
@@ -64,11 +65,27 @@ public class BodyVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs CenterPointChangedArgs = new(nameof(CenterPix));
     private static readonly PropertyChangedEventArgs PanelZIndexChangedArgs = new(nameof(PanelZIndex));
     private static readonly PropertyChangedEventArgs RadiusPixChangedArgs = new(nameof(RadiusPix));
+    private static readonly PropertyChangedEventArgs FillChangedArgs = new(nameof(Fill));
 
     public void Refresh()
     {
         PropertyChanged?.Invoke(this, CenterPointChangedArgs);
         PropertyChanged?.Invoke(this, PanelZIndexChangedArgs);
         PropertyChanged?.Invoke(this, RadiusPixChangedArgs);
+        RefreshColor();
+    }
+
+    private void RefreshColor()
+    {
+        var newColor = Model.Color;
+        if (newColor == _latestColor)
+        {
+            // Brushes are expensive, so only make a new one if necessary.
+            return;
+        }
+
+        _latestColor = newColor;
+        Fill = MakeBrush(newColor);
+        PropertyChanged?.Invoke(this, FillChangedArgs);
     }
 }
