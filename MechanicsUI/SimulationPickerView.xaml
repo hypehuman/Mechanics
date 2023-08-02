@@ -15,12 +15,26 @@
         <GroupBox Margin="5" Padding="5" DockPanel.Dock="Top" Header="Options">
             <CheckBox IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
         </GroupBox>
-        <GroupBox Margin="5" Padding="5" Header="Preconfigured" DataContext="{Binding PreconfiguredVM}">
-            <local:SimulationGroupView />
+        <GroupBox Margin="5" Padding="5" Header="Preconfigured">
+            <ItemsControl HorizontalAlignment="Left" VerticalAlignment="Top" ItemsSource="{Binding PreconfigNames}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button
+                            HorizontalAlignment="Left"
+                            Content="{Binding}"
+                            Click="PreconfiguredButton_Click"
+                        />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </GroupBox>
-        <GroupBox Margin="5" Padding="5" Header="Configurable" DataContext="{Binding ConfigurableVM}">
-            <StackPanel>
+        <StackPanel>
+            <GroupBox Margin="5" Padding="5" Header="Initial Configuration">
                 <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Text="Scenario: " />
+                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding SelectedScenarioName}" ItemsSource="{Binding ScenarioNames}" />
+                    </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="Seed (empty for random): " />
                         <TextBox VerticalAlignment="Center" MinWidth="100">
@@ -33,18 +47,23 @@
                             </TextBox.Text>
                         </TextBox>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="Gravity: " />
-                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding GravityConfig}" ItemsSource="{Binding GravityTypes}" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="Collision handling: " />
-                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding CollisionConfig}" ItemsSource="{Binding CollisionTypes}" />
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Margin="5" Padding="5" Header="Step Configuration">
+                <StackPanel>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="Gravity: " />
+                            <ComboBox VerticalAlignment="Center" SelectedItem="{Binding GravityConfig}" ItemsSource="{Binding GravityTypes}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="Collision handling: " />
+                            <ComboBox VerticalAlignment="Center" SelectedItem="{Binding CollisionConfig}" ItemsSource="{Binding CollisionTypes}" />
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
-                <Separator Height="10" />
-                <local:SimulationGroupView />
-            </StackPanel>
-        </GroupBox>
+            </GroupBox>
+            <Button Margin="5" Click="LaunchButton_Click">Launch Simulation</Button>
+        </StackPanel>
     </DockPanel>
 </UserControl>
