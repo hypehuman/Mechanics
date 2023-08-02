@@ -8,9 +8,6 @@ public class TwoBodies : RandomSimulation
     private readonly double _totalMass;
     private readonly double _totalVolume;
 
-    public override double dt_step => 1;
-    protected override int steps_per_leap => 1024;
-
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
@@ -18,6 +15,9 @@ public class TwoBodies : RandomSimulation
     public TwoBodies(double systemRadius, double totalMass, double totalVolume, int? seed = null)
         : base(seed)
     {
+        StepConfig.StepTime = 1;
+        StepConfig.StepsPerLeap = 1024;
+
         _systemRadius = systemRadius;
         _totalMass = totalMass;
         _totalVolume = totalVolume;

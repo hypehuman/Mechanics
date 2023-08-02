@@ -10,9 +10,6 @@ public class Falling : RandomSimulation
     private readonly double _totalVolume;
     private readonly double _maxVelocity;
 
-    public override double dt_step => 8;
-    protected override int steps_per_leap => 128;
-
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
@@ -20,6 +17,9 @@ public class Falling : RandomSimulation
     public Falling(double systemRadius, int numBodies, double totalMass, double totalVolume, double maxVelocity, int? seed = null)
         : base(seed)
     {
+        StepConfig.StepTime = 8;
+        StepConfig.StepsPerLeap = 128;
+
         _systemRadius = systemRadius;
         _numBodies = numBodies;
         _totalMass = totalMass;

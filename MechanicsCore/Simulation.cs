@@ -1,31 +1,30 @@
 ﻿using MathNet.Spatial.Euclidean;
+using MechanicsCore.StepConfiguring;
 
 namespace MechanicsCore;
 
 public abstract class Simulation
 {
+    #region Current state
+
     private int sPrevBodyID = -1;
     public int NextBodyID => Interlocked.Increment(ref sPrevBodyID);
 
     public double t { get; private set; }
-    public abstract double dt_step { get; }
-    protected abstract int steps_per_leap { get; }
     public abstract Vector3D DisplayBound0 { get; }
     public abstract Vector3D DisplayBound1 { get; }
 
     public abstract IReadOnlyList<Body> Bodies { get; }
     public IEnumerable<Body> ExistingBodies => Bodies.Where(b => b.Exists);
 
-    #region Configurable
-
-    public GravityType GravityConfig { get; set; }
-    public static double BuoyantGravityRatio => 1; // Increasing this to 10 lets us line up more moons without them collapsing in on each other.
-    public bool CombineIfOverlapping { get; set; }
-    public double DragCoefficient { get; set; }
-
     #endregion
 
-    public bool TakeSimpleShortcut => GravityConfig == GravityType.Newton_Pointlike && DragCoefficient == 0;
+    public InitialConfiguration InitConfig { get; } = new InitialConfiguration();
+    public StepConfiguration StepConfig { get; } = new StepConfiguration();
+
+    public bool TakeSimpleShortcut =>
+        StepConfig.GravityConfig == GravityType.Newton_Pointlike &&
+        StepConfig.CollisionConfig != CollisionType.Drag;
 
     private void Step()
     {
@@ -43,15 +42,15 @@ public abstract class Simulation
         {
             var body = Bodies[i];
             if (!body.Exists) continue;
-            body.Step(dt_step, a[i]);
+            body.Step(StepConfig.StepTime, a[i]);
         };
 
-        if (CombineIfOverlapping)
+        if (StepConfig.CollisionConfig == CollisionType.Combine)
         {
             CombineOverlappingBodies();
         }
 
-        t += dt_step;
+        t += StepConfig.StepTime;
     }
 
     private void CombineOverlappingBodies()
@@ -188,7 +187,7 @@ public abstract class Simulation
 
     public void Leap()
     {
-        for (int i = 0; i < steps_per_leap; i++)
+        for (int i = 0; i < StepConfig.StepsPerLeap; i++)
         {
             Step();
         }
@@ -202,19 +201,8 @@ public abstract class Simulation
 
     public virtual IEnumerable<string> GetConfigLines()
     {
-        yield return $"Step time: {DoubleToString(dt_step)}";
-
-        if (GravityConfig != GravityType.None)
-            yield return $"Gravity: {GravityConfig}";
-
-        if (GravityConfig == GravityType.Newton_Buoyant)
-            yield return $"Buoyant gravity ratio: {DoubleToString(BuoyantGravityRatio)}";
-
-        if (CombineIfOverlapping)
-            yield return "Combine bodies if they overlap";
-
-        if (DragCoefficient != 0)
-            yield return $"Drag coefficient: {DoubleToString(DragCoefficient)}";
+        foreach (var s in StepConfig.GetConfigLines())
+            yield return s;
     }
 
     public IEnumerable<string> GetStateSummaryLines()

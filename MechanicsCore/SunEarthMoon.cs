@@ -4,10 +4,6 @@ namespace MechanicsCore;
 
 public class SunEarthMoon : Simulation
 {
-    public override double dt_step => 16;
-    private const double leaps_per_year = 365.24;
-    protected override int steps_per_leap => Convert.ToInt32(Constants.SecondsPerYear / leaps_per_year / dt_step);
-
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
 
@@ -15,6 +11,10 @@ public class SunEarthMoon : Simulation
 
     public SunEarthMoon()
     {
+        StepConfig.StepTime = 16;
+        const double leaps_per_year = 365.24;
+        StepConfig.StepsPerLeap = Convert.ToInt32(Constants.SecondsPerYear / leaps_per_year / StepConfig.StepTime);
+
         var moonDisplayRadius = Constants.EarthMoonDistance * 0.25;
 
         var bodies = new Body[] {

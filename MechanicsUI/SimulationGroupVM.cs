@@ -1,4 +1,5 @@
 ﻿using MechanicsCore;
+using MechanicsCore.StepConfiguring;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -31,7 +32,7 @@ public abstract class SimulationGroupVM
         {
             throw new Exception($"Failed to make simulation '{name}': {ex.Message}", ex);
         }
-        ConfigureSimulation(sim);
+        SetStepConfiguration(sim);
         return new SimulationVM(sim, name)
         {
             IsAutoLeaping = PickerVM.AutoStart,
@@ -40,7 +41,7 @@ public abstract class SimulationGroupVM
 
     protected abstract Simulation? MakeSimulation(string name);
 
-    protected virtual void ConfigureSimulation(Simulation sim) { }
+    protected virtual void SetStepConfiguration(Simulation sim) { }
 }
 
 public class PreconfiguredSimulationGroupVM : SimulationGroupVM
@@ -65,11 +66,11 @@ public class ConfigurableSimulationGroupVM : SimulationGroupVM
 
     private static readonly IReadOnlyList<GravityType> sGravityTypes = Enum.GetValues<GravityType>();
     public static IReadOnlyList<GravityType> GravityTypes => sGravityTypes;
-    public GravityType Gravity { get; set; } = GravityType.Newton_Pointlike;
+    public GravityType GravityConfig { get; set; }
 
-    public bool CombineIfOverlapping { get; set; }
-
-    public bool EnableDrag { get; set; }
+    private static readonly IReadOnlyList<CollisionType> sCollisionTypes = Enum.GetValues<CollisionType>();
+    public static IReadOnlyList<CollisionType> CollisionTypes => sCollisionTypes;
+    public CollisionType CollisionConfig { get; set; }
 
     public string SeedString { get; set; } = string.Empty;
     private int? Seed => TryParseSeed(SeedString, out var seed) ? seed : null;
@@ -83,13 +84,16 @@ public class ConfigurableSimulationGroupVM : SimulationGroupVM
         return sim;
     }
 
-    protected override void ConfigureSimulation(Simulation sim)
+    protected override void SetStepConfiguration(Simulation sim)
     {
-        base.ConfigureSimulation(sim);
+        base.SetStepConfiguration(sim);
 
-        sim.GravityConfig = Gravity;
-        sim.CombineIfOverlapping = CombineIfOverlapping;
-        sim.DragCoefficient = EnableDrag ? 1 : 0;
+        // TODO: Configure step time
+        // TODO: Configure steps per leap
+        sim.StepConfig.GravityConfig = GravityConfig;
+        // TODO: Configure buoyancy ratio if relevant
+        sim.StepConfig.CollisionConfig = CollisionConfig;
+        // TODO: Configure drag coefficient if relevant
     }
 
     public static bool TryParseSeed(string seedString, out int? seed)

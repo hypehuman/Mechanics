@@ -1,5 +1,6 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.Rust.mechanics_fast;
+using MechanicsCore.StepConfiguring;
 
 namespace MechanicsCore;
 
@@ -69,6 +70,7 @@ public class Body
     private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2)
     {
         var sim = body1.Simulation;
+        var config = sim.StepConfig;
         var displacement = body2.Position - body1.Position;
         var m2 = body2.Mass;
 
@@ -83,7 +85,7 @@ public class Body
         var r1 = body1.Radius;
         var r2 = body2.Radius;
 
-        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, body1.Simulation.GravityConfig);
+        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, config.GravityConfig, config.BuoyantGravityRatio);
 
         if (distance > r1 + r2)
         {
@@ -108,7 +110,8 @@ public class Body
         double m2,
         double r1,
         double r2,
-        GravityType gravity
+        GravityType gravity,
+        double buoyantGravityRatio
     )
     {
         switch (gravity)
@@ -142,7 +145,7 @@ public class Body
                 // By the time you're fully engulfed, the gravity is the opposite of what it was when they were barely touching.
                 // From there it drops linearly, to zero when the centers are overlapping.
                 var engulfmentDistance = Math.Abs(r1 - r2);
-                var agAtEngulfmentDistance = -Simulation.BuoyantGravityRatio * agAtKissingDistance;
+                var agAtEngulfmentDistance = -buoyantGravityRatio * agAtKissingDistance;
 
                 if (distance > engulfmentDistance)
                 {
@@ -189,11 +192,12 @@ public class Body
 
     private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance)
     {
-        var dragCoefficient = body1.Simulation.DragCoefficient;
-        if (dragCoefficient == 0)
+        var config = body1.Simulation.StepConfig;
+        if (config.CollisionConfig != CollisionType.Drag)
         {
             return default;
         }
+        var dragCoefficient = config.DragCoefficient;
 
         // Assume the bodies are fully overlapping, which might not actually be true.
         var relativeVelocity = body2.Velocity - body1.Velocity;
@@ -228,7 +232,7 @@ public class Body
             var m2 = body2.Mass;
             var v1 = body1.Velocity;
             var v2 = body2.Velocity;
-            var t = body1.Simulation.dt_step;
+            var t = config.StepTime;
             fd = m1 / t * ((m1 * v1 + m2 * v2) / (m1 + m2) - v1);
 
             // Check again!
@@ -246,10 +250,11 @@ public class Body
 
     private static bool WillBounce(Body body1, Body body2, Vector3D relativeVelocity, Vector3D force, bool isDoubleCheck)
     {
+        var config = body1.Simulation.StepConfig;
         var nextAcceleration1 = force / body1.Mass;
         var nextAcceleration2 = -force / body2.Mass;
-        var changeInVelocity1 = body1.Simulation.dt_step * nextAcceleration1;
-        var changeInVelocity2 = body2.Simulation.dt_step * nextAcceleration2;
+        var changeInVelocity1 = config.StepTime * nextAcceleration1;
+        var changeInVelocity2 = config.StepTime * nextAcceleration2;
         var nextVelocity1 = body1.Velocity + changeInVelocity1;
         var nextVelocity2 = body2.Velocity + changeInVelocity2;
         var nextRelativeVelocity = nextVelocity2 - nextVelocity1;

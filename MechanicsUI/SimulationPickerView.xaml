@@ -35,10 +35,12 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="Gravity: " />
-                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding Gravity}" ItemsSource="{Binding GravityTypes}" />
+                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding GravityConfig}" ItemsSource="{Binding GravityTypes}" />
                     </StackPanel>
-                    <CheckBox IsChecked="{Binding CombineIfOverlapping}">Combine bodies if overlapping</CheckBox>
-                    <CheckBox IsChecked="{Binding EnableDrag}">Drag</CheckBox>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Text="Collision handling: " />
+                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding CollisionConfig}" ItemsSource="{Binding CollisionTypes}" />
+                    </StackPanel>
                 </StackPanel>
                 <Separator Height="10" />
                 <local:SimulationGroupView />

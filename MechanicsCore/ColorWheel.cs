@@ -6,9 +6,6 @@ public class ColorWheel : Simulation
 {
     private readonly Func<int, BodyColor> _getColor;
 
-    public override double dt_step => 0;
-    protected override int steps_per_leap => 0;
-
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }

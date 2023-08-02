@@ -6,9 +6,6 @@ public class MoonFromRing : RandomSimulation
 {
     private readonly int _numMoonFragments;
 
-    public override double dt_step => 1;
-    protected override int steps_per_leap => 128;
-
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
@@ -16,6 +13,9 @@ public class MoonFromRing : RandomSimulation
     public MoonFromRing(int numMoonFragments, int? seed = null)
         : base(seed)
     {
+        StepConfig.StepTime = 1;
+        StepConfig.StepsPerLeap = 128;
+
         _numMoonFragments = numMoonFragments;
 
         DisplayBound1 = new(Constants.EarthMoonDistance * 1.1, Constants.EarthMoonDistance * 1.1, Constants.EarthRadius * 1.1);

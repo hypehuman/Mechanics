@@ -1,12 +1,14 @@
-﻿namespace MechanicsCore;
+﻿using MechanicsCore.StepConfiguring;
+
+namespace MechanicsCore;
 
 public static class PreconfiguredSimulations
 {
     public static Simulation Default()
     {
         var sim = TwoBodies_Pointlike_0;
-        sim.GravityConfig = GravityType.Newton_Buoyant;
-        sim.DragCoefficient = 1;
+        sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
+        sim.StepConfig.CollisionConfig = CollisionType.Drag;
         return sim;
     }
 
@@ -15,7 +17,7 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.TwoBodies(0);
-            sim.GravityConfig = GravityType.Newton_Pointlike;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
             return sim;
         }
     }
@@ -25,7 +27,7 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.TwoBodies(0);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
             return sim;
         }
     }
@@ -35,8 +37,8 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.TwoBodies(0);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
-            sim.DragCoefficient = 1;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
+            sim.StepConfig.CollisionConfig = CollisionType.Drag;
             return sim;
         }
     }
@@ -46,7 +48,7 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.SunEarthMoon();
-            sim.GravityConfig = GravityType.Newton_Pointlike;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
             return sim;
         }
     }
@@ -56,8 +58,8 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.Falling_Tiny(0);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
-            sim.DragCoefficient = 1;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
+            sim.StepConfig.CollisionConfig = CollisionType.Drag;
             return sim;
         }
     }
@@ -70,8 +72,8 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.Falling_Tiny(287200931);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
-            sim.DragCoefficient = 1;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
+            sim.StepConfig.CollisionConfig = CollisionType.Drag;
             return sim;
         }
     }
@@ -81,8 +83,8 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.Falling_Small(0);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
-            sim.DragCoefficient = 1;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
+            sim.StepConfig.CollisionConfig = CollisionType.Drag;
             return sim;
         }
     }
@@ -92,8 +94,8 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.Falling_Large(0);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
-            sim.DragCoefficient = 1;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
+            sim.StepConfig.CollisionConfig = CollisionType.Drag;
             return sim;
         }
     }
@@ -103,8 +105,8 @@ public static class PreconfiguredSimulations
         get
         {
             var sim = Simulations.Falling_Huge(0);
-            sim.GravityConfig = GravityType.Newton_Buoyant;
-            sim.DragCoefficient = 1;
+            sim.StepConfig.GravityConfig = GravityType.Newton_Buoyant;
+            sim.StepConfig.CollisionConfig = CollisionType.Drag;
             return sim;
         }
     }
