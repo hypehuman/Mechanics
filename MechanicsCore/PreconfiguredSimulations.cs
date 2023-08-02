@@ -111,6 +111,28 @@ public static class PreconfiguredSimulations
         }
     }
 
+    public static Simulation MoonFromRing_Pointlike_Combine_Sane_0
+    {
+        get
+        {
+            var sim = Simulations.MoonFromRing_Sane(0);
+            sim.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
+            sim.StepConfig.CollisionConfig = CollisionType.Combine;
+            return sim;
+        }
+    }
+
+    public static Simulation MoonFromRing_Pointlike_Combine_Insane_102691847
+    {
+        get
+        {
+            var sim = Simulations.MoonFromRing_Insane(102691847);
+            sim.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
+            sim.StepConfig.CollisionConfig = CollisionType.Combine;
+            return sim;
+        }
+    }
+
     public static Simulation ColorWheel_CloseCyclic { get; } = new ColorWheel(BodyColors.GetCloseCyclicColor);
     public static Simulation ColorWheel_SpacedCyclic { get; } = new ColorWheel(BodyColors.GetSpacedCyclicColor);
     public static Simulation ColorWheel_HashedPseudorandom { get; } = new ColorWheel(BodyColors.GetHashedPseudorandomColor);

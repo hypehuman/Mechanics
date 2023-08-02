@@ -13,7 +13,7 @@ public class MoonFromRing : RandomSimulation
     public MoonFromRing(int numMoonFragments, int? seed = null)
         : base(seed)
     {
-        StepConfig.StepTime = 1;
+        StepConfig.StepTime = 8;
         StepConfig.StepsPerLeap = 128;
 
         _numMoonFragments = numMoonFragments;

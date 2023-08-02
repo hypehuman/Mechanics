@@ -23,9 +23,10 @@ internal class Program
         Vector3D c() => Constants.GravitationalConstant * m2 * displacement / (distance * distance * distance);
         HeadToHead(new[] { a, b, c }, 16, 100000000);
 
-        TestPerformance(PreconfiguredSimulations.SunEarthMoon_Pointlike);
-        TestPerformance(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0);
-        TestPerformance(PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0);
+        SeeHowLongItTakes(PreconfiguredSimulations.MoonFromRing_Pointlike_Combine_Insane_102691847, 5);
+        SeeHowFarItGoes(PreconfiguredSimulations.SunEarthMoon_Pointlike, 10000);
+        SeeHowFarItGoes(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0, 10000);
+        SeeHowFarItGoes(PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0, 10000);
 
         Console.WriteLine();
         Console.WriteLine("Press Enter to start the simulation:");
@@ -82,11 +83,27 @@ internal class Program
         }
     }
 
-    private static void TestPerformance(Simulation sim)
+    private static void SeeHowLongItTakes(Simulation sim, int numLeaps)
+    {
+        var sw = Stopwatch.StartNew();
+        for (int leapI = 0; leapI < 5; leapI++)
+        {
+            sim.Leap();
+            Console.WriteLine("Leap " + leapI);
+            foreach (var line in sim.GetStateSummaryLines())
+            {
+                Console.WriteLine(line);
+            }
+            Console.WriteLine();
+        }
+        Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
+    }
+
+    private static void SeeHowFarItGoes(Simulation sim, int ms)
     {
         var numLeaps = 0;
         var sw = Stopwatch.StartNew();
-        while (sw.ElapsedMilliseconds < 10000)
+        while (sw.ElapsedMilliseconds < ms)
         {
             sim.Leap();
             numLeaps++;

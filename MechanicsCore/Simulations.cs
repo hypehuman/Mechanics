@@ -37,5 +37,6 @@ public static class Simulations
         seed
     );
 
-    public static Simulation MoonFromRing(int? seed = null) => new MoonFromRing(1024, seed);
+    public static Simulation MoonFromRing_Sane(int? seed = null) => new MoonFromRing(64, seed);
+    public static Simulation MoonFromRing_Insane(int? seed = null) => new MoonFromRing(1024, seed);
 }
