@@ -126,7 +126,7 @@ public class Body
                 // By the time you're fully engulfed, the gravity is the opposite of what it was when they were barely touching.
                 // From there it drops linearly, to zero when the centers are overlapping.
                 var engulfmentDistance = Math.Abs(r1 - r2);
-                var agAtEngulfmentDistance = -100 * agAtKissingDistance;
+                var agAtEngulfmentDistance = -agAtKissingDistance;
 
                 if (distance > engulfmentDistance)
                 {
