@@ -38,4 +38,6 @@ public static class Constants
     public static double SphereRadiusToVolume(double radius) => FourThirdsPi * radius * radius * radius;
 
     public static double SphereVolumeToRadius(double volume) => Math.Cbrt(volume * ThreeOverFourPi);
+
+    public const double GoldenRatio = 1.61803398874989484820458683436;
 }

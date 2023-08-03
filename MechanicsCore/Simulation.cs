@@ -104,6 +104,11 @@ public abstract class Simulation
             {
                 body.Position = WeightedAverage(group, b => b.Position, b => b.Mass);
                 body.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
+                body.Color = new(
+                    WeightedAverage(group, b => b.Color.R, b => b.Mass),
+                    WeightedAverage(group, b => b.Color.G, b => b.Mass),
+                    WeightedAverage(group, b => b.Color.B, b => b.Mass)
+                );
                 body.Mass = group.Sum(b => b.Mass);
                 body.Volume = group.Sum(b => b.Volume);
                 body.DisplayVolume = group.Sum(b => b.DisplayVolume);
@@ -144,6 +149,39 @@ public abstract class Simulation
 
         if (weightSum != 0)
             return valueSum / weightSum;
+        else
+            throw new DivideByZeroException($"Division of {valueSum} by zero.");
+    }
+
+    /// <summary>
+    /// Adapted from https://stackoverflow.com/a/3604761
+    /// </summary>
+    public static byte WeightedAverage<T>(IEnumerable<T> records, Func<T, byte> value, Func<T, double> weight)
+    {
+        if (records == null)
+            throw new ArgumentNullException(nameof(records), $"{nameof(records)} is null.");
+
+        int count = 0;
+        double valueSum = 0;
+        double weightSum = 0;
+
+        foreach (var record in records)
+        {
+            count++;
+            double recordWeight = weight(record);
+
+            valueSum += recordWeight * value(record);
+            weightSum += recordWeight;
+        }
+
+        if (count == 0)
+            throw new ArgumentException($"{nameof(records)} is empty.");
+
+        if (count == 1)
+            return value(records.Single());
+
+        if (weightSum != 0)
+            return Convert.ToByte(valueSum / weightSum);
         else
             throw new DivideByZeroException($"Division of {valueSum} by zero.");
     }
