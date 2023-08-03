@@ -10,7 +10,8 @@ pub extern "C" fn compute_gravitational_acceleration(displacement: Vector3<f64>,
     acceleration
 }
 
-fn compute_acceleration(masses: &[f64], positions: &[Vector3<f64>], index_of_self: usize) -> Vector3<f64> {
+#[no_mangle]
+pub extern "C" fn compute_acceleration(masses: &[f64], positions: &[Vector3<f64>], index_of_self: usize) -> Vector3<f64> {
     let mut acceleration = Vector3::new(0.0, 0.0, 0.0);
 
     for i in 0..masses.len() {
