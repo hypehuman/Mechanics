@@ -1,6 +1,7 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore;
 using MechanicsCore.Rust.mechanics_fast;
+using MechanicsCore.StepConfiguring;
 using System.Diagnostics;
 
 namespace MechanicsConsole;
@@ -12,8 +13,8 @@ internal class Program
         Console.WriteLine("Running performance tests:");
 
         var sim = PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0;
-        sim.GravityConfig = GravityType.Newton_Pointlike;
-        sim.DragCoefficient = 0;
+        sim.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
+        sim.StepConfig.CollisionConfig = CollisionType.None;
         if (!sim.TakeSimpleShortcut) { throw new Exception("Config should have made it simple."); }
         var n = sim.Bodies.Count;
         var m = new double[n];

@@ -36,16 +36,25 @@ public abstract class Simulation
 #if !DISABLE_RUST
         if (TakeSimpleShortcut)
         {
-            var m = new double[n];
-            var p = new Vector3D[n];
-            for (var i = 0; i < n; i++)
+            // The indexing in Bodies will be different from what we pass to Rust,
+            // since Rust doesn't yet know to ignore bodies that have stopped existing.
+            var numExistingBodies = ExistingBodies.Count();
+            var m = new double[numExistingBodies];
+            var p = new Vector3D[numExistingBodies];
+            int rustI = 0;
+            foreach (var body in ExistingBodies)
             {
-                m[i] = Bodies[i].Mass;
-                p[i] = Bodies[i].Position;
+                m[rustI] = body.Mass;
+                p[rustI] = body.Position;
+                rustI++;
             };
+            rustI = 0;
             for (var i = 0; i < n; i++)
             {
-                a[i] = mechanics_fast.ComputeAcceleration(m, p, i);
+                var body = Bodies[i];
+                if (!body.Exists) continue;
+                a[i] = mechanics_fast.ComputeAcceleration(m, p, rustI);
+                rustI++;
             };
         }
         else
@@ -53,9 +62,9 @@ public abstract class Simulation
         {
             for (var i = 0; i < n; i++)
             {
-            var body = Bodies[i];
-            if (!body.Exists) continue;
-            a[i] = body.ComputeAcceleration(Bodies);
+                var body = Bodies[i];
+                if (!body.Exists) continue;
+                a[i] = body.ComputeAcceleration(Bodies);
             };
         }
         for (var i = 0; i < n; i++)
