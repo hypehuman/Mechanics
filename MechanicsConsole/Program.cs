@@ -11,17 +11,54 @@ internal class Program
     {
         Console.WriteLine("Running performance tests:");
 
-        Vector3D displacement = new(1, 1, 1);
-        double m2 = 1;
-        double distance = displacement.Length;
-        Vector3D a() => mechanics_fast.compute_gravitational_acceleration(displacement, m2);
-        Vector3D b()
+        var sim = PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0;
+        sim.GravityConfig = GravityType.Newton_Pointlike;
+        sim.DragCoefficient = 0;
+        if (!sim.TakeSimpleShortcut) { throw new Exception("Config should have made it simple."); }
+        var n = sim.Bodies.Count;
+        var m = new double[n];
+        var p = new Vector3D[n];
+        for (var i = 0; i < n; i++)
         {
-            var x = displacement.Length;
-            return Constants.GravitationalConstant * m2 * displacement / (distance * distance * distance);
+            m[i] = sim.Bodies[i].Mass;
+            p[i] = sim.Bodies[i].Position;
+        };
+        Vector3D[] a()
+        {
+            var a = new Vector3D[n];
+            for (var i = 0; i < n; i++)
+            {
+                a[i] = mechanics_fast.compute_acceleration(m, p, i);
+            };
+            return a;
         }
-        Vector3D c() => Constants.GravitationalConstant * m2 * displacement / (distance * distance * distance);
-        HeadToHead(new[] { a, b, c }, 16, 100000000);
+        Vector3D[] b()
+        {
+            var n = sim.Bodies.Count;
+            var m = new double[n];
+            var p = new Vector3D[n];
+            for (var i = 0; i < n; i++)
+            {
+                m[i] = sim.Bodies[i].Mass;
+                p[i] = sim.Bodies[i].Position;
+            };
+            var a = new Vector3D[n];
+            for (var i = 0; i < n; i++)
+            {
+                mechanics_fast.compute_acceleration(m, p, i);
+            };
+            return a;
+        }
+        Vector3D[] c()
+        {
+            var a = new Vector3D[n];
+            for (var i = 0; i < n; i++)
+            {
+                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies);
+            };
+            return a;
+        };
+        HeadToHead(new[] { a, b, c }, 16, 10);
 
         TestPerformance(PreconfiguredSimulations.SunEarthMoon_Pointlike);
         TestPerformance(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0);
@@ -43,7 +80,7 @@ internal class Program
         Shuffle(funcIDsByGroup);
 
         var timeByFuncID = Enumerable.Range(0, funcs.Count).ToDictionary(i => i, i => (long)0);
-        T x = default;
+        T? x = default;
         var sw = new Stopwatch();
         foreach (var funcID in funcIDsByGroup)
         {
@@ -53,7 +90,7 @@ internal class Program
             {
                 var val = func();
                 // bogus computation to ensure that the func() call doesn't get optimized away
-                x = x.Equals(default(T)) ? val : x;
+                x = object.Equals(x, default(T)) ? val : x;
             }
             timeByFuncID[funcID] += sw.ElapsedTicks;
         }
