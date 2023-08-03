@@ -43,7 +43,7 @@ public abstract class Simulation
             };
             for (var i = 0; i < n; i++)
             {
-                a[i] = mechanics_fast.compute_acceleration(m, p, i);
+                a[i] = mechanics_fast.ComputeAcceleration(m, p, i);
             };
         }
         else

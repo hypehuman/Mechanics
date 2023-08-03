@@ -28,7 +28,7 @@ internal class Program
             var a = new Vector3D[n];
             for (var i = 0; i < n; i++)
             {
-                a[i] = mechanics_fast.compute_acceleration(m, p, i);
+                a[i] = mechanics_fast.ComputeAcceleration(m, p, i);
             };
             return a;
         }
@@ -45,7 +45,7 @@ internal class Program
             var a = new Vector3D[n];
             for (var i = 0; i < n; i++)
             {
-                mechanics_fast.compute_acceleration(m, p, i);
+                a[i] = mechanics_fast.ComputeAcceleration(m, p, i);
             };
             return a;
         }
@@ -58,7 +58,7 @@ internal class Program
             };
             return a;
         };
-        HeadToHead(new[] { a, b, c }, 16, 10);
+        HeadToHead(new[] { a, b, c }, 8, 32);
 
         TestPerformance(PreconfiguredSimulations.SunEarthMoon_Pointlike);
         TestPerformance(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0);
