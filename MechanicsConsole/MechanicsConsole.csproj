@@ -5,6 +5,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,5 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="..\MechanicsCore\MechanicsCore.csproj" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(SolutionDir)Rust\mechanics_fast\target\release\mechanics_fast.dll&quot; &quot;$(TargetDir)mechanics_fast.dll&quot;" />
+  </Target>
 
 </Project>
