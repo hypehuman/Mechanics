@@ -19,11 +19,11 @@
             <ItemsControl HorizontalAlignment="Left" VerticalAlignment="Top" ItemsSource="{Binding PreconfigNames}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Button
-                            HorizontalAlignment="Left"
-                            Content="{Binding}"
-                            Click="PreconfiguredButton_Click"
-                        />
+                        <Button HorizontalAlignment="Left" Click="PreconfiguredButton_Click">
+                            <!-- Use TextBlock instead of directly setting Button.Content. -->
+                            <!-- This prevents underscores from being misinterpreted as access keys -->
+                            <TextBlock Text="{Binding}" />
+                        </Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
