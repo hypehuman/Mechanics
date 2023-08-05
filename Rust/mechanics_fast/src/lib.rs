@@ -24,6 +24,15 @@ fn compute_acceleration(masses: &[f64], positions: &[Vector3<f64>], index_of_sel
     acceleration
 }
 
+#[no_mangle]
+pub extern "C" fn compute_acceleration_wrapper(masses: *const f64, positions: *const Vector3<f64>, num_bodies: usize, index_of_self: usize) -> Vector3<f64> {
+	let masses_slice = unsafe { std::slice::from_raw_parts(masses, num_bodies) };
+	let positions_slice = unsafe { std::slice::from_raw_parts(positions, num_bodies) };
+    let acceleration = compute_acceleration(masses_slice, positions_slice, index_of_self);
+	
+	acceleration
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
