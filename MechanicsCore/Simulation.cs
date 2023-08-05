@@ -1,4 +1,5 @@
 ﻿using MathNet.Spatial.Euclidean;
+using MechanicsCore.Rust.mechanics_fast;
 using MechanicsCore.StepConfiguring;
 
 namespace MechanicsCore;
@@ -32,12 +33,31 @@ public abstract class Simulation
         // first compute all accelerations, then move bodies.
         var n = Bodies.Count;
         var a = new Vector3D[n];
-        for (var i = 0; i < n; i++)
+#if !DISABLE_RUST
+        if (TakeSimpleShortcut)
         {
+            var m = new double[n];
+            var p = new Vector3D[n];
+            for (var i = 0; i < n; i++)
+            {
+                m[i] = Bodies[i].Mass;
+                p[i] = Bodies[i].Position;
+            };
+            for (var i = 0; i < n; i++)
+            {
+                a[i] = mechanics_fast.ComputeAcceleration(m, p, i);
+            };
+        }
+        else
+#endif
+        {
+            for (var i = 0; i < n; i++)
+            {
             var body = Bodies[i];
             if (!body.Exists) continue;
             a[i] = body.ComputeAcceleration(Bodies);
-        };
+            };
+        }
         for (var i = 0; i < n; i++)
         {
             var body = Bodies[i];
