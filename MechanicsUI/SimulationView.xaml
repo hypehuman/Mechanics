@@ -10,13 +10,19 @@
     d:DataContext="{d:DesignInstance Type=local:DefaultSimulationVM, IsDesignTimeCreatable=True}"
 >
     <DockPanel LastChildFill="True">
-        <StackPanel DockPanel.Dock="Top">
-            <TextBox Style="{StaticResource SelectableReadonlyText}" Text="{Binding Config, Mode=OneWay}" />
-            <TextBox Style="{StaticResource SelectableReadonlyText}" Text="{Binding StateSummary, Mode=OneWay}" />
-            <StackPanel Orientation="Horizontal">
-                <Button Click="LeapButton_Click">Leap</Button>
-                <CheckBox IsChecked="{Binding IsAutoLeaping}">Auto-leap</CheckBox>
-            </StackPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <GroupBox VerticalAlignment="Top" Margin="5" Header="Configuration">
+                <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding Config, Mode=OneWay}" />
+            </GroupBox>
+            <GroupBox VerticalAlignment="Top" Margin="5" Header="Controls">
+                <StackPanel Orientation="Horizontal">
+                    <Button Margin="5" VerticalAlignment="Center" Click="LeapButton_Click">Leap</Button>
+                    <CheckBox Margin="5" VerticalAlignment="Center" IsChecked="{Binding IsAutoLeaping}">Auto-leap</CheckBox>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox VerticalAlignment="Top" Margin="5" Header="Status">
+                <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding StateSummary, Mode=OneWay}" />
+            </GroupBox>
         </StackPanel>
         <Border
             local:SizeObserver.Observe="True"

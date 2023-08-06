@@ -12,9 +12,6 @@
         <local:SimulationPickerVM />
     </UserControl.DataContext>
     <DockPanel LastChildFill="True">
-        <GroupBox Margin="5" Padding="5" DockPanel.Dock="Top" Header="Options">
-            <CheckBox IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
-        </GroupBox>
         <GroupBox Margin="5" Padding="5" Header="Preconfigured">
             <ItemsControl HorizontalAlignment="Left" VerticalAlignment="Top" ItemsSource="{Binding PreconfigNames}">
                 <ItemsControl.ItemTemplate>
@@ -63,7 +60,12 @@
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
-            <Button Margin="5" Click="LaunchButton_Click">Launch Simulation</Button>
+            <GroupBox Margin="5" Header="Controls">
+                <StackPanel>
+                    <CheckBox Margin="5" IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
+                    <Button Margin="5" Click="LaunchButton_Click">Launch Simulation</Button>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
     </DockPanel>
 </UserControl>
