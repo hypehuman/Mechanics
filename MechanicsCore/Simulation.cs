@@ -139,7 +139,6 @@ public abstract class Simulation
                 );
                 body.Mass = group.Sum(b => b.Mass);
                 body.Volume = group.Sum(b => b.Volume);
-                body.DisplayVolume = group.Sum(b => b.DisplayVolume);
             }
             else
             {

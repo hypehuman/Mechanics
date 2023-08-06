@@ -15,14 +15,12 @@ public class SunEarthMoon : Simulation
         const double leaps_per_year = 365.24;
         StepConfig.StepsPerLeap = Convert.ToInt32(Constants.SecondsPerYear / leaps_per_year / StepConfig.StepTime);
 
-        var moonDisplayRadius = Constants.EarthMoonDistance * 0.25;
-
         var bodies = new Body[] {
             new(this,
                 name: "Sun",
                 color: BodyColors.Sun,
                 mass: Constants.SunMass,
-                displayRadius: Constants.SunEarthDistance / 64,
+                radius: Constants.SunRadius,
                 position: default,
                 // Give it the opposite momentum of the earth so that the system's center of mass stays in place
                 velocity: new(0, -Constants.EarthOrbitSunSpeed * Constants.EarthMass / Constants.SunMass, 0)
@@ -31,7 +29,7 @@ public class SunEarthMoon : Simulation
                 name: "Earth",
                 color: BodyColors.Earth,
                 mass: Constants.EarthMass,
-                displayRadius: Constants.EarthMoonDistance - moonDisplayRadius,
+                radius: Constants.EarthRadius,
                 position: new(Constants.SunEarthDistance, 0, 0),
                 velocity: new(0, Constants.EarthOrbitSunSpeed, 0)
             ),
@@ -39,7 +37,7 @@ public class SunEarthMoon : Simulation
                 name: "Moon",
                 color: BodyColors.Moon,
                 mass: Constants.MoonMass,
-                displayRadius: moonDisplayRadius,
+                radius: Constants.MoonRadius,
                 position: new(Constants.SunEarthDistance + Constants.EarthMoonDistance, 0, 0),
                 velocity: new(0, Constants.EarthOrbitSunSpeed + Constants.MoonOrbitEarthSpeed, 0)
             ),

@@ -23,7 +23,6 @@ public class MoonFromRing : RandomSimulation
         var fragmentMass = Constants.MoonMass / _numMoonFragments;
         var fragmentVolume = Constants.MoonVolume / _numMoonFragments;
         var fragmentRadius = Constants.SphereVolumeToRadius(fragmentVolume);
-        var fragmentDisplayRadius = Constants.SphereVolumeToRadius(fragmentVolume * 1000);
         var bodies = new Body[_numMoonFragments + 1];
         for (int i = 0; i < _numMoonFragments; i++)
         {
@@ -35,7 +34,6 @@ public class MoonFromRing : RandomSimulation
                 color: BodyColors.GetCloseCyclicColor((int)(angle01 * 256)),
                 mass: fragmentMass,
                 radius: fragmentRadius,
-                displayRadius: fragmentDisplayRadius,
                 position: new(Constants.EarthMoonDistance * cos, Constants.EarthMoonDistance * sin, 0),
                 velocity: new(Constants.MoonOrbitEarthSpeed * -sin, Constants.MoonOrbitEarthSpeed * cos, 0)
             );

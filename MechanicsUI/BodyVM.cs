@@ -9,27 +9,27 @@ namespace MechanicsUI;
 public class BodyVM : INotifyPropertyChanged
 {
     public Body Model { get; }
-    public Simulation Simulation { get; }
-    public double RadiusPix => Model.DisplayRadius;
-    private BodyColor _latestColor; // brushes are expensive, so only make a new one if necessary
-    public Brush Fill { get; private set; }
+    public SimulationVM SimulationVM { get; }
 
-    public BodyVM(Body model, Simulation simulation)
+    public BodyVM(Body model, SimulationVM simulationVM)
     {
         Model = model;
-        Simulation = simulation;
-        Fill = MakeBrush(Model.Color);
+        SimulationVM = simulationVM;
+
+        SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
     }
 
-    private static Brush MakeBrush(BodyColor bc)
+    private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        var winMediaColor = Color.FromRgb(bc.R, bc.G, bc.B);
-        var brush = new SolidColorBrush(winMediaColor);
-        brush.Freeze();
-        return brush;
+        if (e.PropertyName == nameof(MechanicsUI.SimulationVM.MinGlowRadius))
+        {
+            RefreshRadii();
+        }
     }
 
-    public Point CenterPix => Model.Exists ? new(Model.Position.X, Model.Position.Y) : new(double.NaN, double.NaN);
+    private Simulation Simulation => SimulationVM.Model;
+
+    public Point CenterXY => Model.Exists ? new(Model.Position.X, Model.Position.Y) : new(double.NaN, double.NaN);
 
     public int PanelZIndex
     {
@@ -61,31 +61,35 @@ public class BodyVM : INotifyPropertyChanged
         }
     }
 
+    public Color WinMediaColor => GetWinMediaColor(Model.Color);
+
+    private static Color GetWinMediaColor(BodyColor bc)
+    {
+        // 75% opacity lets us see to the next object behind
+        return Color.FromArgb(192, bc.R, bc.G, bc.B);
+    }
+
+    public double GlowRadius => Model.ComputeGlowRadius(SimulationVM.MinGlowRadius);
+    public double TrueRadiusOverGlowRadius => Model.Radius / GlowRadius;
+
     public event PropertyChangedEventHandler? PropertyChanged;
-    private static readonly PropertyChangedEventArgs CenterPointChangedArgs = new(nameof(CenterPix));
+    private static readonly PropertyChangedEventArgs CenterXYChangedArgs = new(nameof(CenterXY));
     private static readonly PropertyChangedEventArgs PanelZIndexChangedArgs = new(nameof(PanelZIndex));
-    private static readonly PropertyChangedEventArgs RadiusPixChangedArgs = new(nameof(RadiusPix));
-    private static readonly PropertyChangedEventArgs FillChangedArgs = new(nameof(Fill));
+    private static readonly PropertyChangedEventArgs WinMediaColorChangedArgs = new(nameof(WinMediaColor));
+    private static readonly PropertyChangedEventArgs GlowRadiusChangedArgs = new(nameof(GlowRadius));
+    private static readonly PropertyChangedEventArgs TrueRadiusOverGlowRadiusChangedArgs = new(nameof(TrueRadiusOverGlowRadius));
 
     public void Refresh()
     {
-        PropertyChanged?.Invoke(this, CenterPointChangedArgs);
+        PropertyChanged?.Invoke(this, CenterXYChangedArgs);
         PropertyChanged?.Invoke(this, PanelZIndexChangedArgs);
-        PropertyChanged?.Invoke(this, RadiusPixChangedArgs);
-        RefreshColor();
+        PropertyChanged?.Invoke(this, WinMediaColorChangedArgs);
+        RefreshRadii();
     }
 
-    private void RefreshColor()
+    private void RefreshRadii()
     {
-        var newColor = Model.Color;
-        if (newColor == _latestColor)
-        {
-            // Brushes are expensive, so only make a new one if necessary.
-            return;
-        }
-
-        _latestColor = newColor;
-        Fill = MakeBrush(newColor);
-        PropertyChanged?.Invoke(this, FillChangedArgs);
+        PropertyChanged?.Invoke(this, GlowRadiusChangedArgs);
+        PropertyChanged?.Invoke(this, TrueRadiusOverGlowRadiusChangedArgs);
     }
 }

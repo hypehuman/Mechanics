@@ -19,7 +19,29 @@ public class SimulationVM : INotifyPropertyChanged
     public double CanvasTranslateY { get; private set; }
     public double CanvasScaleX { get; private set; } = 1;
     public double CanvasScaleY { get; private set; } = -1;
-    bool _isAutoLeaping;
+    private double _minGlowRadiusFractionOfFrame = 0.002;
+    public double MinGlowRadiusFractionOfFrame
+    {
+        get => _minGlowRadiusFractionOfFrame;
+        set
+        {
+            _minGlowRadiusFractionOfFrame = value;
+            PropertyChanged?.Invoke(this, MinGlowRadiusFractionOfFrameChangedArgs);
+            PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
+        }
+    }
+    public double MinGlowRadius
+    {
+        get
+        {
+            // Minimum glow radius is a fraction of the entire frame's width or height, whichever is larger.
+            var frameWidth = Math.Abs(Model.DisplayBound1.X - Model.DisplayBound0.X);
+            var frameHeight = Math.Abs(Model.DisplayBound1.Y - Model.DisplayBound0.Y);
+            var minGlowRadius = _minGlowRadiusFractionOfFrame * Math.Max(frameWidth, frameHeight);
+            return minGlowRadius;
+        }
+    }
+    private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
         get => _isAutoLeaping;
@@ -43,7 +65,7 @@ public class SimulationVM : INotifyPropertyChanged
     {
         Model = model;
         Name = name;
-        BodyVMs = Model.Bodies.Select(b => new BodyVM(b, Model)).ToArray();
+        BodyVMs = Model.Bodies.Select(b => new BodyVM(b, this)).ToArray();
     }
 
     private string GetTitleOrConfig(string separator)
@@ -74,10 +96,13 @@ public class SimulationVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs CanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
     private static readonly PropertyChangedEventArgs CanvasScaleXChangedArgs = new(nameof(CanvasScaleX));
     private static readonly PropertyChangedEventArgs CanvasScaleYChangedArgs = new(nameof(CanvasScaleY));
+    private static readonly PropertyChangedEventArgs MinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
+    private static readonly PropertyChangedEventArgs MinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
 
     private void RefreshSim()
     {
         PropertyChanged?.Invoke(this, StateSummaryChangedArgs);
+
         foreach (var bodyVM in BodyVMs)
         {
             bodyVM.Refresh();
@@ -102,6 +127,7 @@ public class SimulationVM : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, CanvasTranslateYChangedArgs);
         PropertyChanged?.Invoke(this, CanvasScaleXChangedArgs);
         PropertyChanged?.Invoke(this, CanvasScaleYChangedArgs);
+        PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
     }
 
     public static void Sort(double a, double b, out double min, out double max)

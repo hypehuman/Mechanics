@@ -12,7 +12,6 @@ public class Body
     public BodyColor Color { get; set; }
     public double Mass { get; set; }
     public double Radius { get; set; }
-    public double DisplayRadius { get; set; }
     public bool Exists { get; set; } = true;
 
     public double Volume
@@ -21,15 +20,9 @@ public class Body
         set => Radius = Constants.SphereVolumeToRadius(value);
     }
 
-    public double DisplayVolume
-    {
-        get => Constants.SphereRadiusToVolume(DisplayRadius);
-        set => DisplayRadius = Constants.SphereVolumeToRadius(value);
-    }
-
     public double Density => Mass / Volume;
 
-    public Body(Simulation simulation, string? name = null, BodyColor? color = null, double mass = 0, double radius = 0, double? displayRadius = null, Vector3D position = default, Vector3D velocity = default)
+    public Body(Simulation simulation, string? name = null, BodyColor? color = null, double mass = 0, double radius = 0, Vector3D position = default, Vector3D velocity = default)
     {
         Simulation = simulation;
         ID = Simulation.NextBodyID;
@@ -37,10 +30,17 @@ public class Body
         Color = color ?? BodyColors.GetSpacedCyclicColor(ID);
         Mass = mass;
         Radius = radius;
-        DisplayRadius = displayRadius ?? radius;
         Position = position;
         Velocity = velocity;
     }
+
+    /// <summary>
+    /// Helps us see small objects.
+    /// All objects will have a glow applied, but smaller objects glow proportionally farther.
+    /// An object with a radius of 0 will have a GlowRadius of <paramref name="minGlowRadius"/>.
+    /// As radius approaches infinity, GlowRadius approaches radius.
+    /// </summary>
+    public double ComputeGlowRadius(double minGlowRadius) => Math.Sqrt(Radius * Radius + minGlowRadius * minGlowRadius);
 
     public Vector3D Position { get; set; }
     public Vector3D Velocity { get; set; }

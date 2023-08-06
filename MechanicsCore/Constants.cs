@@ -8,6 +8,8 @@ public static class Constants
 
     public const double SunMass = 1.98847e30;
 
+    public const double SunRadius = 6.957e8;
+
     public const double SunEarthDistance = 1.4960e11;
 
     public const double EarthMass = 5.9722e24;
