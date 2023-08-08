@@ -35,8 +35,7 @@
                     </MultiBinding.Converter>
                 </MultiBinding>
             </Border.ToolTip>
-            <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource entryTemplateSelector}">
-            </ContentControl>
+            <ContentControl Content="{Binding UserEntryVM}" ContentTemplateSelector="{StaticResource entryTemplateSelector}" />
         </Border>
         <TextBlock VerticalAlignment="Center" Text="{Binding ActualValue, StringFormat='{} ({0})'}" />
     </StackPanel>

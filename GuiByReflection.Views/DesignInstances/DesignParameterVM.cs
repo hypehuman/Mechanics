@@ -11,9 +11,8 @@ public class DesignParameterVM : IParameterVM
     public bool HasHelp => true;
     public string? Help => "DesignHelp";
 
+    public IUserEntryVM UserEntryVM { get; } = new DesignUserEntryVM();
     public object? ActualValue { get; private set; } = "DesignActualValue";
-
-    public object? UserEntry { get; set; } = "DesignUserEntry";
 
     public bool HasMessage => true;
     public string? Message => "DesignMessage";

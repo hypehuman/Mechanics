@@ -9,7 +9,6 @@ public class ParameterVM : IParameterVM
 {
     private readonly ParameterInfo _parameterInfo;
     private readonly IUserEntryHandler _userEntryHandler;
-    private object? _userEntry;
     private object? _actualValue;
     private bool _hasMessage;
     private string? _message;
@@ -19,7 +18,7 @@ public class ParameterVM : IParameterVM
     public string Title { get; }
     public string? Help { get; }
 
-    public ParameterVM(ParameterInfo parameterInfo, IUserEntryHandler? userEntryHandler = null)
+    public ParameterVM(ParameterInfo parameterInfo, IUserEntryHandler? userEntryHandler = null, IUserEntryVMSelector? userEntryVMSelector = null)
     {
         _parameterInfo = parameterInfo;
         _userEntryHandler = userEntryHandler ?? DefaultUserEntryHandler.Instance;
@@ -30,31 +29,25 @@ public class ParameterVM : IParameterVM
 
         Help = _parameterInfo.GetCustomAttribute<GuiHelpAttribute>(false)?.Value;
 
+        UserEntryVM = (userEntryVMSelector ?? DefaultUserEntryVMSelector.Instance).SelectUserEntryVM(ParameterType, userEntryVMSelector);
+        UserEntryVM.UserEntryChanged += UserEntryVM_UserEntryChanged;
+
         SetActualValue(GetDefaultValue(ParameterType), updateUserEnteredValue: true);
     }
 
-    public bool HasHelp => !string.IsNullOrWhiteSpace(Help);
-
-    public object? UserEntry
+    private void UserEntryVM_UserEntryChanged(object? sender, UserEntryChangedEventArgs e)
     {
-        get => _userEntry;
-        set => SetUserEntry(value, updateActualValue: true);
-    }
-
-    private void SetUserEntry(object? userEntry, bool updateActualValue)
-    {
-        if (_userEntry == userEntry)
-            return;
-        _userEntry = userEntry;
-        OnPropertyChanged(nameof(UserEntry));
-
-        if (updateActualValue)
+        if (e.UpdateActualValue)
         {
-            var value = _userEntryHandler.UserEntryToValue(userEntry, ParameterType, ActualValue, out var message);
+            var value = _userEntryHandler.UserEntryToValue(e.UserEntry, ParameterType, ActualValue, out var message);
             SetActualValue(value, updateUserEnteredValue: false);
             Message = message;
         }
     }
+
+    public bool HasHelp => !string.IsNullOrWhiteSpace(Help);
+
+    public IUserEntryVM UserEntryVM { get; }
 
     public object? ActualValue => _actualValue;
 
@@ -71,7 +64,7 @@ public class ParameterVM : IParameterVM
 
         if (updateUserEnteredValue)
         {
-            SetUserEntry(actualValue, updateActualValue: false);
+            UserEntryVM.SetUserEntry(actualValue, updateActualValue: false);
             Message = string.Empty;
         }
     }

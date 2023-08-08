@@ -1,4 +1,5 @@
 ﻿using GuiByReflection.ViewModels;
+using GuiByReflection.ViewModels.UserEntryVMs;
 using GuiByReflection.Views.UserEntryViews;
 using System;
 using System.Windows;
@@ -10,24 +11,27 @@ namespace GuiByReflection.Views
     {
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
-            var parameterVM = item as IParameterVM;
-            var viewType = SelectViewType(parameterVM?.ParameterType);
+            var vm = item as IUserEntryVM;
+            var viewType = SelectViewType(vm);
             return new DataTemplate
             {
                 VisualTree = new FrameworkElementFactory(viewType),
             };
         }
 
-        protected virtual Type SelectViewType(Type? parameterType)
+        protected virtual Type SelectViewType(IUserEntryVM? vm)
         {
-            if (parameterType == null)
+            if (vm == null)
                 return typeof(DefaultUserEntryView);
 
-            if (parameterType == typeof(bool))
+            if (vm is IBoolUserEntryVM)
                 return typeof(BoolCheckboxUserEntryView);
 
-            if (parameterType.IsAssignableTo(typeof(Enum)))
+            if (vm is IEnumUserEntryVM)
                 return typeof(EnumDropdownUserEntryView);
+
+            if (vm is INullableUserEntryVM)
+                return typeof(NullableUserEntryView);
 
             return typeof(DefaultUserEntryView);
         }
