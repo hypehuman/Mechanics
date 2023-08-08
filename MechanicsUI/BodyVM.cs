@@ -56,8 +56,11 @@ public class BodyVM : INotifyPropertyChanged
             var minOut = int.MinValue / 2d;
             var maxOut = int.MaxValue / 2d;
             var doubleOut = relativeZ * (maxOut - minOut) + minOut;
-            var intOut = Convert.ToInt32(doubleOut);
-            return intOut;
+            return
+                double.IsNaN(doubleOut) ? 0 : // z was probably NaN
+                doubleOut < int.MinValue + 1 ? int.MinValue : // z was probably negative infinity
+                doubleOut > int.MaxValue - 1 ? int.MaxValue : // z was probably positive infinity
+                Convert.ToInt32(doubleOut);
         }
     }
 
