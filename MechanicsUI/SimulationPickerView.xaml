@@ -26,31 +26,33 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </GroupBox>
-        <StackPanel>
-            <GroupBox Margin="5" Padding="5" Header="Initial Configuration">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="Scenario: " />
-                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding SelectedScenario}" ItemsSource="{Binding Scenarios}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Title}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+        <ScrollViewer>
+            <StackPanel>
+                <GroupBox Margin="5" Padding="5" Header="Initial Configuration">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="Scenario: " />
+                            <ComboBox VerticalAlignment="Center" SelectedItem="{Binding SelectedScenario}" ItemsSource="{Binding Scenarios}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Title}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <uiByReflectionViews:MethodView DataContext="{Binding InitConfigConstructorVM}" />
                     </StackPanel>
-                    <uiByReflectionViews:MethodView DataContext="{Binding InitConfigConstructorVM}" />
-                </StackPanel>
-            </GroupBox>
-            <GroupBox Margin="5" Padding="5" Header="Step Configuration">
-                <uiByReflectionViews:MethodView DataContext="{Binding StepConfigConstructorVM}" />
-            </GroupBox>
-            <GroupBox Margin="5" Header="Controls">
-                <StackPanel>
-                    <CheckBox Margin="5" IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
-                    <Button Margin="5" Click="LaunchButton_Click">Launch Simulation</Button>
-                </StackPanel>
-            </GroupBox>
-        </StackPanel>
+                </GroupBox>
+                <GroupBox Margin="5" Padding="5" Header="Step Configuration">
+                    <uiByReflectionViews:MethodView DataContext="{Binding StepConfigConstructorVM}" />
+                </GroupBox>
+                <GroupBox Margin="5" Header="Controls">
+                    <StackPanel>
+                        <CheckBox Margin="5" IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
+                        <Button Margin="5" Click="LaunchButton_Click">Launch Simulation</Button>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
     </DockPanel>
 </UserControl>

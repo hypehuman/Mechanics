@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:MechanicsUI"
     mc:Ignorable="d"
-    Title="MainWindow" Width="640" Height="480"
+    Title="MainWindow" Width="800" Height="800"
 >
     <local:SimulationPickerView />
 </Window>
