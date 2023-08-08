@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using AdonisUI.Controls;
+using System.Windows;
 
 namespace MechanicsUI;
 
@@ -36,7 +37,7 @@ partial class SimulationPickerView
 
     private static void ShowSimWindow(SimulationVM simVm)
     {
-        var simWindow = new Window
+        var simWindow = new AdonisWindow
         {
             Title = simVm.Title,
             Content = new SimulationView

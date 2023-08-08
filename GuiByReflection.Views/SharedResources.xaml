@@ -21,6 +21,7 @@
                             />
                             <TextBlock
                                 x:Name="QuestionBlock" Text="?"
+                                FontWeight="Bold" Foreground="Black"
                                 HorizontalAlignment="Center" VerticalAlignment="Center"
                             />
                         </Grid>
