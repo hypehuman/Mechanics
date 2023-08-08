@@ -11,12 +11,16 @@ public class Simulation
 
     #region Current state
 
-    public double t { get; private set; }
+    public long NumStepsPerformed { get; private set; }
+    public double t => NumStepsPerformed * StepConfig.StepTime;
     public Vector3D DisplayBound0 { get; }
     public Vector3D DisplayBound1 { get; }
 
     public IReadOnlyList<Body> Bodies { get; }
     public IEnumerable<Body> ExistingBodies => Bodies.Where(b => b.Exists);
+
+    public bool HasError { get; private set; }
+    public string LatestErrorMessage { get; private set; }
 
     #endregion
 
@@ -27,27 +31,53 @@ public class Simulation
         DisplayBound0 = displayBound0;
         DisplayBound1 = displayBound1;
         StepConfig = fullConfiguration.StepConfig;
+
+        p = new Vector3D[Bodies.Count];
+        v = new Vector3D[Bodies.Count];
+        a = new Vector3D[Bodies.Count];
     }
 
-    private void Step()
+    // Reuse these collections on each step to reduce garbage
+    private readonly Vector3D[] p;
+    private readonly Vector3D[] v;
+    private readonly Vector3D[] a;
+
+    private bool TryComputeStep()
+    {
+        try
+        {
+            ComputeStep();
+            return true;
+        }
+        catch (StepFailedException caughtEx)
+        {
+            HasError = true;
+            LatestErrorMessage = caughtEx.Message;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Should not change anything but the values in <see cref="p"/>, <see cref="v"/>, and <see cref="a"/>.
+    /// </summary>
+    private void ComputeStep()
     {
         // To make deterministic, parallelizable, and order-insensitive:
         // first compute all accelerations, then move bodies.
         var n = Bodies.Count;
-        var a = new Vector3D[n];
 #if !DISABLE_RUST
         if (StepConfig.CanTakeSimpleShortcut())
         {
             // The indexing in Bodies will be different from what we pass to Rust,
             // since Rust doesn't yet know to ignore bodies that have stopped existing.
             var numExistingBodies = ExistingBodies.Count();
-            var m = new double[numExistingBodies];
-            var p = new Vector3D[numExistingBodies];
+            var rustMasses = new double[numExistingBodies];
+            var rustPositions = new Vector3D[numExistingBodies];
             int rustI = 0;
             foreach (var body in ExistingBodies)
             {
-                m[rustI] = body.Mass;
-                p[rustI] = body.Position;
+                rustMasses[rustI] = body.Mass;
+                rustPositions[rustI] = body.Position;
                 rustI++;
             };
             rustI = 0;
@@ -55,7 +85,7 @@ public class Simulation
             {
                 var body = Bodies[i];
                 if (!body.Exists) continue;
-                a[i] = mechanics_fast.ComputeAcceleration(m, p, rustI);
+                a[i] = mechanics_fast.ComputeAcceleration(rustMasses, rustPositions, rustI);
                 rustI++;
             };
         }
@@ -73,7 +103,20 @@ public class Simulation
         {
             var body = Bodies[i];
             if (!body.Exists) continue;
-            body.Step(StepConfig.StepTime, a[i]);
+            body.ComputeStep(StepConfig.StepTime, a[i], out p[i], out v[i]);
+        };
+    }
+
+    private void Step()
+    {
+        // Now we've started editing the bodies, so there's no way to recover from an exception.
+
+        var n = Bodies.Count;
+        for (var i = 0; i < n; i++)
+        {
+            var body = Bodies[i];
+            if (!body.Exists) continue;
+            body.Step(p[i], v[i]);
         };
 
         if (StepConfig.CollisionConfig == CollisionType.Combine)
@@ -81,7 +124,7 @@ public class Simulation
             CombineOverlappingBodies();
         }
 
-        t += StepConfig.StepTime;
+        NumStepsPerformed++;
     }
 
     private void CombineOverlappingBodies()
@@ -217,10 +260,24 @@ public class Simulation
 
     public void Leap()
     {
+        if (!TryLeap())
+        {
+            throw new Exception(LatestErrorMessage);
+        }
+    }
+
+    public bool TryLeap()
+    {
         for (int i = 0; i < StepConfig.StepsPerLeap; i++)
         {
+            if (!TryComputeStep())
+            {
+                return false;
+            }
             Step();
         }
+
+        return true;
     }
 
     public static string DoubleToString(double d) => $"{d:0.000e00}";
@@ -240,8 +297,13 @@ public class Simulation
 
     public IEnumerable<string> GetStateSummaryLines()
     {
+        yield return $"Step {NumStepsPerformed}";
         yield return GetTimeString();
         yield return $"{ExistingBodies.Count()} bodies";
+        if (HasError)
+        {
+            yield return LatestErrorMessage;
+        }
     }
 
     private string GetTimeString()

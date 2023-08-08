@@ -47,6 +47,7 @@ public class SimulationVM : INotifyPropertyChanged
         set
         {
             _isAutoLeaping = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAutoLeaping)));
             DoAutoLeap(Dispatcher.CurrentDispatcher);
         }
     }
@@ -73,7 +74,11 @@ public class SimulationVM : INotifyPropertyChanged
 
     public void LeapAndRefresh()
     {
-        Model.Leap();
+        if (!Model.TryLeap())
+        {
+            IsAutoLeaping = false;
+        }
+
         RefreshSim();
     }
 

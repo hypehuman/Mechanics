@@ -59,10 +59,31 @@ public class Body
         return a;
     }
 
-    public void Step(double dt, Vector3D a)
+    public void ComputeStep(double dt, Vector3D a, out Vector3D p, out Vector3D v)
     {
-        Velocity += dt * a;
-        Position += dt * Velocity;
+        AssertIsReal(a);
+        v = Velocity + dt * a;
+        AssertIsReal(v);
+        p = Position + dt * v;
+        AssertIsReal(p);
+    }
+
+    private static void AssertIsReal(Vector3D vector)
+    {
+        if (
+            !double.IsRealNumber(vector.X) ||
+            !double.IsRealNumber(vector.Y) ||
+            !double.IsRealNumber(vector.Z)
+        )
+        {
+            throw new StepFailedException("Non-real vector");
+        }
+    }
+
+    public void Step(Vector3D p, Vector3D v)
+    {
+        Position = p;
+        Velocity = v;
     }
 
     private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2, StepConfiguration config)
@@ -255,11 +276,11 @@ public class Body
         var dot = relativeVelocity * nextRelativeVelocity;
         if (isDoubleCheck && dot < -0.0001)
         {
-            throw new Exception("They bounced off each other. This should have been prevented by the capping formula.");
+            throw new StepFailedException("They bounced off each other. This should have been prevented by the capping formula.");
         }
         if (isDoubleCheck && dot > 0.0001)
         {
-            throw new Exception("They bounced the first time, but now they're still moving.");
+            throw new StepFailedException("They bounced the first time, but now they're still moving.");
         }
         return dot < 0;
     }
