@@ -57,8 +57,10 @@ public class ParameterVM : IParameterVM
     /// </summary>
     public void SetActualValue(object? actualValue, bool updateUserEnteredValue)
     {
-        if (_actualValue == actualValue)
-            return;
+        // You might be tempted to return if _actualValue == actualValue.
+        // But for nullable types, we need to continue even if the value is changing from null to null.
+        // This ensures that we get properly set up via the initial call from the constructor.
+
         _actualValue = actualValue;
         OnPropertyChanged(nameof(ActualValue));
 

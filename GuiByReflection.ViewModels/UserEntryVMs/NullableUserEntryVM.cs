@@ -15,7 +15,7 @@ public class NullableUserEntryVM : UserEntryVM, INullableUserEntryVM
     public bool UserEntryHasValue
     {
         get => UnderlyingUserEntry != null;
-        set => UserEntry = null;
+        set => UserEntry = value ? ParameterVM.GetDefaultValue(_underlyingType) : null;
     }
 
     public object? UnderlyingUserEntry
