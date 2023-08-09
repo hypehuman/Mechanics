@@ -6,6 +6,14 @@ public class MoonFromRing : RandomSimulation
 {
     private readonly int _numMoonFragments;
 
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"Number of Moon fragments: {_numMoonFragments}";
+    }
+
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
@@ -46,13 +54,5 @@ public class MoonFromRing : RandomSimulation
         );
         Bodies = bodies;
         BodySystem.SetNetZeroMomentum(bodies);
-    }
-
-    public override IEnumerable<string> GetConfigLines()
-    {
-        foreach (var b in base.GetConfigLines())
-            yield return b;
-
-        yield return $"Number of Moon fragments: {_numMoonFragments}";
     }
 }

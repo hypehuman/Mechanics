@@ -8,6 +8,16 @@ public class TwoBodies : RandomSimulation
     private readonly double _totalMass;
     private readonly double _totalVolume;
 
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"System radius: {DoubleToString(_systemRadius)}";
+        yield return $"Total mass: {DoubleToString(_totalMass)}";
+        yield return $"Total volume: {DoubleToString(_totalVolume)}";
+    }
+
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
@@ -43,15 +53,5 @@ public class TwoBodies : RandomSimulation
             );
         }
         Bodies = bodies;
-    }
-
-    public override IEnumerable<string> GetConfigLines()
-    {
-        foreach (var b in base.GetConfigLines())
-            yield return b;
-
-        yield return $"System radius: {DoubleToString(_systemRadius)}";
-        yield return $"Total mass: {DoubleToString(_totalMass)}";
-        yield return $"Total volume: {DoubleToString(_totalVolume)}";
     }
 }

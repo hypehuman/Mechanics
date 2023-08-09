@@ -10,6 +10,18 @@ public class Falling : RandomSimulation
     private readonly double _totalVolume;
     private readonly double _maxVelocity;
 
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"System radius: {DoubleToString(_systemRadius)}";
+        yield return $"Number of bodies: {_numBodies}";
+        yield return $"Total mass: {DoubleToString(_totalMass)}";
+        yield return $"Total volume: {DoubleToString(_totalVolume)}";
+        yield return $"Max velocity: {DoubleToString(_maxVelocity)}";
+    }
+
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
@@ -60,17 +72,5 @@ public class Falling : RandomSimulation
             v = new(x, y, z);
         } while (v.Length > radius);
         return v;
-    }
-
-    public override IEnumerable<string> GetConfigLines()
-    {
-        foreach (var b in base.GetConfigLines())
-            yield return b;
-
-        yield return $"System radius: {DoubleToString(_systemRadius)}";
-        yield return $"Number of bodies: {_numBodies}";
-        yield return $"Total mass: {DoubleToString(_totalMass)}";
-        yield return $"Total volume: {DoubleToString(_totalVolume)}";
-        yield return $"Max velocity: {DoubleToString(_maxVelocity)}";
     }
 }

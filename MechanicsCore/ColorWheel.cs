@@ -6,6 +6,14 @@ public class ColorWheel : Simulation
 {
     private readonly Func<int, BodyColor> _getColor;
 
+    public override IEnumerable<string> GetConfigLines()
+    {
+        foreach (var b in base.GetConfigLines())
+            yield return b;
+
+        yield return $"Color getter: {_getColor.Method.Name}";
+    }
+
     public override Vector3D DisplayBound0 { get; }
     public override Vector3D DisplayBound1 { get; }
     public override IReadOnlyList<Body> Bodies { get; }
@@ -46,12 +54,4 @@ public class ColorWheel : Simulation
     }
 
     private static double GetWheelRadius(int wheelI, double bodyRadius) => 1 + wheelI * 2 * bodyRadius;
-
-    public override IEnumerable<string> GetConfigLines()
-    {
-        foreach (var b in base.GetConfigLines())
-            yield return b;
-
-        yield return $"Color getter: {_getColor.Method.Name}";
-    }
 }
