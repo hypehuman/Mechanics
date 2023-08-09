@@ -1,62 +1,97 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.Rust.mechanics_fast;
+using MechanicsCore.StepConfiguring;
 
 namespace MechanicsCore;
 
 public class Body
 {
-    public Simulation Simulation { get; }
     public int ID { get; }
     public string Name { get; }
+    public BodyColor Color { get; set; }
     public double Mass { get; set; }
     public double Radius { get; set; }
-    public double DisplayRadius { get; set; }
+    public bool Exists { get; set; } = true;
 
-    public double Volume => Constants.SphereRadiusToVolume(Radius);
+    public double Volume
+    {
+        get => Constants.SphereRadiusToVolume(Radius);
+        set => Radius = Constants.SphereVolumeToRadius(value);
+    }
+
     public double Density => Mass / Volume;
 
-    public Body(Simulation simulation, string name = "b", double mass = 0, double radius = 0, double? displayRadius = null, Vector3D position = default, Vector3D velocity = default)
+    public Body(int id, string? name = null, BodyColor? color = null, double mass = 0, double radius = 0, Vector3D position = default, Vector3D velocity = default)
     {
-        Simulation = simulation;
-        ID = Simulation.NextBodyID;
-        Name = name;
+        ID = id;
+        Name = name ?? ID.ToString();
+        Color = color ?? BodyColors.GetSpacedCyclicColor(ID);
         Mass = mass;
         Radius = radius;
-        DisplayRadius = displayRadius ?? radius;
         Position = position;
         Velocity = velocity;
     }
 
+    /// <summary>
+    /// Helps us see small objects.
+    /// All objects will have a glow applied, but smaller objects glow proportionally farther.
+    /// An object with a radius of 0 will have a GlowRadius of <paramref name="minGlowRadius"/>.
+    /// As radius approaches infinity, GlowRadius approaches radius.
+    /// </summary>
+    public double ComputeGlowRadius(double minGlowRadius) => Math.Sqrt(Radius * Radius + minGlowRadius * minGlowRadius);
+
     public Vector3D Position { get; set; }
     public Vector3D Velocity { get; set; }
 
-    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies)
+    public Vector3D ComputeMomentum() => Mass * Velocity;
+
+    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies, StepConfiguration config)
     {
         var a = default(Vector3D);
         foreach (var body2 in allBodies)
         {
-            if (body2 == this)
+            if (!body2.Exists || body2 == this)
             {
                 continue;
             }
-            a += GetAccelerationOn1DueTo2(this, body2);
+            a += GetAccelerationOn1DueTo2(this, body2, config);
         }
         return a;
     }
 
-    public void Step(double dt, Vector3D a)
+    public void ComputeStep(double dt, Vector3D a, out Vector3D p, out Vector3D v)
     {
-        Velocity += dt * a;
-        Position += dt * Velocity;
+        AssertIsReal(a);
+        v = Velocity + dt * a;
+        AssertIsReal(v);
+        p = Position + dt * v;
+        AssertIsReal(p);
     }
 
-    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2)
+    private static void AssertIsReal(Vector3D vector)
     {
-        var sim = body1.Simulation;
+        if (
+            !double.IsRealNumber(vector.X) ||
+            !double.IsRealNumber(vector.Y) ||
+            !double.IsRealNumber(vector.Z)
+        )
+        {
+            throw new StepFailedException("Non-real vector");
+        }
+    }
+
+    public void Step(Vector3D p, Vector3D v)
+    {
+        Position = p;
+        Velocity = v;
+    }
+
+    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2, StepConfiguration config)
+    {
         var displacement = body2.Position - body1.Position;
         var m2 = body2.Mass;
 
-        if (sim.TakeSimpleShortcut)
+        if (config.CanTakeSimpleShortcut())
         {
             // Shortcut for simpler simulations
             return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2);
@@ -67,7 +102,7 @@ public class Body
         var r1 = body1.Radius;
         var r2 = body2.Radius;
 
-        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, body1.Simulation.GravityConfig);
+        var ag = ComputeGravitationalAcceleration(displacement, distance, m2, r1, r2, config.GravityConfig, config.BuoyantGravityRatio);
 
         if (distance > r1 + r2)
         {
@@ -81,7 +116,7 @@ public class Body
             return ag;
         }
 
-        var others = ComputeOtherForces(body1, body2, displacement, distance);
+        var others = ComputeOtherForces(body1, body2, displacement, distance, config);
         others /= m1; // convert others from a force to an acceleration
         return ag + others;
     }
@@ -92,7 +127,8 @@ public class Body
         double m2,
         double r1,
         double r2,
-        GravityType gravity
+        GravityType gravity,
+        double buoyantGravityRatio
     )
     {
         switch (gravity)
@@ -126,7 +162,7 @@ public class Body
                 // By the time you're fully engulfed, the gravity is the opposite of what it was when they were barely touching.
                 // From there it drops linearly, to zero when the centers are overlapping.
                 var engulfmentDistance = Math.Abs(r1 - r2);
-                var agAtEngulfmentDistance = -agAtKissingDistance;
+                var agAtEngulfmentDistance = -buoyantGravityRatio * agAtKissingDistance;
 
                 if (distance > engulfmentDistance)
                 {
@@ -166,18 +202,18 @@ public class Body
 #endif
     }
 
-    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance)
+    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance, StepConfiguration config)
     {
-        return ComputeDragForce(body1, body2, displacement, distance);
+        return ComputeDragForce(body1, body2, displacement, distance, config);
     }
 
-    private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance)
+    private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance, StepConfiguration config)
     {
-        var dragCoefficient = body1.Simulation.DragCoefficient;
-        if (dragCoefficient == 0)
+        if (config.CollisionConfig != CollisionType.Drag)
         {
             return default;
         }
+        var dragCoefficient = config.DragCoefficient;
 
         // Assume the bodies are fully overlapping, which might not actually be true.
         var relativeVelocity = body2.Velocity - body1.Velocity;
@@ -204,7 +240,7 @@ public class Body
         // whereas in theory, the acceleration should drop off rapidly within that time step.
         // Therefore, we cap the force at an amount that would bring the bodies' relative velocity to zero in one time step.
 
-        if (WillBounce(body1, body2, relativeVelocity, fd, false))
+        if (WillBounce(body1, body2, relativeVelocity, fd, config.StepTime, false))
         {
             // Instead, apply a force sufficient to make both velocities the same while conserving momentum
             // (assuming the opposite force is applied to body2)
@@ -212,11 +248,11 @@ public class Body
             var m2 = body2.Mass;
             var v1 = body1.Velocity;
             var v2 = body2.Velocity;
-            var t = body1.Simulation.dt_step;
+            var t = config.StepTime;
             fd = m1 / t * ((m1 * v1 + m2 * v2) / (m1 + m2) - v1);
 
             // Check again!
-            WillBounce(body1, body2, relativeVelocity, fd, true);
+            WillBounce(body1, body2, relativeVelocity, fd, config.StepTime, true);
         }
 
         // Now we have computed the drag.
@@ -228,23 +264,23 @@ public class Body
         return double.IsFinite(component.Length) ? component : default;
     }
 
-    private static bool WillBounce(Body body1, Body body2, Vector3D relativeVelocity, Vector3D force, bool isDoubleCheck)
+    private static bool WillBounce(Body body1, Body body2, Vector3D relativeVelocity, Vector3D force, double stepTime, bool isDoubleCheck)
     {
         var nextAcceleration1 = force / body1.Mass;
         var nextAcceleration2 = -force / body2.Mass;
-        var changeInVelocity1 = body1.Simulation.dt_step * nextAcceleration1;
-        var changeInVelocity2 = body2.Simulation.dt_step * nextAcceleration2;
+        var changeInVelocity1 = stepTime * nextAcceleration1;
+        var changeInVelocity2 = stepTime * nextAcceleration2;
         var nextVelocity1 = body1.Velocity + changeInVelocity1;
         var nextVelocity2 = body2.Velocity + changeInVelocity2;
         var nextRelativeVelocity = nextVelocity2 - nextVelocity1;
         var dot = relativeVelocity * nextRelativeVelocity;
         if (isDoubleCheck && dot < -0.0001)
         {
-            throw new Exception("They bounced off each other. This should have been prevented by the capping formula.");
+            throw new StepFailedException("They bounced off each other. This should have been prevented by the capping formula.");
         }
         if (isDoubleCheck && dot > 0.0001)
         {
-            throw new Exception("They bounced the first time, but now they're still moving.");
+            throw new StepFailedException("They bounced the first time, but now they're still moving.");
         }
         return dot < 0;
     }

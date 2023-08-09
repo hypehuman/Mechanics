@@ -1,58 +1,60 @@
 ﻿using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore;
+namespace MechanicsCore.Scenarios;
 
-public class SunEarthMoon : Simulation
+public class SunEarthMoon : SimulationInitializer
 {
-    public override double dt_step => 16;
-    private double leaps_per_year => 365.24;
-    protected override int steps_per_leap => Convert.ToInt32(Constants.SecondsPerYear / leaps_per_year / dt_step);
-
-    public override Vector3D DisplayBound0 { get; }
-    public override Vector3D DisplayBound1 { get; }
-
-    private readonly Body[] bodies;
-    public override IReadOnlyList<Body> Bodies => bodies;
+    public override object?[] GetConstructorParameters()
+    {
+        return Array.Empty<object?>();
+    }
 
     public SunEarthMoon()
     {
-        var moonDisplayRadius = Constants.EarthMoonDistance * 0.25;
+    }
 
-        bodies = new[] {
-            new Body(this,
+    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    {
+        var bodies = new Body[] {
+            new(NextBodyID,
                 name: "Sun",
+                color: BodyColors.Sun,
                 mass: Constants.SunMass,
-                displayRadius: Constants.SunEarthDistance / 64,
+                radius: Constants.SunRadius,
                 position: default,
                 // Give it the opposite momentum of the earth so that the system's center of mass stays in place
                 velocity: new(0, -Constants.EarthOrbitSunSpeed * Constants.EarthMass / Constants.SunMass, 0)
             ),
-            new Body(this,
+            new(NextBodyID,
                 name: "Earth",
+                color: BodyColors.Earth,
                 mass: Constants.EarthMass,
-                displayRadius: Constants.EarthMoonDistance - moonDisplayRadius,
+                radius: Constants.EarthRadius,
                 position: new(Constants.SunEarthDistance, 0, 0),
                 velocity: new(0, Constants.EarthOrbitSunSpeed, 0)
             ),
-            new Body(this,
+            new(NextBodyID,
                 name: "Moon",
+                color: BodyColors.Moon,
                 mass: Constants.MoonMass,
-                displayRadius: moonDisplayRadius,
+                radius: Constants.MoonRadius,
                 position: new(Constants.SunEarthDistance + Constants.EarthMoonDistance, 0, 0),
                 velocity: new(0, Constants.EarthOrbitSunSpeed + Constants.MoonOrbitEarthSpeed, 0)
             ),
         };
 
         var displayBoundPadding = Constants.SunEarthDistance / 64;
-        DisplayBound0 = new(
+        displayBound0 = new(
             bodies.Min(b => b.Position.X) - displayBoundPadding,
             bodies.Min(b => b.Position.Y) - displayBoundPadding,
             bodies.Min(b => b.Position.Z) - displayBoundPadding
         );
-        DisplayBound1 = new(
+        displayBound1 = new(
             bodies.Max(b => b.Position.X) + displayBoundPadding,
             bodies.Max(b => b.Position.Y) + displayBoundPadding,
             bodies.Max(b => b.Position.Z) + displayBoundPadding
         );
+
+        return bodies;
     }
 }

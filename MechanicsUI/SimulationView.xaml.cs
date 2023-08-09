@@ -1,9 +1,8 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 
 namespace MechanicsUI;
 
-public partial class SimulationView : UserControl
+partial class SimulationView
 {
     public SimulationVM? SimulationVM => DataContext as SimulationVM;
 

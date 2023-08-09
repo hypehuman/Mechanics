@@ -1,6 +1,7 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore;
 using MechanicsCore.Rust.mechanics_fast;
+using MechanicsCore.StepConfiguring;
 using System.Diagnostics;
 
 namespace MechanicsConsole;
@@ -11,10 +12,11 @@ internal class Program
     {
         Console.WriteLine("Running performance tests:");
 
-        var sim = PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0;
-        sim.GravityConfig = GravityType.Newton_Pointlike;
-        sim.DragCoefficient = 0;
-        if (!sim.TakeSimpleShortcut) { throw new Exception("Config should have made it simple."); }
+        var config = PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0;
+        config.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
+        config.StepConfig.CollisionConfig = CollisionType.None;
+        if (!config.StepConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
+        var sim = new Simulation(config);
         var n = sim.Bodies.Count;
         var m = new double[n];
         var p = new Vector3D[n];
@@ -54,15 +56,16 @@ internal class Program
             var a = new Vector3D[n];
             for (var i = 0; i < n; i++)
             {
-                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies);
+                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies, sim.StepConfig);
             };
             return a;
         };
         HeadToHead(new[] { a, b, c }, 8, 32);
 
-        TestPerformance(PreconfiguredSimulations.SunEarthMoon_Pointlike);
-        TestPerformance(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0);
-        TestPerformance(PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0);
+        SeeHowLongItTakes(PreconfiguredSimulations.MoonFromRing_Pointlike_Combine_Insane_102691847, 5);
+        SeeHowFarItGoes(PreconfiguredSimulations.SunEarthMoon_Pointlike, 10000);
+        SeeHowFarItGoes(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0, 10000);
+        SeeHowFarItGoes(PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0, 10000);
 
         Console.WriteLine();
         Console.WriteLine("Press Enter to start the simulation:");
@@ -119,11 +122,29 @@ internal class Program
         }
     }
 
-    private static void TestPerformance(Simulation sim)
+    private static void SeeHowLongItTakes(FullConfiguration config, int numLeaps)
     {
+        var sim = new Simulation(config);
+        var sw = Stopwatch.StartNew();
+        for (int leapI = 0; leapI < 5; leapI++)
+        {
+            sim.Leap();
+            Console.WriteLine("Leap " + leapI);
+            foreach (var line in sim.GetStateSummaryLines())
+            {
+                Console.WriteLine(line);
+            }
+            Console.WriteLine();
+        }
+        Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
+    }
+
+    private static void SeeHowFarItGoes(FullConfiguration config, int ms)
+    {
+        var sim = new Simulation(config);
         var numLeaps = 0;
         var sw = Stopwatch.StartNew();
-        while (sw.ElapsedMilliseconds < 10000)
+        while (sw.ElapsedMilliseconds < ms)
         {
             sim.Leap();
             numLeaps++;
@@ -131,8 +152,9 @@ internal class Program
         Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
     }
 
-    private static void Run(Simulation sim)
+    private static void Run(FullConfiguration config)
     {
+        var sim = new Simulation(config);
         sim.DumpState();
         while (sim.t < Constants.SecondsPerYear)
         {

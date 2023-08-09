@@ -10,22 +10,44 @@ namespace MechanicsUI;
 public class SimulationVM : INotifyPropertyChanged
 {
     public Simulation Model { get; }
-    public string Name { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
     public BodyVM[] BodyVMs { get; }
-    public string SimTimeString => Model.GetTimeString();
+    public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
     public double CanvasTranslateX { get; private set; }
     public double CanvasTranslateY { get; private set; }
     public double CanvasScaleX { get; private set; } = 1;
     public double CanvasScaleY { get; private set; } = -1;
-    bool _isAutoLeaping;
+    private double _minGlowRadiusFractionOfFrame = 0.002;
+    public double MinGlowRadiusFractionOfFrame
+    {
+        get => _minGlowRadiusFractionOfFrame;
+        set
+        {
+            _minGlowRadiusFractionOfFrame = value;
+            PropertyChanged?.Invoke(this, MinGlowRadiusFractionOfFrameChangedArgs);
+            PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
+        }
+    }
+    public double MinGlowRadius
+    {
+        get
+        {
+            // Minimum glow radius is a fraction of the entire frame's width or height, whichever is larger.
+            var frameWidth = Math.Abs(Model.DisplayBound1.X - Model.DisplayBound0.X);
+            var frameHeight = Math.Abs(Model.DisplayBound1.Y - Model.DisplayBound0.Y);
+            var minGlowRadius = _minGlowRadiusFractionOfFrame * Math.Max(frameWidth, frameHeight);
+            return minGlowRadius;
+        }
+    }
+    private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
         get => _isAutoLeaping;
         set
         {
             _isAutoLeaping = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAutoLeaping)));
             DoAutoLeap(Dispatcher.CurrentDispatcher);
         }
     }
@@ -39,21 +61,24 @@ public class SimulationVM : INotifyPropertyChanged
         }
     }
 
-    public SimulationVM(Simulation model, string name)
+    public SimulationVM(Simulation model)
     {
         Model = model;
-        Name = name;
-        BodyVMs = Model.Bodies.Select(b => new BodyVM(b, Model)).ToArray();
+        BodyVMs = Model.Bodies.Select(b => new BodyVM(b, this)).ToArray();
     }
 
     private string GetTitleOrConfig(string separator)
     {
-        return Name + string.Concat(Model.GetConfigLines().Select(l => separator + l));
+        return string.Join(separator, Model.GetConfigLines());
     }
 
     public void LeapAndRefresh()
     {
-        Model.Leap();
+        if (!Model.TryLeap())
+        {
+            IsAutoLeaping = false;
+        }
+
         RefreshSim();
     }
 
@@ -69,15 +94,18 @@ public class SimulationVM : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    private static readonly PropertyChangedEventArgs SimTimeStringChangedArgs = new(nameof(SimTimeString));
+    private static readonly PropertyChangedEventArgs StateSummaryChangedArgs = new(nameof(StateSummary));
     private static readonly PropertyChangedEventArgs CanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
     private static readonly PropertyChangedEventArgs CanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
     private static readonly PropertyChangedEventArgs CanvasScaleXChangedArgs = new(nameof(CanvasScaleX));
     private static readonly PropertyChangedEventArgs CanvasScaleYChangedArgs = new(nameof(CanvasScaleY));
+    private static readonly PropertyChangedEventArgs MinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
+    private static readonly PropertyChangedEventArgs MinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
 
     private void RefreshSim()
     {
-        PropertyChanged?.Invoke(this, SimTimeStringChangedArgs);
+        PropertyChanged?.Invoke(this, StateSummaryChangedArgs);
+
         foreach (var bodyVM in BodyVMs)
         {
             bodyVM.Refresh();
@@ -102,6 +130,7 @@ public class SimulationVM : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, CanvasTranslateYChangedArgs);
         PropertyChanged?.Invoke(this, CanvasScaleXChangedArgs);
         PropertyChanged?.Invoke(this, CanvasScaleYChangedArgs);
+        PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
     }
 
     public static void Sort(double a, double b, out double min, out double max)
@@ -122,7 +151,7 @@ public class SimulationVM : INotifyPropertyChanged
 public class DefaultSimulationVM : SimulationVM
 {
     public DefaultSimulationVM()
-        : base(PreconfiguredSimulations.Default(), "Default")
+        : base(new(PreconfiguredSimulations.Default()))
     {
     }
 }

@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AdonisUI" Version="1.17.1" />
+    <PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GuiByReflection.ViewModels\GuiByReflection.ViewModels.csproj" />
+    <ProjectReference Include="..\GuiByReflection.Views\GuiByReflection.Views.csproj" />
     <ProjectReference Include="..\MechanicsCore\MechanicsCore.csproj" />
   </ItemGroup>
 

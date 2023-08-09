@@ -1,0 +1,130 @@
+﻿using GuiByReflection.Models;
+using System.ComponentModel;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+
+namespace GuiByReflection.ViewModels;
+
+public class ParameterVM : IParameterVM
+{
+    private readonly ParameterInfo _parameterInfo;
+    private readonly IUserEntryHandler _userEntryHandler;
+    private object? _userEntry;
+    private object? _actualValue;
+    private bool _hasMessage;
+    private string? _message;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    public Type ParameterType { get; }
+    public string Title { get; }
+    public string? Help { get; }
+
+    public ParameterVM(ParameterInfo parameterInfo, IUserEntryHandler? userEntryHandler = null)
+    {
+        _parameterInfo = parameterInfo;
+        _userEntryHandler = userEntryHandler ?? DefaultUserEntryHandler.Instance;
+        ParameterType = _parameterInfo.ParameterType;
+
+        var explicitLabel = _parameterInfo.GetCustomAttribute<GuiTitleAttribute>(false)?.Value;
+        Title = !string.IsNullOrWhiteSpace(explicitLabel) ? explicitLabel : _parameterInfo.Name ?? "[unnamed parameter]";
+
+        Help = _parameterInfo.GetCustomAttribute<GuiHelpAttribute>(false)?.Value;
+
+        SetActualValue(GetDefaultValue(ParameterType), updateUserEnteredValue: true);
+    }
+
+    public bool HasHelp => !string.IsNullOrWhiteSpace(Help);
+
+    public object? UserEntry
+    {
+        get => _userEntry;
+        set => SetUserEntry(value, updateActualValue: true);
+    }
+
+    private void SetUserEntry(object? userEntry, bool updateActualValue)
+    {
+        if (_userEntry == userEntry)
+            return;
+        _userEntry = userEntry;
+        OnPropertyChanged(nameof(UserEntry));
+
+        if (updateActualValue)
+        {
+            var value = _userEntryHandler.UserEntryToValue(userEntry, ParameterType, ActualValue, out var message);
+            SetActualValue(value, updateUserEnteredValue: false);
+            Message = message;
+        }
+    }
+
+    public object? ActualValue => _actualValue;
+
+    /// <summary>
+    // TODO: Check whether the value can be assigned to the type.
+    // .NET internally uses System.RuntimeType.CheckValue to do that when calling the method.
+    /// </summary>
+    public void SetActualValue(object? actualValue, bool updateUserEnteredValue)
+    {
+        if (_actualValue == actualValue)
+            return;
+        _actualValue = actualValue;
+        OnPropertyChanged(nameof(ActualValue));
+
+        if (updateUserEnteredValue)
+        {
+            SetUserEntry(actualValue, updateActualValue: false);
+            Message = string.Empty;
+        }
+    }
+
+    public bool HasMessage
+    {
+        get => _hasMessage;
+        private set
+        {
+            if (_hasMessage == value)
+                return;
+            _hasMessage = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string? Message
+    {
+        get => _message;
+        private set
+        {
+            if (_message == value)
+                return;
+            _message = value;
+            OnPropertyChanged();
+            HasMessage = !string.IsNullOrWhiteSpace(value);
+        }
+    }
+
+    public static object? GetDefaultValue(Type type)
+    {
+        if (type.IsValueType)
+        {
+            return Activator.CreateInstance(type);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Determines whether <paramref name="value"/> can be assigned to a variable of the specified <paramref name="targetType"/>.
+    /// </summary>
+    public static bool CanAssignTypeFromValue(Type targetType, object? value)
+    {
+        return
+            value == null ?
+                // If the value is null, return whether the type can accept null values.
+                !targetType.IsValueType || Nullable.GetUnderlyingType(targetType) != null :
+                // If the value is not null, use IsAssignableFrom
+                targetType.IsAssignableFrom(value.GetType());
+    }
+
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+}

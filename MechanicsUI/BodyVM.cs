@@ -1,7 +1,6 @@
 ﻿using MechanicsCore;
 using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -10,101 +9,37 @@ namespace MechanicsUI;
 public class BodyVM : INotifyPropertyChanged
 {
     public Body Model { get; }
-    public Simulation Simulation { get; }
-    public double RadiusPix { get; }
-    public Brush Fill { get; }
+    public SimulationVM SimulationVM { get; }
 
-    public BodyVM(Body model, Simulation simulation)
+    public BodyVM(Body model, SimulationVM simulationVM)
     {
         Model = model;
-        Simulation = simulation;
-        RadiusPix = Math.Max(1, Model.DisplayRadius);
-        Fill = GetBrush();
+        SimulationVM = simulationVM;
+
+        SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
     }
 
-    private Brush GetBrush()
+    private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Some magic names have specially selected brushes.
-        switch (Model.Name)
+        if (e.PropertyName == nameof(MechanicsUI.SimulationVM.MinGlowRadius))
         {
-            case "Sun": return Brushes.Gold;
-            case "Earth": return Brushes.LightSeaGreen;
-            case "Moon": return Brushes.Silver;
+            RefreshRadii();
         }
-
-        // Get an arbitrary hue based on the model's ID.
-        var hueByte = GetArbitraryHue(Model.ID);
-        var brush = sBrushByHue[hueByte];
-        return brush;
     }
 
-    private static byte GetArbitraryHue(int id)
-    {
-        // The first few IDs get nicely distributed contrasting hues.
-        if (id < 8)
-        {
-            var hue01 = id switch
-            {
-                0 => 0d / 8,
-                1 => 4d / 8,
-                2 => 2d / 8,
-                3 => 6d / 8,
-                4 => 1d / 8,
-                5 => 5d / 8,
-                6 => 3d / 8,
-                7 => 7d / 8,
-            };
-            var hueByte = (byte)(hue01 * 256);
-            return hueByte;
-        }
+    private Simulation Simulation => SimulationVM.Model;
 
-        // Then we start hashing them.
-        return Hash8(BitConverter.GetBytes(id));
-    }
-
-    private static byte Hash8(byte[] input)
-    {
-        byte hash = 0;
-        int q = 33149;
-        foreach (byte b in input)
-        {
-            hash += (byte)(b * q);
-        }
-        return hash;
-    }
-
-    private static readonly Brush[] sBrushByHue = Enumerable.Range(0, 256).Select(hueByte =>
-    {
-        var hue01 = hueByte / 256d;
-        var brush = new SolidColorBrush(HueToRGB(hue01));
-        brush.Freeze();
-        return brush;
-    }).ToArray();
-
-    private static Color HueToRGB(double hue01)
-    {
-        var kr = (5 + hue01 * 6) % 6;
-        var kg = (3 + hue01 * 6) % 6;
-        var kb = (1 + hue01 * 6) % 6;
-
-        var r = 1 - Math.Max(Min3(kr, 4 - kr, 1), 0);
-        var g = 1 - Math.Max(Min3(kg, 4 - kg, 1), 0);
-        var b = 1 - Math.Max(Min3(kb, 4 - kb, 1), 0);
-
-        return Color.FromRgb(Convert.ToByte(r * byte.MaxValue), Convert.ToByte(g * byte.MaxValue), Convert.ToByte(b * byte.MaxValue));
-    }
-
-    private static double Min3(double a, double b, double c)
-    {
-        return Math.Min(Math.Min(a, b), c);
-    }
-
-    public Point CenterPix => new(Model.Position.X, Model.Position.Y);
+    public Point CenterXY => Model.Exists ? new(Model.Position.X, Model.Position.Y) : new(double.NaN, double.NaN);
 
     public int PanelZIndex
     {
         get
         {
+            if (!Model.Exists)
+            {
+                return 0;
+            }
+
             // Compute Z scaled to the range [0,1] relative to the simulation bounds.
             var z = Model.Position.Z;
             SimulationVM.Sort(Simulation.DisplayBound0.Z, Simulation.DisplayBound1.Z, out var zMin, out var zMax);
@@ -121,18 +56,43 @@ public class BodyVM : INotifyPropertyChanged
             var minOut = int.MinValue / 2d;
             var maxOut = int.MaxValue / 2d;
             var doubleOut = relativeZ * (maxOut - minOut) + minOut;
-            var intOut = Convert.ToInt32(doubleOut);
-            return intOut;
+            return
+                double.IsNaN(doubleOut) ? 0 : // z was probably NaN
+                doubleOut < int.MinValue + 1 ? int.MinValue : // z was probably negative infinity
+                doubleOut > int.MaxValue - 1 ? int.MaxValue : // z was probably positive infinity
+                Convert.ToInt32(doubleOut);
         }
     }
 
+    public Color WinMediaColor => GetWinMediaColor(Model.Color);
+
+    private static Color GetWinMediaColor(BodyColor bc)
+    {
+        // 75% opacity lets us see to the next object behind
+        return Color.FromArgb(192, bc.R, bc.G, bc.B);
+    }
+
+    public double GlowRadius => Model.ComputeGlowRadius(SimulationVM.MinGlowRadius);
+    public double TrueRadiusOverGlowRadius => Model.Radius / GlowRadius;
+
     public event PropertyChangedEventHandler? PropertyChanged;
-    private static readonly PropertyChangedEventArgs CenterPointChangedArgs = new(nameof(CenterPix));
+    private static readonly PropertyChangedEventArgs CenterXYChangedArgs = new(nameof(CenterXY));
     private static readonly PropertyChangedEventArgs PanelZIndexChangedArgs = new(nameof(PanelZIndex));
+    private static readonly PropertyChangedEventArgs WinMediaColorChangedArgs = new(nameof(WinMediaColor));
+    private static readonly PropertyChangedEventArgs GlowRadiusChangedArgs = new(nameof(GlowRadius));
+    private static readonly PropertyChangedEventArgs TrueRadiusOverGlowRadiusChangedArgs = new(nameof(TrueRadiusOverGlowRadius));
 
     public void Refresh()
     {
-        PropertyChanged?.Invoke(this, CenterPointChangedArgs);
+        PropertyChanged?.Invoke(this, CenterXYChangedArgs);
         PropertyChanged?.Invoke(this, PanelZIndexChangedArgs);
+        PropertyChanged?.Invoke(this, WinMediaColorChangedArgs);
+        RefreshRadii();
+    }
+
+    private void RefreshRadii()
+    {
+        PropertyChanged?.Invoke(this, GlowRadiusChangedArgs);
+        PropertyChanged?.Invoke(this, TrueRadiusOverGlowRadiusChangedArgs);
     }
 }

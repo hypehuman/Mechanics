@@ -1,8 +1,6 @@
-﻿using System.Windows;
+﻿namespace MechanicsUI;
 
-namespace MechanicsUI;
-
-public partial class MainWindow : Window
+partial class MainWindow
 {
     public MainWindow()
     {

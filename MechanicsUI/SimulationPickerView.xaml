@@ -4,6 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uiByReflectionViews="clr-namespace:GuiByReflection.Views;assembly=GuiByReflection.Views"
     xmlns:local="clr-namespace:MechanicsUI"
     mc:Ignorable="d"
     d:DesignHeight="450" d:DesignWidth="800"
@@ -12,36 +13,46 @@
         <local:SimulationPickerVM />
     </UserControl.DataContext>
     <DockPanel LastChildFill="True">
-        <GroupBox Margin="5" Padding="5" DockPanel.Dock="Top" Header="Options">
-            <CheckBox IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
+        <GroupBox Margin="5" Padding="5" Header="Preconfigured">
+            <ItemsControl HorizontalAlignment="Left" VerticalAlignment="Top" ItemsSource="{Binding PreconfigNames}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button HorizontalAlignment="Left" Click="PreconfiguredButton_Click">
+                            <!-- Use TextBlock instead of directly setting Button.Content. -->
+                            <!-- This prevents underscores from being misinterpreted as access keys -->
+                            <TextBlock Text="{Binding}" />
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </GroupBox>
-        <GroupBox Margin="5" Padding="5" Header="Preconfigured" DataContext="{Binding PreconfiguredVM}">
-            <local:SimulationGroupView />
-        </GroupBox>
-        <GroupBox Margin="5" Padding="5" Header="Configurable" DataContext="{Binding ConfigurableVM}">
+        <ScrollViewer>
             <StackPanel>
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="Seed (empty for random): " />
-                        <TextBox VerticalAlignment="Center" MinWidth="100">
-                            <TextBox.Text>
-                                <Binding Path="SeedString" UpdateSourceTrigger="PropertyChanged">
-                                    <Binding.ValidationRules>
-                                        <local:SeedTextValidationRule />
-                                    </Binding.ValidationRules>
-                                </Binding>
-                            </TextBox.Text>
-                        </TextBox>
+                <GroupBox Margin="5" Padding="5" Header="Initial Configuration">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center" Text="Scenario: " />
+                            <ComboBox VerticalAlignment="Center" SelectedItem="{Binding SelectedScenario}" ItemsSource="{Binding Scenarios}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Title}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <uiByReflectionViews:MethodView DataContext="{Binding InitConfigConstructorVM}" />
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="Gravity: " />
-                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding Gravity}" ItemsSource="{Binding GravityStyles}" />
+                </GroupBox>
+                <GroupBox Margin="5" Padding="5" Header="Step Configuration">
+                    <uiByReflectionViews:MethodView DataContext="{Binding StepConfigConstructorVM}" />
+                </GroupBox>
+                <GroupBox Margin="5" Header="Controls">
+                    <StackPanel>
+                        <CheckBox Margin="5" IsChecked="{Binding AutoStart}">AutoStart</CheckBox>
+                        <Button Margin="5" Click="LaunchButton_Click">Launch Simulation</Button>
                     </StackPanel>
-                    <CheckBox IsChecked="{Binding EnableDrag}">Drag</CheckBox>
-                </StackPanel>
-                <Separator Height="10" />
-                <local:SimulationGroupView />
+                </GroupBox>
             </StackPanel>
-        </GroupBox>
+        </ScrollViewer>
     </DockPanel>
 </UserControl>

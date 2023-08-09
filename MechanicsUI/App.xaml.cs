@@ -1,7 +1,14 @@
-﻿using System.Windows;
+﻿using AdonisUI;
+using System.Windows;
 
 namespace MechanicsUI;
 
-public partial class App : Application
+partial class App
 {
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        ResourceLocator.SetColorScheme(Resources, ResourceLocator.DarkColorScheme);
+
+        base.OnStartup(e);
+    }
 }
