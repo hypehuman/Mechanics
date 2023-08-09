@@ -18,8 +18,10 @@ public class UserEntryVM : IUserEntryVM
 
     public void SetUserEntry(object? userEntry, bool updateActualValue)
     {
-        if (_userEntry == userEntry)
-            return;
+        // You might be tempted to return if _auserEntry == userEntry.
+        // But for nullable types, we need to continue even if the value is changing from null to null.
+        // This ensures that we get properly set up via the initial call from the constructor.
+
         _userEntry = userEntry;
         OnPropertyChanged(new(nameof(UserEntry)));
         UserEntryChanged?.Invoke(this, new(userEntry, updateActualValue));
