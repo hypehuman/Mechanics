@@ -13,7 +13,7 @@
         <local:UserEntryDataTemplateSelector x:Key="entryTemplateSelector" />
     </UserControl.Resources>
     <StackPanel Orientation="Horizontal">
-        <CheckBox IsChecked="{Binding UserEntryHasValue}" />
-        <ContentControl Content="{Binding UnderlyingVM}" ContentTemplateSelector="{StaticResource entryTemplateSelector}" />
+        <ContentControl Content="{Binding HasValueVM}" ContentTemplateSelector="{StaticResource entryTemplateSelector}" />
+        <ContentControl Content="{Binding UnderlyingValueVM}" ContentTemplateSelector="{StaticResource entryTemplateSelector}" />
     </StackPanel>
 </UserControl>
