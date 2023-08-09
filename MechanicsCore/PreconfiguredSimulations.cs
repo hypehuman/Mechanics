@@ -218,7 +218,7 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration ColorWheel_CloseCyclic { get; } = new(new ColorWheel(BodyColors.GetCloseCyclicColor), new());
-    public static FullConfiguration ColorWheel_SpacedCyclic { get; } = new(new ColorWheel(BodyColors.GetSpacedCyclicColor), new());
-    public static FullConfiguration ColorWheel_HashedPseudorandom { get; } = new(new ColorWheel(BodyColors.GetHashedPseudorandomColor), new());
+    public static FullConfiguration ColorWheel_CloseCyclic { get; } = new(new ColorWheel(BodyColors.GetCloseCyclicColor, false), new());
+    public static FullConfiguration ColorWheel_SpacedCyclic { get; } = new(new ColorWheel(BodyColors.GetSpacedCyclicColor, false), new());
+    public static FullConfiguration ColorWheel_HashedPseudorandom { get; } = new(new ColorWheel(BodyColors.GetHashedPseudorandomColor, false), new());
 }
