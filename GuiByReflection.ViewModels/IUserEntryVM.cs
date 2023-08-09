@@ -13,5 +13,5 @@ public interface IUserEntryVM : INotifyPropertyChanged
 
     event EventHandler<UserEntryChangedEventArgs>? UserEntryChanged;
 
-    void SetUserEntry(object? userEntry, bool updateActualValue);
+    void SetUserEntry(object? userEntry, bool isOriginalAction);
 }

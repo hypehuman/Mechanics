@@ -19,7 +19,7 @@ public class DesignParameterVM : IParameterVM
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public void SetActualValue(object? value, bool updateUserEnteredValue)
+    public void SetActualValue(object? value, bool isOriginalAction)
     {
         throw new NotImplementedException();
     }

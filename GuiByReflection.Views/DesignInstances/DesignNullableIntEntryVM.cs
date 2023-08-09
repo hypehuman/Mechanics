@@ -7,7 +7,7 @@ namespace GuiByReflection.Views.DesignInstances
     {
         public IUserEntryVM UnderlyingVM { get; } = new DesignUserEntryVM();
 
-        public bool UserEntryHasValue { get; set; } = true;
+        public bool HasValueUserEntry { get; set; } = true;
 
         public object? UnderlyingUserEntry { get; set; } = 1;
     }

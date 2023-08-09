@@ -2,7 +2,7 @@
 
 public interface INullableUserEntryVM : IUserEntryVM
 {
-    public bool UserEntryHasValue { get; set; }
+    public bool HasValueUserEntry { get; set; }
     public object? UnderlyingUserEntry { get; set; }
     public IUserEntryVM UnderlyingVM { get; }
 }
@@ -12,10 +12,19 @@ public class NullableUserEntryVM : UserEntryVM, INullableUserEntryVM
     private readonly Type _underlyingType;
     public IUserEntryVM UnderlyingVM { get; }
 
-    public bool UserEntryHasValue
+    private bool _hasValueUserEntry;
+    public bool HasValueUserEntry
     {
-        get => UnderlyingUserEntry != null;
-        set => UserEntry = value ? ParameterVM.GetDefaultValue(_underlyingType) : null;
+        get => _hasValueUserEntry;
+        set
+        {
+            _hasValueUserEntry UserEntry = value ? ParameterVM.GetDefaultValue(_underlyingType) : null;
+        }
+    }
+
+    private void UpdateHasValueUserEntry()
+    {
+
     }
 
     public object? UnderlyingUserEntry
@@ -42,7 +51,7 @@ public class NullableUserEntryVM : UserEntryVM, INullableUserEntryVM
 
         UserEntryChanged += (sender, args) =>
         {
-            OnPropertyChanged(nameof(UserEntryHasValue));
+            OnPropertyChanged(nameof(HasValueUserEntry));
             OnPropertyChanged(nameof(UnderlyingUserEntry));
         };
     }

@@ -15,5 +15,5 @@ public interface IParameterVM : ICanHaveHelp
     bool HasMessage { get; }
     string? Message { get; }
 
-    void SetActualValue(object? value, bool updateUserEnteredValue);
+    void SetActualValue(object? value, bool isOriginalAction);
 }

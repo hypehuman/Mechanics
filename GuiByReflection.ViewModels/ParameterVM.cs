@@ -32,15 +32,15 @@ public class ParameterVM : IParameterVM
         UserEntryVM = (userEntryVMSelector ?? DefaultUserEntryVMSelector.Instance).SelectUserEntryVM(ParameterType, userEntryVMSelector);
         UserEntryVM.UserEntryChanged += UserEntryVM_UserEntryChanged;
 
-        SetActualValue(GetDefaultValue(ParameterType), updateUserEnteredValue: true);
+        SetActualValue(GetDefaultValue(ParameterType), isOriginalAction: true);
     }
 
     private void UserEntryVM_UserEntryChanged(object? sender, UserEntryChangedEventArgs e)
     {
-        if (e.UpdateActualValue)
+        if (e.IsOriginalAction)
         {
             var value = _userEntryHandler.UserEntryToValue(e.UserEntry, ParameterType, ActualValue, out var message);
-            SetActualValue(value, updateUserEnteredValue: false);
+            SetActualValue(value, isOriginalAction: false);
             Message = message;
         }
     }
@@ -55,7 +55,7 @@ public class ParameterVM : IParameterVM
     // TODO: Check whether the value can be assigned to the type.
     // .NET internally uses System.RuntimeType.CheckValue to do that when calling the method.
     /// </summary>
-    public void SetActualValue(object? actualValue, bool updateUserEnteredValue)
+    public void SetActualValue(object? actualValue, bool isOriginalAction)
     {
         // You might be tempted to return if _actualValue == actualValue.
         // But for nullable types, we need to continue even if the value is changing from null to null.
@@ -64,9 +64,9 @@ public class ParameterVM : IParameterVM
         _actualValue = actualValue;
         OnPropertyChanged(nameof(ActualValue));
 
-        if (updateUserEnteredValue)
+        if (isOriginalAction)
         {
-            UserEntryVM.SetUserEntry(actualValue, updateActualValue: false);
+            UserEntryVM.SetUserEntry(actualValue, isOriginalAction: false);
             Message = string.Empty;
         }
     }

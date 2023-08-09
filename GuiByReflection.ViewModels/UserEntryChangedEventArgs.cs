@@ -3,11 +3,11 @@
 public class UserEntryChangedEventArgs : EventArgs
 {
     public object? UserEntry { get; }
-    public bool UpdateActualValue { get; }
+    public bool IsOriginalAction { get; }
 
-    public UserEntryChangedEventArgs(object? userEntry, bool updateActualValue)
+    public UserEntryChangedEventArgs(object? userEntry, bool isOriginalAction)
     {
         UserEntry = userEntry;
-        UpdateActualValue = updateActualValue;
+        IsOriginalAction = isOriginalAction;
     }
 }
