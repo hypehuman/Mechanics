@@ -1,5 +1,4 @@
-﻿using MechanicsCore.Scenarios;
-using MechanicsCore.StepConfiguring;
+﻿using MechanicsCore.StepConfiguring;
 
 namespace MechanicsCore;
 
@@ -217,8 +216,4 @@ public static class PreconfiguredSimulations
             return new(initConfig, stepConfig);
         }
     }
-
-    public static FullConfiguration ColorWheel_CloseCyclic { get; } = new(new ColorWheel(BodyColors.GetCloseCyclicColor, false), new());
-    public static FullConfiguration ColorWheel_SpacedCyclic { get; } = new(new ColorWheel(BodyColors.GetSpacedCyclicColor, false), new());
-    public static FullConfiguration ColorWheel_HashedPseudorandom { get; } = new(new ColorWheel(BodyColors.GetHashedPseudorandomColor, false), new());
 }

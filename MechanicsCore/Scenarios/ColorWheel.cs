@@ -4,7 +4,7 @@ namespace MechanicsCore.Scenarios;
 
 public class ColorWheel : SimulationInitializer
 {
-    private readonly Func<int, BodyColor> _getColor;
+    private readonly ColorMapping _colorMapping;
     private readonly bool _normalizeRadiance;
 
     public override IEnumerable<string> GetConfigLines()
@@ -12,19 +12,29 @@ public class ColorWheel : SimulationInitializer
         foreach (var b in base.GetConfigLines())
             yield return b;
 
-        yield return $"Color getter: {_getColor.Method.Name}";
+        yield return $"Color mapping: {_colorMapping}";
         yield return $"Normalize radiance: {_normalizeRadiance}";
     }
 
     public override object?[] GetConstructorParameters()
     {
-        return new object?[] { _getColor, _normalizeRadiance };
+        return new object?[] { _colorMapping, _normalizeRadiance };
     }
 
-    public ColorWheel(Func<int, BodyColor> getColor, bool normalizeRadiance)
+    public ColorWheel(ColorMapping colorMapping, bool normalizeRadiance)
     {
-        _getColor = getColor ?? throw new ArgumentNullException(nameof(getColor));
+        // Call this to validate the argument
+        var func = GetColorMappingFunction(colorMapping);
+
+        _colorMapping = colorMapping;
         _normalizeRadiance = normalizeRadiance;
+    }
+
+    public enum ColorMapping
+    {
+        CloseCyclic,
+        SpacedCyclicCyclic,
+        HashedPseudorandom,
     }
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
@@ -37,6 +47,8 @@ public class ColorWheel : SimulationInitializer
         displayBound1 = new(maxXY, maxXY, bodyRadius);
         displayBound0 = -displayBound1;
 
+        var getColor = GetColorMappingFunction(_colorMapping);
+
         var bodies = new Body[numWheels * numColorsPerWheel];
         for (var wheelI = 0; wheelI < numWheels; wheelI++)
         {
@@ -44,7 +56,7 @@ public class ColorWheel : SimulationInitializer
             for (var bodyJ = 0; bodyJ < numColorsPerWheel; bodyJ++)
             {
                 var colorI = wheelI * numColorsPerWheel + bodyJ;
-                var color = _getColor(colorI);
+                var color = getColor(colorI);
                 if (_normalizeRadiance)
                 {
                     color = NormalizeRadiance(color);
@@ -65,6 +77,17 @@ public class ColorWheel : SimulationInitializer
     }
 
     private static double GetWheelRadius(int wheelI, double bodyRadius) => 1 + wheelI * 2 * bodyRadius;
+
+    private static Func<int, BodyColor> GetColorMappingFunction(ColorMapping colorMapping)
+    {
+        return colorMapping switch
+        {
+            ColorMapping.CloseCyclic => BodyColors.GetCloseCyclicColor,
+            ColorMapping.SpacedCyclicCyclic => BodyColors.GetSpacedCyclicColor,
+            ColorMapping.HashedPseudorandom => BodyColors.GetHashedPseudorandomColor,
+            _ => throw Utils.OutOfRange(nameof(colorMapping), colorMapping)
+        };
+    }
 
     /// <summary>
     /// Radiance is "the radiant flux emitted, reflected, transmitted or received by a given surface, per unit solid angle per unit projected area."
