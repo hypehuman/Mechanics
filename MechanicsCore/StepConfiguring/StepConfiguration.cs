@@ -1,11 +1,37 @@
-﻿namespace MechanicsCore.StepConfiguring;
+﻿using GuiByReflection.Models;
+
+namespace MechanicsCore.StepConfiguring;
 
 /// <summary>
 /// Configuration that determines how the simulation proceeds at each step
 /// </summary>
-public class StepConfiguration
+public class StepConfiguration : IGetConstructorParameters
 {
     public StepConfiguration() { }
+
+    public object?[] GetConstructorParameters()
+    {
+        return new object?[] { StepTime, StepsPerLeap, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
+    }
+
+    public StepConfiguration(
+        [GuiTitle("Step time")]
+        [GuiHelp("The number of seconds per simulation step. Increasing this makes the simulation faster but less accurate.")]
+        double stepTime,
+        int stepsPerLeap,
+        GravityType gravity,
+        double buoyantGravityRatio,
+        CollisionType collisionConfig,
+        double dragCoefficient
+    )
+    {
+        StepTime = stepTime;
+        StepsPerLeap = stepsPerLeap;
+        GravityConfig = gravity;
+        BuoyantGravityRatio = buoyantGravityRatio;
+        CollisionConfig = collisionConfig;
+        DragCoefficient = dragCoefficient;
+    }
 
     public double StepTime { get; set; }
     public int StepsPerLeap { get; set; }
@@ -36,4 +62,8 @@ public class StepConfiguration
         if (CollisionConfig == CollisionType.Drag)
             yield return $"Drag coefficient: {Simulation.DoubleToString(DragCoefficient)}";
     }
+
+    public bool CanTakeSimpleShortcut() =>
+        GravityConfig == GravityType.Newton_Pointlike &&
+        CollisionConfig != CollisionType.Drag;
 }

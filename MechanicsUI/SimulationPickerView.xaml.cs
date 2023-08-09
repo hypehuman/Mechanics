@@ -1,9 +1,8 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 
 namespace MechanicsUI;
 
-public partial class SimulationPickerView : UserControl
+partial class SimulationPickerView
 {
     public SimulationPickerVM? ViewModel => DataContext as SimulationPickerVM;
 
@@ -19,10 +18,7 @@ public partial class SimulationPickerView : UserControl
             return;
 
         var preconfigName = (string)((FrameworkElement)sender).DataContext;
-
-        // TODO: Instead of starting the simulation, just set the config values.
-        var simVm = vm.StartPreconfiguredSimulation(preconfigName);
-        ShowSimWindow(simVm);
+        vm.SetPreconfiguredValues(preconfigName);
     }
 
     private void LaunchButton_Click(object sender, RoutedEventArgs e)
@@ -32,6 +28,9 @@ public partial class SimulationPickerView : UserControl
             return;
 
         var simVm = vm.StartSimulation();
+        if (simVm == null)
+            return;
+
         ShowSimWindow(simVm);
     }
 

@@ -1,100 +1,94 @@
-﻿using MechanicsCore;
+﻿using GuiByReflection.ViewModels;
+using MechanicsCore;
 using MechanicsCore.StepConfiguring;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MechanicsUI;
 
-public class SimulationPickerVM
+public class SimulationPickerVM : INotifyPropertyChanged
 {
-    public IReadOnlyList<string> PreconfigNames { get; } = typeof(PreconfiguredSimulations).GetProperties().Select(p => p.Name).ToArray();
-    public IReadOnlyList<string> ScenarioNames { get; } = typeof(Simulations).GetMethods().Where(m => m.ReturnType == typeof(Simulation)).Select(p => p.Name).ToArray();
+    private static readonly IReadOnlyList<string> sPreconfigNames =
+        typeof(PreconfiguredSimulations)
+        .GetProperties()
+        .Select(p => p.Name)
+        .ToList();
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public bool AutoStart { get; set; }
 
-    #region Init Config
+    public IReadOnlyList<string> PreconfigNames => sPreconfigNames;
 
-    public string SelectedScenarioName { get; set; }
+    public IReadOnlyList<Scenario> Scenarios => Simulations.Scenarios;
 
-    public string SeedString { get; set; } = string.Empty;
-    /* make private */
-    public int? GetSeed() => TryParseSeed(SeedString, out var seed) ? seed : null;
+    private Scenario _selectedScenario;
+    public Scenario SelectedScenario
+    {
+        get => _selectedScenario;
+        set
+        {
+            _selectedScenario = value;
+            OnPropertyChanged();
 
-    #endregion
+            InitConfigConstructorVM = new ConstructorVM(ConstructorVM.GetLongestPublicConstructor(value.InitializerType));
+        }
+    }
 
-    #region Step Config
+    private IMethodVM _initConfigConstructorVM;
+    public IMethodVM InitConfigConstructorVM
+    {
+        get => _initConfigConstructorVM;
+        set
+        {
+            _initConfigConstructorVM = value;
+            OnPropertyChanged();
+        }
+    }
 
-    private static readonly IReadOnlyList<GravityType> sGravityTypes = Enum.GetValues<GravityType>();
-    public static IReadOnlyList<GravityType> GravityTypes => sGravityTypes;
-    public GravityType GravityConfig { get; set; }
-
-    private static readonly IReadOnlyList<CollisionType> sCollisionTypes = Enum.GetValues<CollisionType>();
-    public static IReadOnlyList<CollisionType> CollisionTypes => sCollisionTypes;
-    public CollisionType CollisionConfig { get; set; }
-
-    #endregion
+    public IMethodVM StepConfigConstructorVM { get; } = new ConstructorVM(ConstructorVM.GetLongestPublicConstructor(typeof(StepConfiguration)));
 
     public SimulationPickerVM()
     {
-        SelectedScenarioName = ScenarioNames[0];
+        SelectedScenario = Scenarios[0];
     }
 
-    /// <summary>
-    /// TODO: Replace with a method that sets the config values instead of starting a new simulation
-    /// </summary>
-    public SimulationVM StartPreconfiguredSimulation(string name)
+    public void SetPreconfiguredValues(string preconfigName)
     {
-        var invoked = typeof(PreconfiguredSimulations).GetStaticPropertyValue(name)
-            ?? throw new NullReferenceException($"'{name}' was null");
-        var sim = (Simulation)invoked;
-        return new SimulationVM(sim, name)
+        var invoked = typeof(PreconfiguredSimulations).GetStaticPropertyValue(preconfigName)
+            ?? throw new NullReferenceException($"'{preconfigName}' was null");
+        var preconfig = (FullConfiguration)invoked;
+
+        var initializerType = preconfig.InitConfig.GetType();
+        SelectedScenario = Simulations.ScenariosByType[initializerType];
+        InitConfigConstructorVM.TrySetParameterValues(preconfig.InitConfig.GetConstructorParameters());
+        StepConfigConstructorVM.TrySetParameterValues(preconfig.StepConfig.GetConstructorParameters());
+    }
+
+    public SimulationVM? StartSimulation()
+    {
+        if (
+            !InitConfigConstructorVM.TryInvokeMethod(out var initConfigObj)
+            | // bitwise OR so that we can display both exceptions
+            !StepConfigConstructorVM.TryInvokeMethod(out var stepConfigObj)
+        )
+        {
+            return null;
+        }
+        var initConfig = (SimulationInitializer)initConfigObj;
+        var stepConfig = (StepConfiguration)stepConfigObj;
+        var sim = new Simulation(new(initConfig, stepConfig));
+        return new SimulationVM(sim)
         {
             IsAutoLeaping = AutoStart,
         };
     }
 
-    public SimulationVM StartSimulation()
+    protected void OnPropertyChanged([CallerMemberName] string? name = null)
     {
-        string name = SelectedScenarioName;
-        var invoked = typeof(Simulations).InvokeStatic(name, GetSeed())
-            ?? throw new NullReferenceException($"'{name}' was null");
-        var sim = (Simulation)invoked;
-        SetStepConfiguration(sim);
-        return new SimulationVM(sim, name)
-        {
-            IsAutoLeaping = AutoStart,
-        };
-    }
-
-    private void SetStepConfiguration(Simulation sim)
-    {
-        // TODO: Configure step time
-        // TODO: Configure steps per leap
-        sim.StepConfig.GravityConfig = GravityConfig;
-        // TODO: Configure buoyancy ratio if relevant
-        sim.StepConfig.CollisionConfig = CollisionConfig;
-        // TODO: Configure drag coefficient if relevant
-    }
-
-    public static bool TryParseSeed(string seedString, out int? seed)
-    {
-        if (string.IsNullOrWhiteSpace(seedString))
-        {
-            // Null is intentional; seed will be random.
-            seed = null;
-            return true;
-        }
-
-        if (int.TryParse(seedString, out var parsedSeed))
-        {
-            // Got an integer; seed will be fixed to the specified value.
-            seed = parsedSeed;
-            return true;
-        }
-
-        // Parsing failed.
-        seed = null;
-        return false;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

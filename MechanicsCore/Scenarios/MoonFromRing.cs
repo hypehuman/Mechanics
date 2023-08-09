@@ -1,8 +1,9 @@
-﻿using MathNet.Spatial.Euclidean;
+﻿using GuiByReflection.Models;
+using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore;
+namespace MechanicsCore.Scenarios;
 
-public class MoonFromRing : RandomSimulation
+public class MoonFromRing : RandomSimulationInitializer
 {
     private readonly int _numMoonFragments;
 
@@ -14,20 +15,26 @@ public class MoonFromRing : RandomSimulation
         yield return $"Number of Moon fragments: {_numMoonFragments}";
     }
 
-    public override Vector3D DisplayBound0 { get; }
-    public override Vector3D DisplayBound1 { get; }
-    public override IReadOnlyList<Body> Bodies { get; }
-
-    public MoonFromRing(int numMoonFragments, int? seed = null)
-        : base(seed)
+    public override object?[] GetConstructorParameters()
     {
-        StepConfig.StepTime = 8;
-        StepConfig.StepsPerLeap = 128;
+        return new object?[] { _numMoonFragments, _requestedSeed };
+    }
 
+    public MoonFromRing(
+        int numMoonFragments,
+        [GuiTitle(RequestedSeedGuiTitle)]
+        [GuiHelp(RequestedSeedGuiHelp)]
+        int? requestedSeed = null
+    )
+        : base(requestedSeed)
+    {
         _numMoonFragments = numMoonFragments;
+    }
 
-        DisplayBound1 = new(Constants.EarthMoonDistance * 1.1, Constants.EarthMoonDistance * 1.1, Constants.EarthRadius * 1.1);
-        DisplayBound0 = -DisplayBound1;
+    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    {
+        displayBound1 = new(Constants.EarthMoonDistance * 1.1, Constants.EarthMoonDistance * 1.1, Constants.EarthRadius * 1.1);
+        displayBound0 = -displayBound1;
         var fragmentMass = Constants.MoonMass / _numMoonFragments;
         var fragmentVolume = Constants.MoonVolume / _numMoonFragments;
         var fragmentRadius = Constants.SphereVolumeToRadius(fragmentVolume);
@@ -38,7 +45,7 @@ public class MoonFromRing : RandomSimulation
             var angleRad = angle01 * 2 * Math.PI;
             var cos = Math.Cos(angleRad);
             var sin = Math.Sin(angleRad);
-            bodies[i] = new(this,
+            bodies[i] = new(NextBodyID,
                 color: BodyColors.GetCloseCyclicColor((int)(angle01 * 256)),
                 mass: fragmentMass,
                 radius: fragmentRadius,
@@ -46,13 +53,13 @@ public class MoonFromRing : RandomSimulation
                 velocity: new(Constants.MoonOrbitEarthSpeed * -sin, Constants.MoonOrbitEarthSpeed * cos, 0)
             );
         }
-        bodies[_numMoonFragments] = new(this,
+        bodies[_numMoonFragments] = new(NextBodyID,
             name: "Earth",
             color: BodyColors.Earth,
             mass: Constants.EarthMass,
             radius: Constants.EarthRadius
         );
-        Bodies = bodies;
         BodySystem.SetNetZeroMomentum(bodies);
+        return bodies;
     }
 }

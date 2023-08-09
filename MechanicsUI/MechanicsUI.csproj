@@ -9,6 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GuiByReflection.ViewModels\GuiByReflection.ViewModels.csproj" />
+    <ProjectReference Include="..\GuiByReflection.Views\GuiByReflection.Views.csproj" />
     <ProjectReference Include="..\MechanicsCore\MechanicsCore.csproj" />
   </ItemGroup>
 

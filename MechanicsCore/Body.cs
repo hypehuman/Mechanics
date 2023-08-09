@@ -6,7 +6,6 @@ namespace MechanicsCore;
 
 public class Body
 {
-    public Simulation Simulation { get; }
     public int ID { get; }
     public string Name { get; }
     public BodyColor Color { get; set; }
@@ -22,10 +21,9 @@ public class Body
 
     public double Density => Mass / Volume;
 
-    public Body(Simulation simulation, string? name = null, BodyColor? color = null, double mass = 0, double radius = 0, Vector3D position = default, Vector3D velocity = default)
+    public Body(int id, string? name = null, BodyColor? color = null, double mass = 0, double radius = 0, Vector3D position = default, Vector3D velocity = default)
     {
-        Simulation = simulation;
-        ID = Simulation.NextBodyID;
+        ID = id;
         Name = name ?? ID.ToString();
         Color = color ?? BodyColors.GetSpacedCyclicColor(ID);
         Mass = mass;
@@ -47,7 +45,7 @@ public class Body
 
     public Vector3D ComputeMomentum() => Mass * Velocity;
 
-    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies)
+    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies, StepConfiguration config)
     {
         var a = default(Vector3D);
         foreach (var body2 in allBodies)
@@ -56,7 +54,7 @@ public class Body
             {
                 continue;
             }
-            a += GetAccelerationOn1DueTo2(this, body2);
+            a += GetAccelerationOn1DueTo2(this, body2, config);
         }
         return a;
     }
@@ -67,14 +65,12 @@ public class Body
         Position += dt * Velocity;
     }
 
-    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2)
+    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2, StepConfiguration config)
     {
-        var sim = body1.Simulation;
-        var config = sim.StepConfig;
         var displacement = body2.Position - body1.Position;
         var m2 = body2.Mass;
 
-        if (sim.TakeSimpleShortcut)
+        if (config.CanTakeSimpleShortcut())
         {
             // Shortcut for simpler simulations
             return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2);
@@ -99,7 +95,7 @@ public class Body
             return ag;
         }
 
-        var others = ComputeOtherForces(body1, body2, displacement, distance);
+        var others = ComputeOtherForces(body1, body2, displacement, distance, config);
         others /= m1; // convert others from a force to an acceleration
         return ag + others;
     }
@@ -185,14 +181,13 @@ public class Body
 #endif
     }
 
-    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance)
+    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance, StepConfiguration config)
     {
-        return ComputeDragForce(body1, body2, displacement, distance);
+        return ComputeDragForce(body1, body2, displacement, distance, config);
     }
 
-    private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance)
+    private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance, StepConfiguration config)
     {
-        var config = body1.Simulation.StepConfig;
         if (config.CollisionConfig != CollisionType.Drag)
         {
             return default;
@@ -224,7 +219,7 @@ public class Body
         // whereas in theory, the acceleration should drop off rapidly within that time step.
         // Therefore, we cap the force at an amount that would bring the bodies' relative velocity to zero in one time step.
 
-        if (WillBounce(body1, body2, relativeVelocity, fd, false))
+        if (WillBounce(body1, body2, relativeVelocity, fd, config.StepTime, false))
         {
             // Instead, apply a force sufficient to make both velocities the same while conserving momentum
             // (assuming the opposite force is applied to body2)
@@ -236,7 +231,7 @@ public class Body
             fd = m1 / t * ((m1 * v1 + m2 * v2) / (m1 + m2) - v1);
 
             // Check again!
-            WillBounce(body1, body2, relativeVelocity, fd, true);
+            WillBounce(body1, body2, relativeVelocity, fd, config.StepTime, true);
         }
 
         // Now we have computed the drag.
@@ -248,13 +243,12 @@ public class Body
         return double.IsFinite(component.Length) ? component : default;
     }
 
-    private static bool WillBounce(Body body1, Body body2, Vector3D relativeVelocity, Vector3D force, bool isDoubleCheck)
+    private static bool WillBounce(Body body1, Body body2, Vector3D relativeVelocity, Vector3D force, double stepTime, bool isDoubleCheck)
     {
-        var config = body1.Simulation.StepConfig;
         var nextAcceleration1 = force / body1.Mass;
         var nextAcceleration2 = -force / body2.Mass;
-        var changeInVelocity1 = config.StepTime * nextAcceleration1;
-        var changeInVelocity2 = config.StepTime * nextAcceleration2;
+        var changeInVelocity1 = stepTime * nextAcceleration1;
+        var changeInVelocity2 = stepTime * nextAcceleration2;
         var nextVelocity1 = body1.Velocity + changeInVelocity1;
         var nextVelocity2 = body2.Velocity + changeInVelocity2;
         var nextRelativeVelocity = nextVelocity2 - nextVelocity1;

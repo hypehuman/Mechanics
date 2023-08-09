@@ -1,22 +1,22 @@
 ﻿using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore;
+namespace MechanicsCore.Scenarios;
 
-public class SunEarthMoon : Simulation
+public class SunEarthMoon : SimulationInitializer
 {
-    public override Vector3D DisplayBound0 { get; }
-    public override Vector3D DisplayBound1 { get; }
-
-    public override IReadOnlyList<Body> Bodies { get; }
+    public override object?[] GetConstructorParameters()
+    {
+        return Array.Empty<object?>();
+    }
 
     public SunEarthMoon()
     {
-        StepConfig.StepTime = 16;
-        const double leaps_per_year = 365.24;
-        StepConfig.StepsPerLeap = Convert.ToInt32(Constants.SecondsPerYear / leaps_per_year / StepConfig.StepTime);
+    }
 
+    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    {
         var bodies = new Body[] {
-            new(this,
+            new(NextBodyID,
                 name: "Sun",
                 color: BodyColors.Sun,
                 mass: Constants.SunMass,
@@ -25,7 +25,7 @@ public class SunEarthMoon : Simulation
                 // Give it the opposite momentum of the earth so that the system's center of mass stays in place
                 velocity: new(0, -Constants.EarthOrbitSunSpeed * Constants.EarthMass / Constants.SunMass, 0)
             ),
-            new(this,
+            new(NextBodyID,
                 name: "Earth",
                 color: BodyColors.Earth,
                 mass: Constants.EarthMass,
@@ -33,7 +33,7 @@ public class SunEarthMoon : Simulation
                 position: new(Constants.SunEarthDistance, 0, 0),
                 velocity: new(0, Constants.EarthOrbitSunSpeed, 0)
             ),
-            new(this,
+            new(NextBodyID,
                 name: "Moon",
                 color: BodyColors.Moon,
                 mass: Constants.MoonMass,
@@ -42,18 +42,19 @@ public class SunEarthMoon : Simulation
                 velocity: new(0, Constants.EarthOrbitSunSpeed + Constants.MoonOrbitEarthSpeed, 0)
             ),
         };
-        Bodies = bodies;
 
         var displayBoundPadding = Constants.SunEarthDistance / 64;
-        DisplayBound0 = new(
+        displayBound0 = new(
             bodies.Min(b => b.Position.X) - displayBoundPadding,
             bodies.Min(b => b.Position.Y) - displayBoundPadding,
             bodies.Min(b => b.Position.Z) - displayBoundPadding
         );
-        DisplayBound1 = new(
+        displayBound1 = new(
             bodies.Max(b => b.Position.X) + displayBoundPadding,
             bodies.Max(b => b.Position.Y) + displayBoundPadding,
             bodies.Max(b => b.Position.Z) + displayBoundPadding
         );
+
+        return bodies;
     }
 }

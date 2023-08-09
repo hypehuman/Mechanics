@@ -10,7 +10,6 @@ namespace MechanicsUI;
 public class SimulationVM : INotifyPropertyChanged
 {
     public Simulation Model { get; }
-    public string Name { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
     public BodyVM[] BodyVMs { get; }
@@ -61,16 +60,15 @@ public class SimulationVM : INotifyPropertyChanged
         }
     }
 
-    public SimulationVM(Simulation model, string name)
+    public SimulationVM(Simulation model)
     {
         Model = model;
-        Name = name;
         BodyVMs = Model.Bodies.Select(b => new BodyVM(b, this)).ToArray();
     }
 
     private string GetTitleOrConfig(string separator)
     {
-        return Name + string.Concat(Model.GetConfigLines().Select(l => separator + l));
+        return string.Join(separator, Model.GetConfigLines());
     }
 
     public void LeapAndRefresh()
@@ -148,7 +146,7 @@ public class SimulationVM : INotifyPropertyChanged
 public class DefaultSimulationVM : SimulationVM
 {
     public DefaultSimulationVM()
-        : base(PreconfiguredSimulations.Default(), "Default")
+        : base(new(PreconfiguredSimulations.Default()))
     {
     }
 }

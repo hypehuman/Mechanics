@@ -12,10 +12,11 @@ internal class Program
     {
         Console.WriteLine("Running performance tests:");
 
-        var sim = PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0;
-        sim.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
-        sim.StepConfig.CollisionConfig = CollisionType.None;
-        if (!sim.TakeSimpleShortcut) { throw new Exception("Config should have made it simple."); }
+        var config = PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0;
+        config.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
+        config.StepConfig.CollisionConfig = CollisionType.None;
+        if (!config.StepConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
+        var sim = new Simulation(config);
         var n = sim.Bodies.Count;
         var m = new double[n];
         var p = new Vector3D[n];
@@ -55,7 +56,7 @@ internal class Program
             var a = new Vector3D[n];
             for (var i = 0; i < n; i++)
             {
-                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies);
+                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies, sim.StepConfig);
             };
             return a;
         };
@@ -121,8 +122,9 @@ internal class Program
         }
     }
 
-    private static void SeeHowLongItTakes(Simulation sim, int numLeaps)
+    private static void SeeHowLongItTakes(FullConfiguration config, int numLeaps)
     {
+        var sim = new Simulation(config);
         var sw = Stopwatch.StartNew();
         for (int leapI = 0; leapI < 5; leapI++)
         {
@@ -137,8 +139,9 @@ internal class Program
         Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
     }
 
-    private static void SeeHowFarItGoes(Simulation sim, int ms)
+    private static void SeeHowFarItGoes(FullConfiguration config, int ms)
     {
+        var sim = new Simulation(config);
         var numLeaps = 0;
         var sw = Stopwatch.StartNew();
         while (sw.ElapsedMilliseconds < ms)
@@ -149,8 +152,9 @@ internal class Program
         Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
     }
 
-    private static void Run(Simulation sim)
+    private static void Run(FullConfiguration config)
     {
+        var sim = new Simulation(config);
         sim.DumpState();
         while (sim.t < Constants.SecondsPerYear)
         {

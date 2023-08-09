@@ -4,6 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:uiByReflectionViews="clr-namespace:GuiByReflection.Views;assembly=GuiByReflection.Views"
     xmlns:local="clr-namespace:MechanicsUI"
     mc:Ignorable="d"
     d:DesignHeight="450" d:DesignWidth="800"
@@ -30,35 +31,19 @@
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="Scenario: " />
-                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding SelectedScenarioName}" ItemsSource="{Binding ScenarioNames}" />
+                        <ComboBox VerticalAlignment="Center" SelectedItem="{Binding SelectedScenario}" ItemsSource="{Binding Scenarios}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Title}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="Seed (empty for random): " />
-                        <TextBox VerticalAlignment="Center" MinWidth="100">
-                            <TextBox.Text>
-                                <Binding Path="SeedString" UpdateSourceTrigger="PropertyChanged">
-                                    <Binding.ValidationRules>
-                                        <local:SeedTextValidationRule />
-                                    </Binding.ValidationRules>
-                                </Binding>
-                            </TextBox.Text>
-                        </TextBox>
-                    </StackPanel>
+                    <uiByReflectionViews:MethodView DataContext="{Binding InitConfigConstructorVM}" />
                 </StackPanel>
             </GroupBox>
             <GroupBox Margin="5" Padding="5" Header="Step Configuration">
-                <StackPanel>
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock VerticalAlignment="Center" Text="Gravity: " />
-                            <ComboBox VerticalAlignment="Center" SelectedItem="{Binding GravityConfig}" ItemsSource="{Binding GravityTypes}" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock VerticalAlignment="Center" Text="Collision handling: " />
-                            <ComboBox VerticalAlignment="Center" SelectedItem="{Binding CollisionConfig}" ItemsSource="{Binding CollisionTypes}" />
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
+                <uiByReflectionViews:MethodView DataContext="{Binding StepConfigConstructorVM}" />
             </GroupBox>
             <GroupBox Margin="5" Header="Controls">
                 <StackPanel>

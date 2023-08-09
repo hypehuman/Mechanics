@@ -4,28 +4,30 @@ using MechanicsCore.StepConfiguring;
 
 namespace MechanicsCore;
 
-public abstract class Simulation
+public class Simulation
 {
+    public SimulationInitializer InitConfig { get; }
+    public StepConfiguration StepConfig { get; } = new StepConfiguration();
+
     #region Current state
 
-    private int sPrevBodyID = -1;
-    public int NextBodyID => Interlocked.Increment(ref sPrevBodyID);
-
     public double t { get; private set; }
-    public abstract Vector3D DisplayBound0 { get; }
-    public abstract Vector3D DisplayBound1 { get; }
+    public Vector3D DisplayBound0 { get; }
+    public Vector3D DisplayBound1 { get; }
 
-    public abstract IReadOnlyList<Body> Bodies { get; }
+    public IReadOnlyList<Body> Bodies { get; }
     public IEnumerable<Body> ExistingBodies => Bodies.Where(b => b.Exists);
 
     #endregion
 
-    public InitialConfiguration InitConfig { get; } = new InitialConfiguration();
-    public StepConfiguration StepConfig { get; } = new StepConfiguration();
-
-    public bool TakeSimpleShortcut =>
-        StepConfig.GravityConfig == GravityType.Newton_Pointlike &&
-        StepConfig.CollisionConfig != CollisionType.Drag;
+    public Simulation(FullConfiguration fullConfiguration)
+    {
+        InitConfig = fullConfiguration.InitConfig;
+        Bodies = InitConfig.GenerateInitialState(out var displayBound0, out var displayBound1);
+        DisplayBound0 = displayBound0;
+        DisplayBound1 = displayBound1;
+        StepConfig = fullConfiguration.StepConfig;
+    }
 
     private void Step()
     {
@@ -34,7 +36,7 @@ public abstract class Simulation
         var n = Bodies.Count;
         var a = new Vector3D[n];
 #if !DISABLE_RUST
-        if (TakeSimpleShortcut)
+        if (StepConfig.CanTakeSimpleShortcut())
         {
             // The indexing in Bodies will be different from what we pass to Rust,
             // since Rust doesn't yet know to ignore bodies that have stopped existing.
@@ -64,7 +66,7 @@ public abstract class Simulation
             {
                 var body = Bodies[i];
                 if (!body.Exists) continue;
-                a[i] = body.ComputeAcceleration(Bodies);
+                a[i] = body.ComputeAcceleration(Bodies, StepConfig);
             };
         }
         for (var i = 0; i < n; i++)
@@ -229,6 +231,9 @@ public abstract class Simulation
 
     public virtual IEnumerable<string> GetConfigLines()
     {
+        foreach (var i in InitConfig.GetConfigLines())
+            yield return i;
+
         foreach (var s in StepConfig.GetConfigLines())
             yield return s;
     }

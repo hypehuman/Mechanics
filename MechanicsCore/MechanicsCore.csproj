@@ -12,6 +12,10 @@
     <PackageReference Include="MathNet.Spatial" Version="0.6.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GuiByReflection.Models\GuiByReflection.Models.csproj" />
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="cd &quot;$(SolutionDir)\Rust\mechanics_fast&quot;&#xD;&#xA;cargo build --release" />
   </Target>

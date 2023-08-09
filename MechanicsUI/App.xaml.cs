@@ -1,7 +1,5 @@
-﻿using System.Windows;
+﻿namespace MechanicsUI;
 
-namespace MechanicsUI;
-
-public partial class App : Application
+partial class App
 {
 }
