@@ -120,7 +120,7 @@ public static class PreconfiguredSimulations
 
     // Around 3 days, forms a two-body "planet" with two one-body "moons".
     // Around 70 days, forms a three-body "planet" with a one-body "moon".
-    // Around 2.5 years, collapses into a single four-body "planet".
+    // Around 1.7 years, collapses into a single four-body "planet".
     public static FullConfiguration Falling_Buoyant_Drag_Tiny_287200931
     {
         get

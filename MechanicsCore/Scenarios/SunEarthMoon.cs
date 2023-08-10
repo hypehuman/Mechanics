@@ -30,7 +30,7 @@ public class SunEarthMoon : SimulationInitializer
                 color: BodyColors.Earth,
                 mass: Constants.EarthMass,
                 radius: Constants.EarthRadius,
-                position: new(Constants.SunEarthDistance, 0, 0),
+                position: new(Constants.EarthOrbitSunDistance, 0, 0),
                 velocity: new(0, Constants.EarthOrbitSunSpeed, 0)
             ),
             new(NextBodyID,
@@ -38,12 +38,12 @@ public class SunEarthMoon : SimulationInitializer
                 color: BodyColors.Moon,
                 mass: Constants.MoonMass,
                 radius: Constants.MoonRadius,
-                position: new(Constants.SunEarthDistance + Constants.EarthMoonDistance, 0, 0),
+                position: new(Constants.EarthOrbitSunDistance + Constants.MoonOrbitEarthDistance, 0, 0),
                 velocity: new(0, Constants.EarthOrbitSunSpeed + Constants.MoonOrbitEarthSpeed, 0)
             ),
         };
 
-        var displayBoundPadding = Constants.SunEarthDistance / 64;
+        var displayBoundPadding = Constants.EarthOrbitSunDistance / 64;
         displayBound0 = new(
             bodies.Min(b => b.Position.X) - displayBoundPadding,
             bodies.Min(b => b.Position.Y) - displayBoundPadding,

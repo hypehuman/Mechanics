@@ -33,7 +33,7 @@ public class MoonFromRing : RandomSimulationInitializer
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
-        displayBound1 = new(Constants.EarthMoonDistance * 1.1, Constants.EarthMoonDistance * 1.1, Constants.EarthRadius * 1.1);
+        displayBound1 = new(Constants.MoonOrbitEarthDistance * 1.1, Constants.MoonOrbitEarthDistance * 1.1, Constants.EarthRadius * 1.1);
         displayBound0 = -displayBound1;
         var fragmentMass = Constants.MoonMass / _numMoonFragments;
         var fragmentVolume = Constants.MoonVolume / _numMoonFragments;
@@ -49,7 +49,7 @@ public class MoonFromRing : RandomSimulationInitializer
                 color: BodyColors.GetCloseCyclicColor((int)(angle01 * 256)),
                 mass: fragmentMass,
                 radius: fragmentRadius,
-                position: new(Constants.EarthMoonDistance * cos, Constants.EarthMoonDistance * sin, 0),
+                position: new(Constants.MoonOrbitEarthDistance * cos, Constants.MoonOrbitEarthDistance * sin, 0),
                 velocity: new(Constants.MoonOrbitEarthSpeed * -sin, Constants.MoonOrbitEarthSpeed * cos, 0)
             );
         }

@@ -67,7 +67,7 @@ public static class Simulations
     public static SimulationInitializer Falling_Huge(int? requestedSeed = null) => Falling(512, requestedSeed);
 
     private static SimulationInitializer Falling(int numBodies, int? requestedSeed = null) => new Falling(
-        Constants.EarthMoonDistance,
+        Constants.MoonOrbitEarthDistance,
         numBodies,
         Constants.EarthMass + Constants.MoonMass,
         Constants.EarthVolume + Constants.MoonVolume,
