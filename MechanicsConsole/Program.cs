@@ -1,6 +1,7 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore;
 using MechanicsCore.Rust.mechanics_fast;
+using MechanicsCore.Scenarios;
 using MechanicsCore.StepConfiguring;
 using System.Diagnostics;
 
@@ -12,11 +13,24 @@ internal class Program
     {
         Console.WriteLine("Running performance tests:");
 
-        var config = PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0;
-        config.StepConfig.GravityConfig = GravityType.Newton_Pointlike;
-        config.StepConfig.CollisionConfig = CollisionType.None;
-        if (!config.StepConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
-        var sim = new Simulation(config);
+        var fallingHuge = new FullConfiguration(
+            new Falling(
+                Constants.MoonOrbitEarthDistance,
+                512,
+                Constants.EarthMass + Constants.MoonMass,
+                Constants.EarthVolume + Constants.MoonVolume,
+                Constants.MoonOrbitEarthSpeed / Math.Sqrt(10)
+            ),
+            new StepConfiguration
+            {
+                StepTime = 8,
+                StepsPerLeap = 128,
+                GravityConfig = GravityType.Newton_Pointlike,
+                CollisionConfig = CollisionType.None,
+            }
+        );
+        if (!fallingHuge.StepConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
+        var sim = new Simulation(fallingHuge);
         var n = sim.Bodies.Count;
         var m = new double[n];
         var p = new Vector3D[n];
@@ -62,10 +76,10 @@ internal class Program
         };
         HeadToHead(new[] { a, b, c }, 8, 32);
 
-        SeeHowLongItTakes(PreconfiguredSimulations.MoonFromRing_Pointlike_Combine_Insane_102691847, 5);
-        SeeHowFarItGoes(PreconfiguredSimulations.SunEarthMoon_Pointlike, 10000);
+        SeeHowLongItTakes(PreconfiguredSimulations.MoonFromRing_Insane_102691847, 5);
+        SeeHowFarItGoes(PreconfiguredSimulations.SunEarthMoon, 10000);
         SeeHowFarItGoes(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0, 10000);
-        SeeHowFarItGoes(PreconfiguredSimulations.Falling_Buoyant_Drag_Huge_0, 10000);
+        SeeHowFarItGoes(fallingHuge, 10000);
 
         Console.WriteLine();
         Console.WriteLine("Press Enter to start the simulation:");

@@ -7,3 +7,14 @@ public interface IGetConstructorParameters
     /// </summary>
     object?[] GetConstructorParameters();
 }
+
+public static class GetConstructorParametersExtensions
+{
+    public static T Clone<T>(this T orig)
+        where T : IGetConstructorParameters
+    {
+        var args = orig.GetConstructorParameters();
+        var copy = Activator.CreateInstance(typeof(T), args);
+        return (T)copy;
+    }
+}

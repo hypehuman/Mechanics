@@ -1,4 +1,5 @@
-﻿using MechanicsCore.StepConfiguring;
+﻿using MechanicsCore.Scenarios;
+using MechanicsCore.StepConfiguring;
 
 namespace MechanicsCore;
 
@@ -10,7 +11,12 @@ public static class PreconfiguredSimulations
     {
         get
         {
-            var initConfig = Simulations.TwoBodies(0);
+            var initConfig = new TwoBodies(
+                Constants.EarthRadius * 2,
+                Constants.EarthMass,
+                Constants.EarthVolume,
+                requestedSeed: 0
+            );
             var stepConfig = new StepConfiguration
             {
                 StepTime = 1,
@@ -21,26 +27,16 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration TwoBodies_Buoyant_0
-    {
-        get
-        {
-            var initConfig = Simulations.TwoBodies(0);
-            var stepConfig = new StepConfiguration
-            {
-                StepTime = 1,
-                StepsPerLeap = 1024,
-                GravityConfig = GravityType.Newton_Buoyant,
-            };
-            return new(initConfig, stepConfig);
-        }
-    }
-
     public static FullConfiguration TwoBodies_Buoyant_Drag_0
     {
         get
         {
-            var initConfig = Simulations.TwoBodies(0);
+            var initConfig = new TwoBodies(
+                Constants.EarthRadius * 2,
+                Constants.EarthMass,
+                Constants.EarthVolume,
+                requestedSeed: 0
+            );
             var stepConfig = new StepConfiguration
             {
                 StepTime = 1,
@@ -52,46 +48,14 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration Line3Moons_Buoyant_Drag
-    {
-        get
-        {
-            var initConfig = Simulations.Line3Moons();
-            var stepConfig = new StepConfiguration
-            {
-                StepTime = 1,
-                StepsPerLeap = 128,
-                GravityConfig = GravityType.Newton_Buoyant,
-                CollisionConfig = CollisionType.Drag,
-            };
-            return new(initConfig, stepConfig);
-        }
-    }
-
-    public static FullConfiguration Line4Moons_Buoyant_Drag
-    {
-        get
-        {
-            var initConfig = Simulations.Line4Moons();
-            var stepConfig = new StepConfiguration
-            {
-                StepTime = 1,
-                StepsPerLeap = 128,
-                GravityConfig = GravityType.Newton_Buoyant,
-                CollisionConfig = CollisionType.Drag,
-            };
-            return new(initConfig, stepConfig);
-        }
-    }
-
-    public static FullConfiguration SunEarthMoon_Pointlike
+    public static FullConfiguration SunEarthMoon
     {
         get
         {
             const double step_time = 16;
             const double leaps_per_year = 365.24;
             const double steps_per_leap = Constants.SecondsPerYear / leaps_per_year / step_time;
-            var initConfig = Simulations.SunEarthMoon();
+            var initConfig = new SunEarthMoon();
             var stepConfig = new StepConfiguration
             {
                 StepTime = step_time,
@@ -102,11 +66,17 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration Falling_Buoyant_Drag_Tiny_0
+    public static FullConfiguration Falling_EarthMoon
     {
         get
         {
-            var initConfig = Simulations.Falling_Tiny(0);
+            var initConfig = new Falling(
+                Constants.MoonOrbitEarthDistance,
+                64,
+                Constants.EarthMass + Constants.MoonMass,
+                Constants.EarthVolume + Constants.MoonVolume,
+                Constants.MoonOrbitEarthSpeed / Math.Sqrt(10)
+            );
             var stepConfig = new StepConfiguration
             {
                 StepTime = 8,
@@ -118,14 +88,23 @@ public static class PreconfiguredSimulations
         }
     }
 
-    // Around 3 days, forms a two-body "planet" with two one-body "moons".
-    // Around 70 days, forms a three-body "planet" with a one-body "moon".
-    // Around 1.7 years, collapses into a single four-body "planet".
-    public static FullConfiguration Falling_Buoyant_Drag_Tiny_287200931
+    /// <summary>
+    /// Around 3 days, forms a two-body "planet" with two one-body "moons".
+    /// Around 70 days, forms a three-body "planet" with a one-body "moon".
+    /// Around 1.7 years, collapses into a single four-body "planet".
+    /// </summary>
+    public static FullConfiguration Falling_EarthMoon_Tiny_287200931
     {
         get
         {
-            var initConfig = Simulations.Falling_Tiny(287200931);
+            var initConfig = new Falling(
+                Constants.MoonOrbitEarthDistance,
+                4,
+                Constants.EarthMass + Constants.MoonMass,
+                Constants.EarthVolume + Constants.MoonVolume,
+                Constants.MoonOrbitEarthSpeed / Math.Sqrt(10),
+                287200931
+            );
             var stepConfig = new StepConfiguration
             {
                 StepTime = 8,
@@ -137,59 +116,40 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration Falling_Buoyant_Drag_Small_0
+    /// <summary>
+    /// Picked 13 because then you have often get 12 (the 3D kissing number) the middle one.
+    /// 4 and 6 are also pretty because of their symmetry.
+    /// I gave them just enough speed that the combined body tends rotate.
+    /// </summary>
+    public static FullConfiguration EarthLattice
     {
         get
         {
-            var initConfig = Simulations.Falling_Small(0);
+            var initConfig = new Falling(
+                Constants.EarthRadius,
+                13,
+                Constants.EarthMass,
+                Constants.EarthVolume,
+                1000
+            );
             var stepConfig = new StepConfiguration
             {
-                StepTime = 8,
+                StepTime = 0.1,
                 StepsPerLeap = 128,
                 GravityConfig = GravityType.Newton_Buoyant,
+                BuoyantGravityRatio = 1000,
                 CollisionConfig = CollisionType.Drag,
+                DragCoefficient = 10,
             };
             return new(initConfig, stepConfig);
         }
     }
 
-    public static FullConfiguration Falling_Buoyant_Drag_Large_0
+    public static FullConfiguration MoonFromRing
     {
         get
         {
-            var initConfig = Simulations.Falling_Large(0);
-            var stepConfig = new StepConfiguration
-            {
-                StepTime = 8,
-                StepsPerLeap = 128,
-                GravityConfig = GravityType.Newton_Buoyant,
-                CollisionConfig = CollisionType.Drag,
-            };
-            return new(initConfig, stepConfig);
-        }
-    }
-
-    public static FullConfiguration Falling_Buoyant_Drag_Huge_0
-    {
-        get
-        {
-            var initConfig = Simulations.Falling_Huge(0);
-            var stepConfig = new StepConfiguration
-            {
-                StepTime = 8,
-                StepsPerLeap = 128,
-                GravityConfig = GravityType.Newton_Buoyant,
-                CollisionConfig = CollisionType.Drag,
-            };
-            return new(initConfig, stepConfig);
-        }
-    }
-
-    public static FullConfiguration MoonFromRing_Pointlike_Combine_Sane_0
-    {
-        get
-        {
-            var initConfig = Simulations.MoonFromRing_Sane(0);
+            var initConfig = new MoonFromRing(64);
             var stepConfig = new StepConfiguration
             {
                 StepTime = 8,
@@ -201,11 +161,11 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration MoonFromRing_Pointlike_Combine_Insane_102691847
+    public static FullConfiguration MoonFromRing_Insane_102691847
     {
         get
         {
-            var initConfig = Simulations.MoonFromRing_Insane(102691847);
+            var initConfig = new MoonFromRing(1024, 102691847);
             var stepConfig = new StepConfiguration
             {
                 StepTime = 8,

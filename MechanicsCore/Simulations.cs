@@ -39,42 +39,4 @@ public static class Simulations
         sScenarios.Add(scenario);
         sScenariosByType.Add(scenario.InitializerType, scenario);
     }
-
-    public static SimulationInitializer TwoBodies(int? requestedSeed = null) => new TwoBodies(
-        Constants.EarthRadius * 2,
-        Constants.EarthMass,
-        Constants.EarthVolume,
-        requestedSeed
-    );
-
-    public static SimulationInitializer Line3Moons(int? requestedSeed = null) => new Line(
-        3,
-        Constants.MoonMass,
-        Constants.MoonRadius
-    );
-
-    public static SimulationInitializer Line4Moons(int? requestedSeed = null) => new Line(
-        4,
-        Constants.MoonMass,
-        Constants.MoonRadius
-    );
-
-    public static SimulationInitializer SunEarthMoon(int? requestedSeed = null) => new SunEarthMoon();
-
-    public static SimulationInitializer Falling_Tiny(int? requestedSeed = null) => Falling(4, requestedSeed);
-    public static SimulationInitializer Falling_Small(int? requestedSeed = null) => Falling(16, requestedSeed);
-    public static SimulationInitializer Falling_Large(int? requestedSeed = null) => Falling(128, requestedSeed);
-    public static SimulationInitializer Falling_Huge(int? requestedSeed = null) => Falling(512, requestedSeed);
-
-    private static SimulationInitializer Falling(int numBodies, int? requestedSeed = null) => new Falling(
-        Constants.MoonOrbitEarthDistance,
-        numBodies,
-        Constants.EarthMass + Constants.MoonMass,
-        Constants.EarthVolume + Constants.MoonVolume,
-        Constants.MoonOrbitEarthSpeed / Math.Sqrt(10),
-        requestedSeed
-    );
-
-    public static SimulationInitializer MoonFromRing_Sane(int? requestedSeed = null) => new MoonFromRing(64, requestedSeed);
-    public static SimulationInitializer MoonFromRing_Insane(int? requestedSeed = null) => new MoonFromRing(1024, requestedSeed);
 }
