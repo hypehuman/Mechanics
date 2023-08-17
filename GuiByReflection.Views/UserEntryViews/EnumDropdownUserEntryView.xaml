@@ -5,8 +5,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:GuiByReflection.Views"
+    xmlns:designInstances="clr-namespace:GuiByReflection.Views.DesignInstances"
     mc:Ignorable="d"
-    d:DataContext="{d:DesignInstance Type=local:DesignParameterVM, IsDesignTimeCreatable=True}"
+    d:DataContext="{d:DesignInstance Type=designInstances:DesignParameterVM, IsDesignTimeCreatable=True}"
 >
     <UserControl.Resources>
         <local:EnumTypeToItemsSourceConverter x:Key="itemsSourceConverter" />
