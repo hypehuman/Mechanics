@@ -1,4 +1,5 @@
 ﻿using AdonisUI.Controls;
+using GuiByReflection.ViewModels;
 using System.Windows;
 
 namespace MechanicsUI;
@@ -18,8 +19,10 @@ partial class SimulationLauncherView
         if (vm == null)
             return;
 
-        var preconfigName = (string)((FrameworkElement)sender).DataContext;
-        vm.LoadScenarioConfig(preconfigName);
+        if (sender is not FrameworkElement senderFE || senderFE.DataContext is not IPropertyVM scenarioVM)
+            return;
+
+        vm.LoadScenarioConfig(scenarioVM);
     }
 
     private void LaunchButton_Click(object sender, RoutedEventArgs e)

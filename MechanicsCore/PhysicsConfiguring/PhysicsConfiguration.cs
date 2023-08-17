@@ -11,14 +11,13 @@ public class PhysicsConfiguration : IGetConstructorParameters
 
     public object?[] GetConstructorParameters()
     {
-        return new object?[] { StepTime, StepsPerLeap, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
+        return new object?[] { StepTime, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
     }
 
     public PhysicsConfiguration(
         [GuiName("Step time")]
         [GuiHelp("The number of seconds per simulation step. Increasing this makes the simulation faster but less accurate.")]
         double stepTime,
-        int stepsPerLeap,
         GravityType gravity,
         double buoyantGravityRatio,
         CollisionType collisionConfig,
@@ -26,7 +25,6 @@ public class PhysicsConfiguration : IGetConstructorParameters
     )
     {
         StepTime = stepTime;
-        StepsPerLeap = stepsPerLeap;
         GravityConfig = gravity;
         BuoyantGravityRatio = buoyantGravityRatio;
         CollisionConfig = collisionConfig;
@@ -34,7 +32,6 @@ public class PhysicsConfiguration : IGetConstructorParameters
     }
 
     public double StepTime { get; set; }
-    public int StepsPerLeap { get; set; }
 
     public GravityType GravityConfig { get; set; }
     /// <summary>
@@ -52,7 +49,6 @@ public class PhysicsConfiguration : IGetConstructorParameters
     public IEnumerable<string> GetConfigLines()
     {
         yield return $"Step time: {Simulation.DoubleToString(StepTime)}";
-        yield return $"Steps per leap: {StepsPerLeap}";
 
         yield return $"Gravity: {GravityConfig}";
         if (GravityConfig == GravityType.Newton_Buoyant)

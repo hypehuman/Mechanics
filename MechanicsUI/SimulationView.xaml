@@ -29,6 +29,10 @@
                                 IsSnapToTickEnabled="True" TickFrequency="0.0001"
                             />
                         </StackPanel>
+                        <DockPanel Margin="5">
+                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Steps per leap: " />
+                            <local:ValidationTextBox VerticalAlignment="Center" DataContext="{Binding StepsPerLeapVM}" />
+                        </DockPanel>
                         <StackPanel Orientation="Horizontal">
                             <Button Margin="5" VerticalAlignment="Center" Click="LeapButton_Click">Leap</Button>
                             <CheckBox Margin="5" VerticalAlignment="Center" IsChecked="{Binding IsAutoLeaping}">Auto-leap</CheckBox>

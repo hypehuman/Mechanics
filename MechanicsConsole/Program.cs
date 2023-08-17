@@ -1,8 +1,8 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore;
-using MechanicsCore.Rust.mechanics_fast;
 using MechanicsCore.Arrangements;
 using MechanicsCore.PhysicsConfiguring;
+using MechanicsCore.Rust.mechanics_fast;
 using System.Diagnostics;
 
 namespace MechanicsConsole;
@@ -24,10 +24,10 @@ internal class Program
             new PhysicsConfiguration
             {
                 StepTime = 8,
-                StepsPerLeap = 128,
                 GravityConfig = GravityType.Newton_Pointlike,
                 CollisionConfig = CollisionType.None,
-            }
+            },
+            SuggestedStepsPerLeap: 128
         );
         if (!ballHuge.PhysicsConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
         var sim = new Simulation(ballHuge);
@@ -142,7 +142,7 @@ internal class Program
         var sw = Stopwatch.StartNew();
         for (int leapI = 0; leapI < 5; leapI++)
         {
-            sim.Leap();
+            sim.Leap(config.SuggestedStepsPerLeap);
             Console.WriteLine("Leap " + leapI);
             foreach (var line in sim.GetStateSummaryLines())
             {
@@ -160,7 +160,7 @@ internal class Program
         var sw = Stopwatch.StartNew();
         while (sw.ElapsedMilliseconds < ms)
         {
-            sim.Leap();
+            sim.Leap(config.SuggestedStepsPerLeap);
             numLeaps++;
         }
         Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
@@ -172,7 +172,7 @@ internal class Program
         sim.DumpState();
         while (sim.t < Constants.SecondsPerYear)
         {
-            sim.Leap();
+            sim.Leap(config.SuggestedStepsPerLeap);
             sim.DumpState();
         }
     }

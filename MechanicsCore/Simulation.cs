@@ -1,13 +1,13 @@
 ﻿using MathNet.Spatial.Euclidean;
-using MechanicsCore.Rust.mechanics_fast;
 using MechanicsCore.PhysicsConfiguring;
+using MechanicsCore.Rust.mechanics_fast;
 
 namespace MechanicsCore;
 
 public class Simulation
 {
     public Arrangement InitialArrangement { get; }
-    public PhysicsConfiguration PhysicsConfig { get; } = new PhysicsConfiguration();
+    public PhysicsConfiguration PhysicsConfig { get; }
 
     #region Current state
 
@@ -20,7 +20,7 @@ public class Simulation
     public IEnumerable<Body> ExistingBodies => Bodies.Where(b => b.Exists);
 
     public bool HasError { get; private set; }
-    public string LatestErrorMessage { get; private set; }
+    public string? LatestErrorMessage { get; private set; }
 
     #endregion
 
@@ -107,7 +107,7 @@ public class Simulation
         };
     }
 
-    private void Step()
+    private void ApplyStep()
     {
         // Now we've started editing the bodies, so there's no way to recover from an exception.
 
@@ -258,23 +258,23 @@ public class Simulation
             throw new DivideByZeroException($"Division of {valueSum} by zero.");
     }
 
-    public void Leap()
+    public void Leap(int numSteps)
     {
-        if (!TryLeap())
+        if (!TryLeap(numSteps))
         {
             throw new Exception(LatestErrorMessage);
         }
     }
 
-    public bool TryLeap()
+    public bool TryLeap(int numSteps)
     {
-        for (int i = 0; i < PhysicsConfig.StepsPerLeap; i++)
+        for (int i = 0; i < numSteps; i++)
         {
             if (!TryComputeStep())
             {
                 return false;
             }
-            Step();
+            ApplyStep();
         }
 
         return true;

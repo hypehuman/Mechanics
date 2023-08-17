@@ -1,8 +1,13 @@
-﻿using MathNet.Spatial.Euclidean;
+﻿using GuiByReflection.Models;
+using MathNet.Spatial.Euclidean;
 
 namespace MechanicsCore.Arrangements;
 
-public class ColorWheel : Arrangement
+[GuiHelp(
+    "Just for testing the distribution of colors that we choose for bodies.",
+    "Step/Leap does nothing."
+)]
+public class zColorWheel : Arrangement
 {
     private readonly ColorMapping _colorMapping;
     private readonly bool _normalizeRadiance;
@@ -21,7 +26,7 @@ public class ColorWheel : Arrangement
         return new object?[] { _colorMapping, _normalizeRadiance };
     }
 
-    public ColorWheel(ColorMapping colorMapping, bool normalizeRadiance)
+    public zColorWheel(ColorMapping colorMapping, bool normalizeRadiance)
     {
         // Call this to validate the argument
         var func = GetColorMappingFunction(colorMapping);

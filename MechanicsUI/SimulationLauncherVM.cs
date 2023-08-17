@@ -5,36 +5,39 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace MechanicsUI;
 
 public class SimulationLauncherVM : INotifyPropertyChanged
 {
-    private static readonly IReadOnlyList<string> sPreconfigNames =
+    private static readonly IReadOnlyList<PropertyInfo> sScenarioGalleryProperties =
         typeof(ScenarioGallery)
-        .GetProperties()
-        .Select(p => p.Name)
-        .ToList();
+        .GetProperties();
+
+    private static readonly IReadOnlyList<Type> sArrangementTypes =
+        Utils.GetInstantiableTypes(typeof(Arrangement)).ToList();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public IValidationTextBoxViewModel<int> StepsPerLeapUponLaunchVM { get; } = new StepsPerLeapTextBoxViewModel();
     public bool IsAutoLeapingUponLaunch { get; set; }
 
-    public IReadOnlyList<string> PreconfigNames => sPreconfigNames;
+    public IReadOnlyList<IPropertyVM> SavedScenarioVMs { get; }
 
-    public IReadOnlyList<GalleryItem> Scenarios => Simulations.Scenarios;
+    public IReadOnlyList<ITypeVM> ArrangerVMs { get; }
 
-    private GalleryItem _selectedScenario;
-    public GalleryItem SelectedScenario
+    private ITypeVM _selectedArranger;
+    public ITypeVM SelectedArranger
     {
-        get => _selectedScenario;
+        get => _selectedArranger;
         set
         {
-            _selectedScenario = value;
+            _selectedArranger = value;
             OnPropertyChanged();
 
-            ArrangementConstructorVM = new ConstructorVM(ConstructorVM.GetLongestPublicConstructor(value.ArrangementType));
+            ArrangementConstructorVM = new ConstructorVM(ConstructorVM.GetLongestPublicConstructor(value.Model));
         }
     }
 
@@ -53,19 +56,23 @@ public class SimulationLauncherVM : INotifyPropertyChanged
 
     public SimulationLauncherVM()
     {
-        SelectedScenario = Scenarios[0];
+        SavedScenarioVMs = sScenarioGalleryProperties.Select(pi => new PropertyVM(null, pi)).ToList();
+        ArrangerVMs = sArrangementTypes.Select(at => new TypeVM(at)).ToList();
+        SelectedArranger = ArrangerVMs[0];
     }
 
-    public void LoadScenarioConfig(string preconfigName)
+    public void LoadScenarioConfig(IPropertyVM savedScenarioVM)
     {
-        var invoked = typeof(ScenarioGallery).GetStaticPropertyValue(preconfigName)
-            ?? throw new NullReferenceException($"'{preconfigName}' was null");
+        var invoked = savedScenarioVM.GetValue()
+            ?? throw new NullReferenceException($"'{savedScenarioVM.ActualGuiName}' was null");
         var scenario = (Scenario)invoked;
 
         var arrangementType = scenario.InitialArrangement.GetType();
-        SelectedScenario = Simulations.ScenariosByType[arrangementType];
+        SelectedArranger = ArrangerVMs.First(avm => avm.Model == arrangementType);
         ArrangementConstructorVM.TrySetParameterValues(scenario.InitialArrangement.GetConstructorParameters());
         PhysicsConfigConstructorVM.TrySetParameterValues(scenario.PhysicsConfig.GetConstructorParameters());
+
+        StepsPerLeapUponLaunchVM.CurrentValue = scenario.SuggestedStepsPerLeap;
     }
 
     public SimulationVM? LaunchSimulation()
@@ -81,10 +88,12 @@ public class SimulationLauncherVM : INotifyPropertyChanged
         var arrangement = (Arrangement)arrangementObj;
         var physics = (PhysicsConfiguration)physicsObj;
         var sim = new Simulation(new(arrangement, physics));
-        return new SimulationVM(sim)
+        var simVM = new SimulationVM(sim)
         {
-            IsAutoLeaping = IsAutoLeapingUponLaunch,
+            IsAutoLeaping = IsAutoLeapingUponLaunch
         };
+        simVM.StepsPerLeapVM.CurrentValue = StepsPerLeapUponLaunchVM.CurrentValue;
+        return simVM;
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)

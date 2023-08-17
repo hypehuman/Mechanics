@@ -23,6 +23,11 @@ public class GuiHelpAttribute : Attribute
         Value = value;
     }
 
+    public GuiHelpAttribute(params string[] lines)
+    {
+        Value = string.Join(Environment.NewLine, lines);
+    }
+
     public override bool Equals([NotNullWhen(true)] object? obj) =>
         obj is GuiHelpAttribute other && other.Value == Value;
 

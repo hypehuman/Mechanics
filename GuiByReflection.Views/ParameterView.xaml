@@ -10,20 +10,20 @@
     d:DataContext="{d:DesignInstance Type=designInstances:DesignParameterVM, IsDesignTimeCreatable=True}"
 >
     <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="SharedResources.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-            <local:ParameterView_HasMessageToBorderBrushConverter x:Key="borderBrushConverter"/>
-            <local:ParameterView_TooltipConverter x:Key="tooltipConverter"/>
-            <local:UserEntryDataTemplateSelector x:Key="entryTemplateSelector" />
-        </ResourceDictionary>
+        <local:ParameterView_HasMessageToBorderBrushConverter x:Key="borderBrushConverter"/>
+        <local:ParameterView_TooltipConverter x:Key="tooltipConverter"/>
+        <local:UserEntryDataTemplateSelector x:Key="entryTemplateSelector" />
     </UserControl.Resources>
     <StackPanel Orientation="Horizontal">
         <local:GuiHelpTooltipWrapper VerticalAlignment="Center">
-            <TextBlock Text="{Binding ActualGuiName, StringFormat='{}{0}: '}" />
+            <TextBlock Text="{Binding ActualGuiName}" />
         </local:GuiHelpTooltipWrapper>
-        <Border BorderThickness="2" BorderBrush="{Binding HasMessage, Converter={StaticResource borderBrushConverter}}">
+        <TextBlock VerticalAlignment="Center" Text=":" />
+        <Border
+            Margin="2,0,0,0"
+            BorderThickness="2"
+            BorderBrush="{Binding HasMessage, Converter={StaticResource borderBrushConverter}}"
+        >
             <Border.ToolTip>
                 <MultiBinding>
                     <MultiBinding.Bindings>

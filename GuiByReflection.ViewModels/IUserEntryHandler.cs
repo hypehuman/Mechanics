@@ -12,7 +12,7 @@ public interface IUserEntryHandler
     /// Returns the <see cref="IParameterVM.ActualValue"/> to use, based on <paramref name="userEntry"/>.
     /// <paramref name="userEntry"/> might be a string that you have to parse.
     /// You can return <paramref name="currentActualValue"/> if you want to leave the current value unchanged,
-    /// Or you can return <see cref="ParameterVM.GetDefaultValue(Type)"/> if you prefer.
+    /// Or you can return <see cref="ParameterVM.GetDefaultParameterValue"/> if you prefer.
     /// TODO: Allow different levels of message: an "error" could block the method call, or a "warning" could just be displayed.
     /// </summary>
     object? UserEntryToValue(object? userEntry, Type type, object? currentActualValue, out string? message);

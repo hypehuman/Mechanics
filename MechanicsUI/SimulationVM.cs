@@ -12,6 +12,8 @@ public class SimulationVM : INotifyPropertyChanged
     public Simulation Model { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
+    public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
+
     public BodyVM[] BodyVMs { get; }
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
     public double CanvasTranslateX { get; private set; }
@@ -74,7 +76,7 @@ public class SimulationVM : INotifyPropertyChanged
 
     public void LeapAndRefresh()
     {
-        if (!Model.TryLeap())
+        if (!Model.TryLeap(StepsPerLeapVM.CurrentValue))
         {
             IsAutoLeaping = false;
         }

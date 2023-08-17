@@ -5,13 +5,12 @@ namespace GuiByReflection.Views.DesignInstances;
 
 internal class DesignMethodVM : MethodVM
 {
-    public enum DesignEnum { DesignEnum1, DesignEnum2 };
-
     public static void DesignMethod(
         string stringParam,
         bool boolParam,
         DesignEnum enumParam,
-        int? nullableIntParam
+        int? nullableIntParam,
+        string optionalParam = "Design Default Parameter Value"
     )
     {
     }

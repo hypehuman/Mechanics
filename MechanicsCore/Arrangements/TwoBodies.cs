@@ -3,6 +3,8 @@ using MathNet.Spatial.Euclidean;
 
 namespace MechanicsCore.Arrangements;
 
+[GuiName("Two Bodies")]
+[GuiHelp("Two bodies with the same density, random relative masses, and random positions")]
 public class TwoBodies : RandomArrangement
 {
     private readonly double _systemRadius;
@@ -16,7 +18,7 @@ public class TwoBodies : RandomArrangement
 
         yield return $"System radius: {Simulation.DoubleToString(_systemRadius)}";
         yield return $"Total mass: {Simulation.DoubleToString(_totalMass)}";
-        yield return $"Total volume: {Simulation.DoubleToString(_totalBodyVolume)}";
+        yield return $"Total body volume: {Simulation.DoubleToString(_totalBodyVolume)}";
     }
 
     public override object?[] GetConstructorParameters()
@@ -25,6 +27,7 @@ public class TwoBodies : RandomArrangement
     }
 
     public TwoBodies(
+        [GuiHelp("maximum distance that each body's center can be from the origin")]
         double systemRadius,
         double totalMass,
         double totalBodyVolume,

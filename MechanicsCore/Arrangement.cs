@@ -13,7 +13,7 @@ public abstract class Arrangement : IGetConstructorParameters
 
     public virtual IEnumerable<string> GetConfigLines()
     {
-        yield return $"Scenario: {GetType().Name}";
+        yield return $"Initial Arrangement: {GetType().Name}";
     }
 
     public abstract object?[] GetConstructorParameters();

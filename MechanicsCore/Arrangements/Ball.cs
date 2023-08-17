@@ -3,6 +3,10 @@ using MathNet.Spatial.Euclidean;
 
 namespace MechanicsCore.Arrangements;
 
+[GuiHelp(
+    "Identical bodies with their centers randomly distributed throughout a ball.",
+    "Distribution is such that any region of the ball with a given volume has the same chance of containing a given number of body centers."
+)]
 public class Ball : RandomArrangement
 {
     private readonly double _systemRadius;
@@ -19,8 +23,8 @@ public class Ball : RandomArrangement
         yield return $"System radius: {Simulation.DoubleToString(_systemRadius)}";
         yield return $"Number of bodies: {_numBodies}";
         yield return $"Total mass: {Simulation.DoubleToString(_totalMass)}";
-        yield return $"Total volume: {Simulation.DoubleToString(_totalBodyVolume)}";
-        yield return $"Max velocity: {Simulation.DoubleToString(_maxSpeed)}";
+        yield return $"Total body volume: {Simulation.DoubleToString(_totalBodyVolume)}";
+        yield return $"Max speed: {Simulation.DoubleToString(_maxSpeed)}";
     }
 
     public override object?[] GetConstructorParameters()
@@ -29,10 +33,12 @@ public class Ball : RandomArrangement
     }
 
     public Ball(
+        [GuiHelp("radius of the ball in which the bodies are arranged")]
         double systemRadius,
         int numBodies,
         double totalMass,
         double totalBodyVolume,
+        [GuiHelp("velocities are distributed with random directions and speeds from 0 to maxSpeed (flat distribution)")]
         double maxSpeed,
         [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]

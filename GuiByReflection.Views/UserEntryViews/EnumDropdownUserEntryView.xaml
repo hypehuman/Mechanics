@@ -6,14 +6,28 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:GuiByReflection.Views"
     xmlns:designInstances="clr-namespace:GuiByReflection.Views.DesignInstances"
+    xmlns:userEntryViews="clr-namespace:GuiByReflection.Views.UserEntryViews"
     mc:Ignorable="d"
-    d:DataContext="{d:DesignInstance Type=designInstances:DesignParameterVM, IsDesignTimeCreatable=True}"
+    d:DataContext="{d:DesignInstance Type=designInstances:DesignEnumParameterVM, IsDesignTimeCreatable=True}"
 >
     <UserControl.Resources>
-        <local:EnumTypeToItemsSourceConverter x:Key="itemsSourceConverter" />
+        <local:EnumTypeToItemsSourceConverter x:Key="EnumTypeToItemsSourceConverter" />
+        <local:EnumValueToVMConverter x:Key="EnumValueToVMConverter" />
+        <local:EnumValueToGuiHelpStringConverter x:Key="EnumValueToGuiHelpStringConverter" />
     </UserControl.Resources>
+    <!-- The ComboBox.ToolTip binding shows the tooltip for the selected option when mousing over the ComboBox while it is closed. -->
+    <!-- The GuiHelpTooltipWrapper shows the tooltip when mousing over options while the ComboBox is open. -->
     <ComboBox
-        ItemsSource="{Binding ParameterType, Converter={StaticResource itemsSourceConverter}}"
+        ItemsSource="{Binding ParameterType, Converter={StaticResource EnumTypeToItemsSourceConverter}}"
         SelectedItem="{Binding UserEntry}"
-    />
+        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem, Converter={StaticResource EnumValueToGuiHelpStringConverter}}"
+    >
+        <ComboBox.ItemTemplate>
+            <DataTemplate>
+                <UserControl DataContext="{Binding Converter={StaticResource EnumValueToVMConverter}}">
+                    <userEntryViews:EnumValueView />
+                </UserControl>
+            </DataTemplate>
+        </ComboBox.ItemTemplate>
+    </ComboBox>
 </UserControl>

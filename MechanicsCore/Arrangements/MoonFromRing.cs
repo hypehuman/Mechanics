@@ -3,6 +3,8 @@ using MathNet.Spatial.Euclidean;
 
 namespace MechanicsCore.Arrangements;
 
+[GuiName("Moon from Ring")]
+[GuiHelp("Start with the moon broken into identical fragments orbiting the Earth, randomly distributed on a circle.")]
 public class MoonFromRing : RandomArrangement
 {
     private readonly int _numMoonFragments;
