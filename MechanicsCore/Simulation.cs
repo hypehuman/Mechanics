@@ -1,18 +1,18 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.Rust.mechanics_fast;
-using MechanicsCore.StepConfiguring;
+using MechanicsCore.PhysicsConfiguring;
 
 namespace MechanicsCore;
 
 public class Simulation
 {
-    public SimulationInitializer InitConfig { get; }
-    public StepConfiguration StepConfig { get; } = new StepConfiguration();
+    public Arrangement InitialArrangement { get; }
+    public PhysicsConfiguration PhysicsConfig { get; } = new PhysicsConfiguration();
 
     #region Current state
 
     public long NumStepsPerformed { get; private set; }
-    public double t => NumStepsPerformed * StepConfig.StepTime;
+    public double t => NumStepsPerformed * PhysicsConfig.StepTime;
     public Vector3D DisplayBound0 { get; }
     public Vector3D DisplayBound1 { get; }
 
@@ -24,13 +24,13 @@ public class Simulation
 
     #endregion
 
-    public Simulation(FullConfiguration fullConfiguration)
+    public Simulation(Scenario config)
     {
-        InitConfig = fullConfiguration.InitConfig;
-        Bodies = InitConfig.GenerateInitialState(out var displayBound0, out var displayBound1);
+        InitialArrangement = config.InitialArrangement;
+        Bodies = InitialArrangement.GenerateInitialState(out var displayBound0, out var displayBound1);
         DisplayBound0 = displayBound0;
         DisplayBound1 = displayBound1;
-        StepConfig = fullConfiguration.StepConfig;
+        PhysicsConfig = config.PhysicsConfig;
 
         p = new Vector3D[Bodies.Count];
         v = new Vector3D[Bodies.Count];
@@ -66,7 +66,7 @@ public class Simulation
         // first compute all accelerations, then move bodies.
         var n = Bodies.Count;
 #if !DISABLE_RUST
-        if (StepConfig.CanTakeSimpleShortcut())
+        if (PhysicsConfig.CanTakeSimpleShortcut())
         {
             // The indexing in Bodies will be different from what we pass to Rust,
             // since Rust doesn't yet know to ignore bodies that have stopped existing.
@@ -96,14 +96,14 @@ public class Simulation
             {
                 var body = Bodies[i];
                 if (!body.Exists) continue;
-                a[i] = body.ComputeAcceleration(Bodies, StepConfig);
+                a[i] = body.ComputeAcceleration(Bodies, PhysicsConfig);
             };
         }
         for (var i = 0; i < n; i++)
         {
             var body = Bodies[i];
             if (!body.Exists) continue;
-            body.ComputeStep(StepConfig.StepTime, a[i], out p[i], out v[i]);
+            body.ComputeStep(PhysicsConfig.StepTime, a[i], out p[i], out v[i]);
         };
     }
 
@@ -119,7 +119,7 @@ public class Simulation
             body.Step(p[i], v[i]);
         };
 
-        if (StepConfig.CollisionConfig == CollisionType.Combine)
+        if (PhysicsConfig.CollisionConfig == CollisionType.Combine)
         {
             CombineOverlappingBodies();
         }
@@ -268,7 +268,7 @@ public class Simulation
 
     public bool TryLeap()
     {
-        for (int i = 0; i < StepConfig.StepsPerLeap; i++)
+        for (int i = 0; i < PhysicsConfig.StepsPerLeap; i++)
         {
             if (!TryComputeStep())
             {
@@ -288,10 +288,10 @@ public class Simulation
 
     public virtual IEnumerable<string> GetConfigLines()
     {
-        foreach (var i in InitConfig.GetConfigLines())
+        foreach (var i in InitialArrangement.GetConfigLines())
             yield return i;
 
-        foreach (var s in StepConfig.GetConfigLines())
+        foreach (var s in PhysicsConfig.GetConfigLines())
             yield return s;
     }
 

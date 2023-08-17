@@ -1,6 +1,6 @@
-﻿namespace MechanicsCore.Scenarios;
+﻿namespace MechanicsCore.Arrangements;
 
-public abstract class RandomSimulationInitializer : SimulationInitializer
+public abstract class RandomArrangement : Arrangement
 {
     protected Random Random { get; }
     protected int? _requestedSeed;
@@ -14,13 +14,13 @@ public abstract class RandomSimulationInitializer : SimulationInitializer
         yield return $"Seed: {Seed}";
     }
 
-    protected RandomSimulationInitializer(int? requestedSeed)
+    protected RandomArrangement(int? requestedSeed)
     {
         _requestedSeed = requestedSeed;
         Seed = requestedSeed ?? new Random().Next();
         Random = new Random(Seed);
     }
 
-    protected const string RequestedSeedGuiTitle = "Fixed Seed";
+    protected const string RequestedSeedGuiName = "Fixed Seed";
     protected const string RequestedSeedGuiHelp = "Leave empty to make it random. Enter a number to repeat a previous run.";
 }

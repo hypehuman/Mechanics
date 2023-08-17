@@ -1,21 +1,21 @@
 ﻿using GuiByReflection.Models;
 
-namespace MechanicsCore.StepConfiguring;
+namespace MechanicsCore.PhysicsConfiguring;
 
 /// <summary>
 /// Configuration that determines how the simulation proceeds at each step
 /// </summary>
-public class StepConfiguration : IGetConstructorParameters
+public class PhysicsConfiguration : IGetConstructorParameters
 {
-    public StepConfiguration() { }
+    public PhysicsConfiguration() { }
 
     public object?[] GetConstructorParameters()
     {
         return new object?[] { StepTime, StepsPerLeap, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
     }
 
-    public StepConfiguration(
-        [GuiTitle("Step time")]
+    public PhysicsConfiguration(
+        [GuiName("Step time")]
         [GuiHelp("The number of seconds per simulation step. Increasing this makes the simulation faster but less accurate.")]
         double stepTime,
         int stepsPerLeap,

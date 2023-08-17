@@ -2,8 +2,8 @@
 
 namespace GuiByReflection.ViewModels;
 
-public interface ICanHaveHelp : INotifyPropertyChanged
+public interface IHasGuiHelp : INotifyPropertyChanged
 {
     bool HasHelp { get; }
-    string? Help { get; }
+    string? ActualGuiHelp { get; }
 }

@@ -1,8 +1,8 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore;
 using MechanicsCore.Rust.mechanics_fast;
-using MechanicsCore.Scenarios;
-using MechanicsCore.StepConfiguring;
+using MechanicsCore.Arrangements;
+using MechanicsCore.PhysicsConfiguring;
 using System.Diagnostics;
 
 namespace MechanicsConsole;
@@ -13,15 +13,15 @@ internal class Program
     {
         Console.WriteLine("Running performance tests:");
 
-        var fallingHuge = new FullConfiguration(
-            new Falling(
+        var ballHuge = new Scenario(
+            new Ball(
                 Constants.MoonOrbitEarthDistance,
                 512,
                 Constants.EarthMass + Constants.MoonMass,
                 Constants.EarthVolume + Constants.MoonVolume,
                 Constants.MoonOrbitEarthSpeed / Math.Sqrt(10)
             ),
-            new StepConfiguration
+            new PhysicsConfiguration
             {
                 StepTime = 8,
                 StepsPerLeap = 128,
@@ -29,8 +29,8 @@ internal class Program
                 CollisionConfig = CollisionType.None,
             }
         );
-        if (!fallingHuge.StepConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
-        var sim = new Simulation(fallingHuge);
+        if (!ballHuge.PhysicsConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
+        var sim = new Simulation(ballHuge);
         var n = sim.Bodies.Count;
         var m = new double[n];
         var p = new Vector3D[n];
@@ -70,21 +70,21 @@ internal class Program
             var a = new Vector3D[n];
             for (var i = 0; i < n; i++)
             {
-                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies, sim.StepConfig);
+                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies, sim.PhysicsConfig);
             };
             return a;
         };
         HeadToHead(new[] { a, b, c }, 8, 32);
 
-        SeeHowLongItTakes(PreconfiguredSimulations.MoonFromRing_Insane_102691847, 5);
-        SeeHowFarItGoes(PreconfiguredSimulations.SunEarthMoon, 10000);
-        SeeHowFarItGoes(PreconfiguredSimulations.TwoBodies_Buoyant_Drag_0, 10000);
-        SeeHowFarItGoes(fallingHuge, 10000);
+        SeeHowLongItTakes(ScenarioGallery.MoonFromRing_Insane_102691847, 5);
+        SeeHowFarItGoes(ScenarioGallery.SunEarthMoon, 10000);
+        SeeHowFarItGoes(ScenarioGallery.TwoBodies_Buoyant_Drag_0, 10000);
+        SeeHowFarItGoes(ballHuge, 10000);
 
         Console.WriteLine();
         Console.WriteLine("Press Enter to start the simulation:");
         Console.ReadLine();
-        Run(PreconfiguredSimulations.Default());
+        Run(ScenarioGallery.Default());
     }
 
     private static void HeadToHead<T>(IReadOnlyList<Func<T>> funcs, int numGroupsPerFunc, int numRunsPerGroup)
@@ -136,7 +136,7 @@ internal class Program
         }
     }
 
-    private static void SeeHowLongItTakes(FullConfiguration config, int numLeaps)
+    private static void SeeHowLongItTakes(Scenario config, int numLeaps)
     {
         var sim = new Simulation(config);
         var sw = Stopwatch.StartNew();
@@ -153,7 +153,7 @@ internal class Program
         Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
     }
 
-    private static void SeeHowFarItGoes(FullConfiguration config, int ms)
+    private static void SeeHowFarItGoes(Scenario config, int ms)
     {
         var sim = new Simulation(config);
         var numLeaps = 0;
@@ -166,7 +166,7 @@ internal class Program
         Console.WriteLine($"{numLeaps} leaps in {sw.ElapsedMilliseconds} ms");
     }
 
-    private static void Run(FullConfiguration config)
+    private static void Run(Scenario config)
     {
         var sim = new Simulation(config);
         sim.DumpState();

@@ -58,12 +58,12 @@ public class MethodVM : IMethodVM
 
         for (var i = 0; i < actualN; i++)
         {
-            var preconfigValue = newParameterValues[i];
+            var newParameterValue = newParameterValues[i];
             var paramVM = ParameterVMs[i];
             // TODO: Check whether the value can be assigned to the type, perhaps using ParameterVM.CanAssignTypeFromValue.
             // .NET internally uses System.RuntimeType.CheckValue to do that when calling the method.
             // For now, we just set the value and wait for TryInvokeMethod to fail.
-            paramVM.SetActualValue(preconfigValue, true);
+            paramVM.SetActualValue(newParameterValue, true);
         }
 
         exception = null;

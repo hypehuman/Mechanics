@@ -3,23 +3,23 @@ using System.Windows;
 
 namespace MechanicsUI;
 
-partial class SimulationPickerView
+partial class SimulationLauncherView
 {
-    public SimulationPickerVM? ViewModel => DataContext as SimulationPickerVM;
+    public SimulationLauncherVM? ViewModel => DataContext as SimulationLauncherVM;
 
-    public SimulationPickerView()
+    public SimulationLauncherView()
     {
         InitializeComponent();
     }
 
-    private void PreconfiguredButton_Click(object sender, RoutedEventArgs e)
+    private void LoadScenarioConfigButton_Click(object sender, RoutedEventArgs e)
     {
         var vm = ViewModel;
         if (vm == null)
             return;
 
         var preconfigName = (string)((FrameworkElement)sender).DataContext;
-        vm.SetPreconfiguredValues(preconfigName);
+        vm.LoadScenarioConfig(preconfigName);
     }
 
     private void LaunchButton_Click(object sender, RoutedEventArgs e)
@@ -28,7 +28,7 @@ partial class SimulationPickerView
         if (vm == null)
             return;
 
-        var simVm = vm.StartSimulation();
+        var simVm = vm.LaunchSimulation();
         if (simVm == null)
             return;
 

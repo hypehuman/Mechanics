@@ -1,4 +1,4 @@
-﻿namespace MechanicsCore.StepConfiguring;
+﻿namespace MechanicsCore.PhysicsConfiguring;
 
 public enum GravityType
 {

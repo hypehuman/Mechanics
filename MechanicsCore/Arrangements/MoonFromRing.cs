@@ -1,9 +1,9 @@
 ﻿using GuiByReflection.Models;
 using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore.Scenarios;
+namespace MechanicsCore.Arrangements;
 
-public class MoonFromRing : RandomSimulationInitializer
+public class MoonFromRing : RandomArrangement
 {
     private readonly int _numMoonFragments;
 
@@ -22,7 +22,7 @@ public class MoonFromRing : RandomSimulationInitializer
 
     public MoonFromRing(
         int numMoonFragments,
-        [GuiTitle(RequestedSeedGuiTitle)]
+        [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]
         int? requestedSeed = null
     )

@@ -1,8 +1,8 @@
 ﻿using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore.Scenarios;
+namespace MechanicsCore.Arrangements;
 
-public class ColorWheel : SimulationInitializer
+public class ColorWheel : Arrangement
 {
     private readonly ColorMapping _colorMapping;
     private readonly bool _normalizeRadiance;

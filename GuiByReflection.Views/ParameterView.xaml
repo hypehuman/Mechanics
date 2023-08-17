@@ -20,9 +20,9 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <StackPanel Orientation="Horizontal">
-        <local:HelpTooltipWrapper VerticalAlignment="Center">
-            <TextBlock Text="{Binding Title, StringFormat='{}{0}: '}" />
-        </local:HelpTooltipWrapper>
+        <local:GuiHelpTooltipWrapper VerticalAlignment="Center">
+            <TextBlock Text="{Binding ActualGuiName, StringFormat='{}{0}: '}" />
+        </local:GuiHelpTooltipWrapper>
         <Border BorderThickness="2" BorderBrush="{Binding HasMessage, Converter={StaticResource borderBrushConverter}}">
             <Border.ToolTip>
                 <MultiBinding>

@@ -151,7 +151,7 @@ public class SimulationVM : INotifyPropertyChanged
 public class DefaultSimulationVM : SimulationVM
 {
     public DefaultSimulationVM()
-        : base(new(PreconfiguredSimulations.Default()))
+        : base(new(ScenarioGallery.Default()))
     {
     }
 }

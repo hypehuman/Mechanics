@@ -1,8 +1,8 @@
 ﻿using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore.Scenarios;
+namespace MechanicsCore.Arrangements;
 
-public class SunEarthMoon : SimulationInitializer
+public class SunEarthMoon : Arrangement
 {
     public override object?[] GetConstructorParameters()
     {

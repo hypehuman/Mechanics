@@ -6,11 +6,11 @@
     
     <BooleanToVisibilityConverter x:Key="bvc" />
     
-    <Style TargetType="{x:Type local:HelpTooltipWrapper}">
+    <Style TargetType="{x:Type local:GuiHelpTooltipWrapper}">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type local:HelpTooltipWrapper}">
-                    <StackPanel Orientation="Horizontal" ToolTip="{Binding Help}">
+                <ControlTemplate TargetType="{x:Type local:GuiHelpTooltipWrapper}">
+                    <StackPanel Orientation="Horizontal" ToolTip="{Binding ActualGuiHelp}">
                         <ContentPresenter VerticalAlignment="Center" Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content}" />
                         <Grid VerticalAlignment="Top" Visibility="{Binding HasHelp, Converter={StaticResource bvc}}">
                             <Ellipse

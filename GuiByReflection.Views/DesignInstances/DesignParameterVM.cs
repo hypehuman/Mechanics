@@ -7,9 +7,9 @@ namespace GuiByReflection.Views.DesignInstances;
 public class DesignParameterVM : IParameterVM
 {
     public Type ParameterType => typeof(int);
-    public string Title => "DesignTitle";
+    public string ActualGuiName => "DesignTitle";
     public bool HasHelp => true;
-    public string? Help => "DesignHelp";
+    public string? ActualGuiHelp => "DesignHelp";
 
     public object? ActualValue { get; private set; } = "DesignActualValue";
 

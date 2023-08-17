@@ -1,17 +1,17 @@
-﻿using MechanicsCore.Scenarios;
+﻿using MechanicsCore.Arrangements;
 using System.Reflection;
 
 namespace MechanicsCore;
 
-public record Scenario(Type InitializerType, string Title, string Description);
+public record GalleryItem(Type ArrangementType, string Title, string Description);
 
 public static class Simulations
 {
-    private static readonly List<Scenario> sScenarios = new();
-    public static IReadOnlyList<Scenario> Scenarios => sScenarios;
+    private static readonly List<GalleryItem> sScenarios = new();
+    public static IReadOnlyList<GalleryItem> Scenarios => sScenarios;
 
-    private static readonly Dictionary<Type, Scenario> sScenariosByType = new();
-    public static IReadOnlyDictionary<Type, Scenario> ScenariosByType => sScenariosByType;
+    private static readonly Dictionary<Type, GalleryItem> sScenariosByType = new();
+    public static IReadOnlyDictionary<Type, GalleryItem> ScenariosByType => sScenariosByType;
 
     static Simulations()
     {
@@ -19,24 +19,24 @@ public static class Simulations
         AddScenario(new(typeof(TwoBodies), "Two Bodies", ""));
         AddScenario(new(typeof(Line), "Line", ""));
         AddScenario(new(typeof(SunEarthMoon), "Sun, Earth, and Moon", ""));
-        AddScenario(new(typeof(Falling), "Falling", ""));
+        AddScenario(new(typeof(Ball), "Falling", ""));
         AddScenario(new(typeof(MoonFromRing), "Moon from Ring", "Start with the moon broken into fragments orbiting the Earth."));
 
         // Add the remaining scenarios in an arbitrary order with default names and no descriptions
-        var allInitializerTypes = Assembly.GetCallingAssembly().GetTypes()
-            .Where(t => !t.IsAbstract && typeof(SimulationInitializer).IsAssignableFrom(t));
-        foreach (var initializerType in allInitializerTypes)
+        var allArrangementTypes = Assembly.GetCallingAssembly().GetTypes()
+            .Where(t => !t.IsAbstract && typeof(Arrangement).IsAssignableFrom(t));
+        foreach (var arrangmentType in allArrangementTypes)
         {
-            if (!sScenariosByType.ContainsKey(initializerType))
+            if (!sScenariosByType.ContainsKey(arrangmentType))
             {
-                AddScenario(new Scenario(initializerType, initializerType.Name, ""));
+                AddScenario(new GalleryItem(arrangmentType, arrangmentType.Name, ""));
             }
         }
     }
 
-    private static void AddScenario(Scenario scenario)
+    private static void AddScenario(GalleryItem scenario)
     {
         sScenarios.Add(scenario);
-        sScenariosByType.Add(scenario.InitializerType, scenario);
+        sScenariosByType.Add(scenario.ArrangementType, scenario);
     }
 }

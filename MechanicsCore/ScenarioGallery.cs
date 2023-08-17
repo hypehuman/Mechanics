@@ -1,13 +1,13 @@
-﻿using MechanicsCore.Scenarios;
-using MechanicsCore.StepConfiguring;
+﻿using MechanicsCore.Arrangements;
+using MechanicsCore.PhysicsConfiguring;
 
 namespace MechanicsCore;
 
-public static class PreconfiguredSimulations
+public static class ScenarioGallery
 {
-    public static FullConfiguration Default() => TwoBodies_Buoyant_Drag_0;
+    public static Scenario Default() => TwoBodies_Buoyant_Drag_0;
 
-    public static FullConfiguration TwoBodies_Pointlike_0
+    public static Scenario TwoBodies_Pointlike_0
     {
         get
         {
@@ -17,7 +17,7 @@ public static class PreconfiguredSimulations
                 Constants.EarthVolume,
                 requestedSeed: 0
             );
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = 1,
                 StepsPerLeap = 1024,
@@ -27,7 +27,7 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration TwoBodies_Buoyant_Drag_0
+    public static Scenario TwoBodies_Buoyant_Drag_0
     {
         get
         {
@@ -37,7 +37,7 @@ public static class PreconfiguredSimulations
                 Constants.EarthVolume,
                 requestedSeed: 0
             );
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = 1,
                 StepsPerLeap = 1024,
@@ -48,7 +48,7 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration SunEarthMoon
+    public static Scenario SunEarthMoon
     {
         get
         {
@@ -56,7 +56,7 @@ public static class PreconfiguredSimulations
             const double leaps_per_year = 365.24;
             const double steps_per_leap = Constants.SecondsPerYear / leaps_per_year / step_time;
             var initConfig = new SunEarthMoon();
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = step_time,
                 StepsPerLeap = Convert.ToInt32(steps_per_leap),
@@ -66,18 +66,18 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration Falling_EarthMoon
+    public static Scenario Falling_EarthMoon
     {
         get
         {
-            var initConfig = new Falling(
+            var initConfig = new Ball(
                 Constants.MoonOrbitEarthDistance,
                 64,
                 Constants.EarthMass + Constants.MoonMass,
                 Constants.EarthVolume + Constants.MoonVolume,
                 Constants.MoonOrbitEarthSpeed / Math.Sqrt(10)
             );
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = 8,
                 StepsPerLeap = 128,
@@ -93,11 +93,11 @@ public static class PreconfiguredSimulations
     /// Around 70 days, forms a three-body "planet" with a one-body "moon".
     /// Around 1.7 years, collapses into a single four-body "planet".
     /// </summary>
-    public static FullConfiguration Falling_EarthMoon_Tiny_287200931
+    public static Scenario Falling_EarthMoon_Tiny_287200931
     {
         get
         {
-            var initConfig = new Falling(
+            var initConfig = new Ball(
                 Constants.MoonOrbitEarthDistance,
                 4,
                 Constants.EarthMass + Constants.MoonMass,
@@ -105,7 +105,7 @@ public static class PreconfiguredSimulations
                 Constants.MoonOrbitEarthSpeed / Math.Sqrt(10),
                 287200931
             );
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = 8,
                 StepsPerLeap = 128,
@@ -121,18 +121,18 @@ public static class PreconfiguredSimulations
     /// 4 and 6 are also pretty because of their symmetry.
     /// I gave them just enough speed that the combined body tends rotate.
     /// </summary>
-    public static FullConfiguration EarthLattice
+    public static Scenario EarthLattice
     {
         get
         {
-            var initConfig = new Falling(
+            var initConfig = new Ball(
                 Constants.EarthRadius,
                 13,
                 Constants.EarthMass,
                 Constants.EarthVolume,
                 1000
             );
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = 0.1,
                 StepsPerLeap = 128,
@@ -145,12 +145,12 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration MoonFromRing
+    public static Scenario MoonFromRing
     {
         get
         {
             var initConfig = new MoonFromRing(64);
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = 8,
                 StepsPerLeap = 128,
@@ -161,12 +161,12 @@ public static class PreconfiguredSimulations
         }
     }
 
-    public static FullConfiguration MoonFromRing_Insane_102691847
+    public static Scenario MoonFromRing_Insane_102691847
     {
         get
         {
             var initConfig = new MoonFromRing(1024, 102691847);
-            var stepConfig = new StepConfiguration
+            var stepConfig = new PhysicsConfiguration
             {
                 StepTime = 8,
                 StepsPerLeap = 128,

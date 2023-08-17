@@ -1,8 +1,8 @@
 ﻿using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore.Scenarios;
+namespace MechanicsCore.Arrangements;
 
-public class Line : SimulationInitializer
+public class Line : Arrangement
 {
     private readonly int _numBodies;
     private readonly double _bodyMass;
