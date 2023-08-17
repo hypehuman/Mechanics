@@ -152,4 +152,50 @@ public static class ScenarioGallery
         },
         128
     );
+
+    [GuiName("Collapsing: Solar System")]
+    [GuiHelp(
+        "Formation of the solar system, assuming it's all gas and doesn't compress.",
+        "I had hoped to see an accretion disc form, but I think that would require some repulsive forces.",
+        "Dividing the solar system's mass by the regional mass density gives us the approximate volume of the gas that formed the solar system.",
+        "Matter outside this region would have fallen into other stars.",
+        "We need a lot of bodies; with 1000 bodies, none of them will weigh less than Jupiter."
+    )]
+    public static Scenario Collapsing_SolarSystem_Puffy
+    {
+        get
+        {
+            var volumeOfSolarSystemRegion = Constants.SolarSystemMass / Constants.MassDensityInSolarNeighborhood;
+            var radiusOfSolarSystemRegion = Constants.SphereVolumeToRadius(volumeOfSolarSystemRegion);
+
+            // I arbitrarily choose a coefficient x in the range (0,1).
+            // The stuff is in clumps that take up fraction x of the space,
+            // and the remaining (1-x) of the space is empty.
+            // More realistic would be to start with x near 1 (uniformly distributed gas),
+            // and to have it drop over time as the clouds combine and contract.
+            // In today's solar system, x=2.8e-24 (the sun's volume divided by the region's volume).
+            const double x = 0.001;
+            var stuffVolume = x * volumeOfSolarSystemRegion;
+
+            // Maximum speed to keep most objects from escaping
+            var orbitalSpeedAtBoundary = Math.Sqrt(Constants.GravitationalConstant * Constants.SolarSystemMass / radiusOfSolarSystemRegion);
+
+            return new(
+                new Ball(
+                    radiusOfSolarSystemRegion,
+                    2048,
+                    Constants.SolarSystemMass,
+                    stuffVolume,
+                    orbitalSpeedAtBoundary // Also try with 0 speed, which might be more realistic?
+                ),
+                new()
+                {
+                    StepTime = 1000000000000,
+                    GravityConfig = GravityType.Newton_Pointlike,
+                    CollisionConfig = CollisionType.Combine,
+                },
+                10
+            );
+        }
+    }
 }
