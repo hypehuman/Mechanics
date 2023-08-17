@@ -23,11 +23,11 @@
                                 <TextBlock Text="{Binding MinGlowRadiusFractionOfFrame, StringFormat={}{0:0.0000}}" />
                             </StackPanel>
                             <Slider
-                            HorizontalAlignment="Left" Width="111"
-                            Value="{Binding MinGlowRadiusFractionOfFrame}"
-                            Minimum="0" Maximum="0.01"
-                            IsSnapToTickEnabled="True" TickFrequency="0.0001"
-                        />
+                                HorizontalAlignment="Left" Width="111"
+                                Value="{Binding MinGlowRadiusFractionOfFrame}"
+                                Minimum="0" Maximum="0.01"
+                                IsSnapToTickEnabled="True" TickFrequency="0.0001"
+                            />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Button Margin="5" VerticalAlignment="Center" Click="LeapButton_Click">Leap</Button>

@@ -1,10 +1,9 @@
-﻿namespace GuiByReflection.Views.UserEntryViews
+﻿namespace GuiByReflection.Views.UserEntryViews;
+
+partial class DefaultUserEntryView
 {
-    partial class DefaultUserEntryView
+    public DefaultUserEntryView()
     {
-        public DefaultUserEntryView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

@@ -1,10 +1,9 @@
-﻿namespace GuiByReflection.Views.UserEntryViews
+﻿namespace GuiByReflection.Views.UserEntryViews;
+
+partial class EnumDropdownUserEntryView
 {
-    partial class EnumDropdownUserEntryView
+    public EnumDropdownUserEntryView()
     {
-        public EnumDropdownUserEntryView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }
