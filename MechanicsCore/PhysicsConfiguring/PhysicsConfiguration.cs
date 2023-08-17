@@ -19,8 +19,15 @@ public class PhysicsConfiguration : IGetConstructorParameters
         [GuiHelp("The number of seconds per simulation step. Increasing this makes the simulation faster but less accurate.")]
         double stepTime,
         GravityType gravity,
+        [GuiHelp(
+            "Only relevant if gravity is Buoyant.",
+            "Determines the maximum strength of the buoyant force.",
+            "If set to 1, the maximum repulsion will have the same magnitude as the maximum attraction " +
+            "(maximum attraction being when the bodies are just barely touching)."
+        )]
         double buoyantGravityRatio,
         CollisionType collisionConfig,
+        [GuiHelp("Only relevant if collisionConfig is Drag.")]
         double dragCoefficient
     )
     {

@@ -42,6 +42,9 @@ public class SimulationVM : INotifyPropertyChanged
             return minGlowRadius;
         }
     }
+    public string GlowRatioTooltip =>
+        "Increase this to improve the visibility of small bodies." + Environment.NewLine +
+        "Set this to 0 to display actual sizes.";
     private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {

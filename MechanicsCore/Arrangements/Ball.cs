@@ -38,7 +38,7 @@ public class Ball : RandomArrangement
         int numBodies,
         double totalMass,
         double totalBodyVolume,
-        [GuiHelp("velocities are distributed with random directions and speeds from 0 to maxSpeed (flat distribution)")]
+        [GuiHelp("Initial velocities are distributed with speeds from 0 to maxSpeed (flat distribution) and random headings.")]
         double maxSpeed,
         [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]

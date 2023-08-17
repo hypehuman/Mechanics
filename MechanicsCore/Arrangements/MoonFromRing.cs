@@ -23,6 +23,7 @@ public class MoonFromRing : RandomArrangement
     }
 
     public MoonFromRing(
+        [GuiName("Number of Moon fragments")]
         int numMoonFragments,
         [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]

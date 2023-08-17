@@ -59,6 +59,7 @@ public static class ScenarioGallery
     }
 
     [GuiName("Collapsing: Earth and Moon")]
+    [GuiHelp("What would happen if you smashed the Earth and Moon? Would they re-form?")]
     public static Scenario Collapsing_EarthMoon => new(
         new Ball(
             Constants.MoonOrbitEarthDistance,
@@ -103,7 +104,7 @@ public static class ScenarioGallery
     [GuiName("Earth Lattice")]
     [GuiHelp(
         "I chose 13 bodies because then we often get 12 (the 3D kissing number) surrounding the middle one.",
-        "4 and 6 are also pretty because of their symmetry.",
+        "4 and 6 bodies are also pretty because of their symmetry.",
         "I gave them just enough speed that the combined body tends rotate comparably to Earth."
     )]
     public static Scenario EarthLattice => new(

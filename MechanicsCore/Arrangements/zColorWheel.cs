@@ -38,7 +38,7 @@ public class zColorWheel : Arrangement
     public enum ColorMapping
     {
         CloseCyclic,
-        SpacedCyclicCyclic,
+        SpacedCyclic,
         HashedPseudorandom,
     }
 
@@ -88,7 +88,7 @@ public class zColorWheel : Arrangement
         return colorMapping switch
         {
             ColorMapping.CloseCyclic => BodyColors.GetCloseCyclicColor,
-            ColorMapping.SpacedCyclicCyclic => BodyColors.GetSpacedCyclicColor,
+            ColorMapping.SpacedCyclic => BodyColors.GetSpacedCyclicColor,
             ColorMapping.HashedPseudorandom => BodyColors.GetHashedPseudorandomColor,
             _ => throw Utils.OutOfRange(nameof(colorMapping), colorMapping)
         };
