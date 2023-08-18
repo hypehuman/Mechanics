@@ -1,7 +1,20 @@
 use cgmath::{InnerSpace, Vector3};
 
 #[no_mangle]
-pub extern "C" fn compute_gravitational_acceleration(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
+pub extern "C" fn pub_compute_gravitational_acceleration_one_on_one(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
+    compute_gravitational_acceleration_one_on_one(displacement, m2)
+}
+
+#[no_mangle]
+pub extern "C" fn pub_compute_gravitational_acceleration_many_on_one(masses: *const f64, positions: *const Vector3<f64>, num_bodies: usize, index_of_self: usize) -> Vector3<f64> {
+    let masses_slice = unsafe { std::slice::from_raw_parts(masses, num_bodies) };
+    let positions_slice = unsafe { std::slice::from_raw_parts(positions, num_bodies) };
+    let acceleration = compute_gravitational_acceleration_many_on_one(masses_slice, positions_slice, index_of_self);
+
+    acceleration
+}
+
+fn compute_gravitational_acceleration_one_on_one(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
     const GRAVITATIONAL_CONSTANT: f64 = 6.67430e-11;
 
     let distance = displacement.magnitude();
@@ -10,27 +23,18 @@ pub extern "C" fn compute_gravitational_acceleration(displacement: Vector3<f64>,
     acceleration
 }
 
-fn compute_acceleration(masses: &[f64], positions: &[Vector3<f64>], index_of_self: usize) -> Vector3<f64> {
+fn compute_gravitational_acceleration_many_on_one(masses: &[f64], positions: &[Vector3<f64>], index_of_self: usize) -> Vector3<f64> {
     let mut acceleration = Vector3::new(0.0, 0.0, 0.0);
 
     for i in 0..masses.len() {
         if i != index_of_self {
             let displacement = positions[i] - positions[index_of_self];
-            let grav_acceleration = compute_gravitational_acceleration(displacement, masses[i]);
+            let grav_acceleration = compute_gravitational_acceleration_one_on_one(displacement, masses[i]);
             acceleration += grav_acceleration;
         }
     }
 
     acceleration
-}
-
-#[no_mangle]
-pub extern "C" fn compute_acceleration_wrapper(masses: *const f64, positions: *const Vector3<f64>, num_bodies: usize, index_of_self: usize) -> Vector3<f64> {
-	let masses_slice = unsafe { std::slice::from_raw_parts(masses, num_bodies) };
-	let positions_slice = unsafe { std::slice::from_raw_parts(positions, num_bodies) };
-    let acceleration = compute_acceleration(masses_slice, positions_slice, index_of_self);
-	
-	acceleration
 }
 
 #[cfg(test)]
@@ -46,28 +50,28 @@ mod tests {
     const EARTH_MOON_DISTANCE:f64 = 3.84399e8;
 
     #[test]
-    fn test_compute_gravitational_acceleration() {
+    fn test_compute_gravitational_acceleration_one_on_one() {
         // acceleration of earth due to sun's gravity
-        test_compute_gravitational_acceleration_once(
+        compute_gravitational_acceleration_one_on_one_once(
             Vector3::new(SUN_EARTH_DISTANCE, 0.0, 0.0),
             SUN_MASS,
             Vector3::new(5.9301e-3, 0.0, 0.0),
         );
         // acceleration of sun due to earth's gravity
-        test_compute_gravitational_acceleration_once(
+        compute_gravitational_acceleration_one_on_one_once(
             -Vector3::new(SUN_EARTH_DISTANCE, 0.0, 0.0),
             EARTH_MASS,
             -Vector3::new(1.7815e-8, 0.0, 0.0),
         );
     }
 
-    fn test_compute_gravitational_acceleration_once(displacement: Vector3<f64>, m2: f64, expected: Vector3<f64>) {
-        let actual = compute_gravitational_acceleration(displacement, m2);
+    fn compute_gravitational_acceleration_one_on_one_once(displacement: Vector3<f64>, m2: f64, expected: Vector3<f64>) {
+        let actual = compute_gravitational_acceleration_one_on_one(displacement, m2);
         assert_relative_eq!(expected, actual, max_relative = 0.001);
     }
 
     #[test]
-    fn test_compute_acceleration() {
+    fn test_compute_gravitational_acceleration_many_on_one() {
         let masses: &[f64] = &[SUN_MASS, EARTH_MASS, MOON_MASS];
         let positions: &[Vector3<f64>] = &[
             Vector3::new(0.0, 0.0, 0.0), // place sun at origin
@@ -82,12 +86,12 @@ mod tests {
         ];
 
         for i in 0..3 {
-            test_compute_acceleration_once(masses, positions, i, expected_accelerations[i]);
+            test_compute_gravitational_acceleration_many_on_one_once(masses, positions, i, expected_accelerations[i]);
         }
     }
 
-    fn test_compute_acceleration_once(masses: &[f64], positions: &[Vector3<f64>], index_of_self: usize, expected: Vector3<f64>) {
-        let actual = compute_acceleration(masses, positions, index_of_self);
+    fn test_compute_gravitational_acceleration_many_on_one_once(masses: &[f64], positions: &[Vector3<f64>], index_of_self: usize, expected: Vector3<f64>) {
+        let actual = compute_gravitational_acceleration_many_on_one(masses, positions, index_of_self);
         assert_relative_eq!(expected, actual, max_relative = 0.001);
     }
 }

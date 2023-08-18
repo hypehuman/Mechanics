@@ -85,7 +85,7 @@ public class Simulation
             {
                 var body = Bodies[i];
                 if (!body.Exists) continue;
-                a[i] = mechanics_fast.ComputeAcceleration(rustMasses, rustPositions, rustI);
+                a[i] = mechanics_fast.ComputeGravitationalAcceleration(rustMasses, rustPositions, rustI);
                 rustI++;
             };
         }

@@ -183,7 +183,7 @@ public class Body
         var distance = displacement.Length;
         return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
 #else
-        return mechanics_fast.compute_gravitational_acceleration(displacement, m2);
+        return mechanics_fast.ComputeGravitationalAcceleration(displacement, m2);
 #endif
     }
 
@@ -198,7 +198,7 @@ public class Body
 #if DISABLE_RUST
         return Constants.GravitationalConstant * m2 * displacement / (distance * distance * distance);
 #else
-        return mechanics_fast.compute_gravitational_acceleration(displacement, m2);
+        return mechanics_fast.ComputeGravitationalAcceleration(displacement, m2);
 #endif
     }
 

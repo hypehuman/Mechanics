@@ -44,7 +44,7 @@ internal class Program
             var a = new Vector3D[n];
             for (var i = 0; i < n; i++)
             {
-                a[i] = mechanics_fast.ComputeAcceleration(m, p, i);
+                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, i);
             };
             return a;
         }
@@ -61,7 +61,7 @@ internal class Program
             var a = new Vector3D[n];
             for (var i = 0; i < n; i++)
             {
-                a[i] = mechanics_fast.ComputeAcceleration(m, p, i);
+                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, i);
             };
             return a;
         }
