@@ -16,8 +16,8 @@ public class ParameterVM : IParameterVM
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public Type ParameterType { get; }
-    public string Title { get; }
-    public string? Help { get; }
+    public string ActualGuiName { get; }
+    public string? ActualGuiHelp { get; }
 
     public ParameterVM(ParameterInfo parameterInfo, IUserEntryHandler? userEntryHandler = null)
     {
@@ -25,15 +25,11 @@ public class ParameterVM : IParameterVM
         _userEntryHandler = userEntryHandler ?? DefaultUserEntryHandler.Instance;
         ParameterType = _parameterInfo.ParameterType;
 
-        var explicitLabel = _parameterInfo.GetCustomAttribute<GuiTitleAttribute>(false)?.Value;
-        Title = !string.IsNullOrWhiteSpace(explicitLabel) ? explicitLabel : _parameterInfo.Name ?? "[unnamed parameter]";
+        ActualGuiName = _parameterInfo.GetCustomAttribute<GuiNameAttribute>(false).GetActualGuiName(_parameterInfo.Name);
+        ActualGuiHelp = _parameterInfo.GetCustomAttribute<GuiHelpAttribute>(false).GetActualGuiHelp();
 
-        Help = _parameterInfo.GetCustomAttribute<GuiHelpAttribute>(false)?.Value;
-
-        SetActualValue(GetDefaultValue(ParameterType), updateUserEnteredValue: true);
+        SetActualValue(GetDefaultParameterValue(), updateUserEnteredValue: true);
     }
-
-    public bool HasHelp => !string.IsNullOrWhiteSpace(Help);
 
     public object? UserEntry
     {
@@ -101,7 +97,12 @@ public class ParameterVM : IParameterVM
         }
     }
 
-    public static object? GetDefaultValue(Type type)
+    public object? GetDefaultParameterValue()
+    {
+        return _parameterInfo.HasDefaultValue ? _parameterInfo.RawDefaultValue : GetDefaultValueOfType(ParameterType);
+    }
+
+    public static object? GetDefaultValueOfType(Type type)
     {
         if (type.IsValueType)
         {

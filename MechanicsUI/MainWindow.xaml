@@ -9,5 +9,5 @@
     mc:Ignorable="d"
     Title="MainWindow" Width="800" Height="800"
 >
-    <local:SimulationPickerView />
+    <local:SimulationLauncherView />
 </AdonisUI:AdonisWindow>

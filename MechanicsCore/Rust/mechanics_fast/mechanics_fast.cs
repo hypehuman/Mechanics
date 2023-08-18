@@ -9,12 +9,17 @@ namespace MechanicsCore.Rust.mechanics_fast;
 public static class mechanics_fast
 {
     [DllImport("mechanics_fast.dll")]
-    public static extern Vector3D compute_gravitational_acceleration(Vector3D displacement, double m2);
+    private static extern Vector3D pub_compute_gravitational_acceleration_one_on_one(Vector3D displacement, double m2);
 
     [DllImport("mechanics_fast.dll")]
-    private static unsafe extern Vector3D compute_acceleration_wrapper(double* masses, Vector3D* positions, UIntPtr num_bodies, UIntPtr index_of_self);
+    private static unsafe extern Vector3D pub_compute_gravitational_acceleration_many_on_one(double* masses, Vector3D* positions, UIntPtr num_bodies, UIntPtr index_of_self);
 
-    public static Vector3D ComputeAcceleration(double[] masses, Vector3D[] positions, int index_of_self)
+    public static Vector3D ComputeGravitationalAcceleration(Vector3D displacement, double m2)
+    {
+        return pub_compute_gravitational_acceleration_one_on_one(displacement, m2);
+    }
+
+    public static Vector3D ComputeGravitationalAcceleration(double[] masses, Vector3D[] positions, int index_of_self)
     {
         unsafe
         {
@@ -22,7 +27,7 @@ public static class mechanics_fast
             {
                 fixed (Vector3D* positionsPtr = positions)
                 {
-                    return compute_acceleration_wrapper(massesPtr, positionsPtr, (UIntPtr)masses.Length, (UIntPtr)index_of_self);
+                    return pub_compute_gravitational_acceleration_many_on_one(massesPtr, positionsPtr, (UIntPtr)masses.Length, (UIntPtr)index_of_self);
                 }
             }
         }

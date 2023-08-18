@@ -1,6 +1,6 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.Rust.mechanics_fast;
-using MechanicsCore.StepConfiguring;
+using MechanicsCore.PhysicsConfiguring;
 
 namespace MechanicsCore;
 
@@ -45,7 +45,7 @@ public class Body
 
     public Vector3D ComputeMomentum() => Mass * Velocity;
 
-    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies, StepConfiguration config)
+    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies, PhysicsConfiguration config)
     {
         var a = default(Vector3D);
         foreach (var body2 in allBodies)
@@ -86,7 +86,7 @@ public class Body
         Velocity = v;
     }
 
-    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2, StepConfiguration config)
+    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2, PhysicsConfiguration config)
     {
         var displacement = body2.Position - body1.Position;
         var m2 = body2.Mass;
@@ -183,7 +183,7 @@ public class Body
         var distance = displacement.Length;
         return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2, distance);
 #else
-        return mechanics_fast.compute_gravitational_acceleration(displacement, m2);
+        return mechanics_fast.ComputeGravitationalAcceleration(displacement, m2);
 #endif
     }
 
@@ -198,16 +198,16 @@ public class Body
 #if DISABLE_RUST
         return Constants.GravitationalConstant * m2 * displacement / (distance * distance * distance);
 #else
-        return mechanics_fast.compute_gravitational_acceleration(displacement, m2);
+        return mechanics_fast.ComputeGravitationalAcceleration(displacement, m2);
 #endif
     }
 
-    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance, StepConfiguration config)
+    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance, PhysicsConfiguration config)
     {
         return ComputeDragForce(body1, body2, displacement, distance, config);
     }
 
-    private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance, StepConfiguration config)
+    private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance, PhysicsConfiguration config)
     {
         if (config.CollisionConfig != CollisionType.Drag)
         {

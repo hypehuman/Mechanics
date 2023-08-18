@@ -1,8 +1,13 @@
-﻿using MathNet.Spatial.Euclidean;
+﻿using GuiByReflection.Models;
+using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore.Scenarios;
+namespace MechanicsCore.Arrangements;
 
-public class Line : SimulationInitializer
+[GuiHelp(
+    "Arranges identical bodies in a line, each touching the other.",
+    "Useful for testing the equilibrium behavior of collision properties like elasticity, deformation, and pressure."
+)]
+public class Line : Arrangement
 {
     private readonly int _numBodies;
     private readonly double _bodyMass;

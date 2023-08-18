@@ -4,6 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:gbrViews="clr-namespace:GuiByReflection.Views;assembly=GuiByReflection.Views"
     xmlns:local="clr-namespace:MechanicsUI"
     mc:Ignorable="d"
     d:DesignHeight="450" d:DesignWidth="800"
@@ -18,17 +19,24 @@
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Controls">
                     <StackPanel Margin="5">
                         <StackPanel Margin="5">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Glow Ratio: "/>
-                                <TextBlock Text="{Binding MinGlowRadiusFractionOfFrame, StringFormat={}{0:0.0000}}" />
-                            </StackPanel>
+                            <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowRatioTooltip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Glow Ratio: "/>
+                                    <TextBlock Text="{Binding MinGlowRadiusFractionOfFrame, StringFormat={}{0:0.0000}}" />
+                                </StackPanel>
+                            </gbrViews:GuiHelpTooltipWrapper>
                             <Slider
-                            HorizontalAlignment="Left" Width="111"
-                            Value="{Binding MinGlowRadiusFractionOfFrame}"
-                            Minimum="0" Maximum="0.01"
-                            IsSnapToTickEnabled="True" TickFrequency="0.0001"
-                        />
+                                HorizontalAlignment="Left" Width="111"
+                                Value="{Binding MinGlowRadiusFractionOfFrame}"
+                                Minimum="0" Maximum="0.01"
+                                IsSnapToTickEnabled="True" TickFrequency="0.0001"
+                            />
                         </StackPanel>
+                        <DockPanel Margin="5">
+                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Steps per leap: " />
+                            <local:ValidationTextBox VerticalAlignment="Center" DataContext="{Binding StepsPerLeapVM}" />
+                        </DockPanel>
+                        <TextBlock Margin="5" Text="{Binding LeapTimeText}" />
                         <StackPanel Orientation="Horizontal">
                             <Button Margin="5" VerticalAlignment="Center" Click="LeapButton_Click">Leap</Button>
                             <CheckBox Margin="5" VerticalAlignment="Center" IsChecked="{Binding IsAutoLeaping}">Auto-leap</CheckBox>

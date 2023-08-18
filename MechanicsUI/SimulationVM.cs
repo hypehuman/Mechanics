@@ -12,6 +12,8 @@ public class SimulationVM : INotifyPropertyChanged
     public Simulation Model { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
+    public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
+
     public BodyVM[] BodyVMs { get; }
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
     public double CanvasTranslateX { get; private set; }
@@ -40,6 +42,11 @@ public class SimulationVM : INotifyPropertyChanged
             return minGlowRadius;
         }
     }
+    public string GlowRatioTooltip =>
+        "Increase this to improve the visibility of small bodies." + Environment.NewLine +
+        "Set this to 0 to display actual sizes.";
+    public string LeapTimeText => 
+        "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
     private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
@@ -65,6 +72,11 @@ public class SimulationVM : INotifyPropertyChanged
     {
         Model = model;
         BodyVMs = Model.Bodies.Select(b => new BodyVM(b, this)).ToArray();
+        StepsPerLeapVM.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
+                PropertyChanged?.Invoke(this, new(nameof(LeapTimeText)));
+        };
     }
 
     private string GetTitleOrConfig(string separator)
@@ -74,7 +86,7 @@ public class SimulationVM : INotifyPropertyChanged
 
     public void LeapAndRefresh()
     {
-        if (!Model.TryLeap())
+        if (!Model.TryLeap(StepsPerLeapVM.CurrentValue))
         {
             IsAutoLeaping = false;
         }
@@ -151,7 +163,7 @@ public class SimulationVM : INotifyPropertyChanged
 public class DefaultSimulationVM : SimulationVM
 {
     public DefaultSimulationVM()
-        : base(new(PreconfiguredSimulations.Default()))
+        : base(new(ScenarioGallery.Default()))
     {
     }
 }

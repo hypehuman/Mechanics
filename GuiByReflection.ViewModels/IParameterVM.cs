@@ -1,9 +1,8 @@
 ﻿namespace GuiByReflection.ViewModels;
 
-public interface IParameterVM : ICanHaveHelp
+public interface IParameterVM : IHasGuiName, IHasGuiHelp
 {
     public Type ParameterType { get; }
-    string Title { get; }
 
     /// <summary>
     /// The value that will be passed to the method call.

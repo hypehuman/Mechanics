@@ -1,32 +1,37 @@
 ﻿using GuiByReflection.Models;
 
-namespace MechanicsCore.StepConfiguring;
+namespace MechanicsCore.PhysicsConfiguring;
 
 /// <summary>
 /// Configuration that determines how the simulation proceeds at each step
 /// </summary>
-public class StepConfiguration : IGetConstructorParameters
+public class PhysicsConfiguration : IGetConstructorParameters
 {
-    public StepConfiguration() { }
+    public PhysicsConfiguration() { }
 
     public object?[] GetConstructorParameters()
     {
-        return new object?[] { StepTime, StepsPerLeap, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
+        return new object?[] { StepTime, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
     }
 
-    public StepConfiguration(
-        [GuiTitle("Step time")]
+    public PhysicsConfiguration(
+        [GuiName("Step time")]
         [GuiHelp("The number of seconds per simulation step. Increasing this makes the simulation faster but less accurate.")]
         double stepTime,
-        int stepsPerLeap,
         GravityType gravity,
+        [GuiHelp(
+            "Only relevant if gravity is Buoyant.",
+            "Determines the maximum strength of the buoyant force.",
+            "If set to 1, the maximum repulsion will have the same magnitude as the maximum attraction " +
+            "(maximum attraction being when the bodies are just barely touching)."
+        )]
         double buoyantGravityRatio,
         CollisionType collisionConfig,
+        [GuiHelp("Only relevant if collisionConfig is Drag.")]
         double dragCoefficient
     )
     {
         StepTime = stepTime;
-        StepsPerLeap = stepsPerLeap;
         GravityConfig = gravity;
         BuoyantGravityRatio = buoyantGravityRatio;
         CollisionConfig = collisionConfig;
@@ -34,7 +39,6 @@ public class StepConfiguration : IGetConstructorParameters
     }
 
     public double StepTime { get; set; }
-    public int StepsPerLeap { get; set; }
 
     public GravityType GravityConfig { get; set; }
     /// <summary>
@@ -52,7 +56,6 @@ public class StepConfiguration : IGetConstructorParameters
     public IEnumerable<string> GetConfigLines()
     {
         yield return $"Step time: {Simulation.DoubleToString(StepTime)}";
-        yield return $"Steps per leap: {StepsPerLeap}";
 
         yield return $"Gravity: {GravityConfig}";
         if (GravityConfig == GravityType.Newton_Buoyant)

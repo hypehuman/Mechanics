@@ -1,8 +1,13 @@
-﻿using MathNet.Spatial.Euclidean;
+﻿using GuiByReflection.Models;
+using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore.Scenarios;
+namespace MechanicsCore.Arrangements;
 
-public class ColorWheel : SimulationInitializer
+[GuiHelp(
+    "Just for testing the distribution of colors that we choose for bodies.",
+    "Step/Leap does nothing."
+)]
+public class zColorWheel : Arrangement
 {
     private readonly ColorMapping _colorMapping;
     private readonly bool _normalizeRadiance;
@@ -21,7 +26,7 @@ public class ColorWheel : SimulationInitializer
         return new object?[] { _colorMapping, _normalizeRadiance };
     }
 
-    public ColorWheel(ColorMapping colorMapping, bool normalizeRadiance)
+    public zColorWheel(ColorMapping colorMapping, bool normalizeRadiance)
     {
         // Call this to validate the argument
         var func = GetColorMappingFunction(colorMapping);
@@ -33,7 +38,7 @@ public class ColorWheel : SimulationInitializer
     public enum ColorMapping
     {
         CloseCyclic,
-        SpacedCyclicCyclic,
+        SpacedCyclic,
         HashedPseudorandom,
     }
 
@@ -83,7 +88,7 @@ public class ColorWheel : SimulationInitializer
         return colorMapping switch
         {
             ColorMapping.CloseCyclic => BodyColors.GetCloseCyclicColor,
-            ColorMapping.SpacedCyclicCyclic => BodyColors.GetSpacedCyclicColor,
+            ColorMapping.SpacedCyclic => BodyColors.GetSpacedCyclicColor,
             ColorMapping.HashedPseudorandom => BodyColors.GetHashedPseudorandomColor,
             _ => throw Utils.OutOfRange(nameof(colorMapping), colorMapping)
         };

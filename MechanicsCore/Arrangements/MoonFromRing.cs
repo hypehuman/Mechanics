@@ -1,9 +1,11 @@
 ﻿using GuiByReflection.Models;
 using MathNet.Spatial.Euclidean;
 
-namespace MechanicsCore.Scenarios;
+namespace MechanicsCore.Arrangements;
 
-public class MoonFromRing : RandomSimulationInitializer
+[GuiName("Moon from Ring")]
+[GuiHelp("Start with the moon broken into identical fragments orbiting the Earth, randomly distributed on a circle.")]
+public class MoonFromRing : RandomArrangement
 {
     private readonly int _numMoonFragments;
 
@@ -21,8 +23,9 @@ public class MoonFromRing : RandomSimulationInitializer
     }
 
     public MoonFromRing(
+        [GuiName("Number of Moon fragments")]
         int numMoonFragments,
-        [GuiTitle(RequestedSeedGuiTitle)]
+        [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]
         int? requestedSeed = null
     )
@@ -33,7 +36,7 @@ public class MoonFromRing : RandomSimulationInitializer
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
-        displayBound1 = new(Constants.EarthMoonDistance * 1.1, Constants.EarthMoonDistance * 1.1, Constants.EarthRadius * 1.1);
+        displayBound1 = new(Constants.MoonOrbitEarthDistance * 1.1, Constants.MoonOrbitEarthDistance * 1.1, Constants.EarthRadius * 1.1);
         displayBound0 = -displayBound1;
         var fragmentMass = Constants.MoonMass / _numMoonFragments;
         var fragmentVolume = Constants.MoonVolume / _numMoonFragments;
@@ -49,7 +52,7 @@ public class MoonFromRing : RandomSimulationInitializer
                 color: BodyColors.GetCloseCyclicColor((int)(angle01 * 256)),
                 mass: fragmentMass,
                 radius: fragmentRadius,
-                position: new(Constants.EarthMoonDistance * cos, Constants.EarthMoonDistance * sin, 0),
+                position: new(Constants.MoonOrbitEarthDistance * cos, Constants.MoonOrbitEarthDistance * sin, 0),
                 velocity: new(Constants.MoonOrbitEarthSpeed * -sin, Constants.MoonOrbitEarthSpeed * cos, 0)
             );
         }

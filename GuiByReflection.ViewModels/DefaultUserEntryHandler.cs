@@ -38,7 +38,7 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
 
             // Having failed to parse as null, return the message and result that we got when we attempted to parse a value.
             message = underlyingMessage;
-            return underlyingValue;
+            return currentActualValue;
         }
 
         if (userEntry is string userString)
@@ -46,9 +46,9 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
             // These two are IParsable and should therefore be handled by TryTryParseByReflection.
             // However, they are very common, so here are some optimized type checks.
             if (type == typeof(int))
-                return TryParse<int>(userString, out message);
+                return TryParse<int>(userString, out var parsed, out message) ? parsed : currentActualValue;
             if (type == typeof(double))
-                return TryParse<double>(userString, out message);
+                return TryParse<double>(userString, out var parsed, out message) ? parsed : currentActualValue;
 
             // Booleans are user-friendlier as checkboxes, but we support textboxes as well.
             // In .NET 8, System.Boolean will implement IParsable.
@@ -61,7 +61,7 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
                 }
 
                 message = TryParseReturnedFalseMessage(typeof(bool));
-                return ParameterVM.GetDefaultValue(type);
+                return currentActualValue;
             }
 
             // Enums are user-friendlier as dropdowns, but we support textboxes as well.
@@ -74,34 +74,35 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
                 }
 
                 message = TryParseReturnedFalseMessage(typeof(Enum));
-                return ParameterVM.GetDefaultValue(type);
+                return currentActualValue;
             }
 
             // Complicated reflection that should handle any IParsable but is probably very slow
-            if (TryTryParseByReflection(type, userString, out var parsedParsable, out var possibleMessage))
+            switch (TryTryParseByReflection(type, userString, out var parsedParsable, out var possibleMessage))
             {
-                message = possibleMessage;
-                return parsedParsable;
+                case TryTryParseResult.TryParseReturnedTrue:
+                    message = string.Empty;
+                    return parsedParsable;
+                case TryTryParseResult.TryParseReturnedFalse:
+                    message = possibleMessage;
+                    return currentActualValue;
+                default:
+                    break;
             }
         }
 
         // give up
         var dumpUserEntry = userEntry == null ? "null" : $"{userEntry.GetType()} '{userEntry}'";
         message = $"Not sure how to convert {dumpUserEntry} to {type}";
-        return ParameterVM.GetDefaultValue(type);
+        return currentActualValue;
     }
 
-    public static TSelf? TryParse<TSelf>(string userString, out string message)
+    private static bool TryParse<TSelf>(string userString, out TSelf? parsed, out string message)
         where TSelf : IParsable<TSelf>
     {
-        if (TSelf.TryParse(userString, null, out var parsed))
-        {
-            message = string.Empty;
-            return parsed;
-        }
-
-        message = TryParseReturnedFalseMessage(typeof(TSelf));
-        return default;
+        var success = TSelf.TryParse(userString, null, out parsed);
+        message = success ? string.Empty : TryParseReturnedFalseMessage(typeof(TSelf));
+        return success;
     }
 
     public static string TryParseReturnedFalseMessage(Type type)
@@ -109,10 +110,7 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
         return $"{type}.TryParse returned false";
     }
 
-    /// <summary>
-    /// Returns false if the <see cref="IParsable{TSelf}.TryParse"/> method could not be found or if it threw an exception.
-    /// </summary>
-    public static bool TryTryParseByReflection(Type type, string userString, out object? parsed, out string message)
+    public static TryTryParseResult TryTryParseByReflection(Type type, string userString, out object? parsed, out string message)
     {
         /* This doesn't seem to find the method:
         var tryParse = type.GetMethod(
@@ -134,7 +132,7 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
             // TryParse method not found
             parsed = default;
             message = string.Empty;
-            return false;
+            return TryTryParseResult.TryParseFailedOrNotFound;
         }
 
         try
@@ -146,12 +144,12 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
             {
                 // TryParse returned true
                 message = string.Empty;
-                return true;
+                return TryTryParseResult.TryParseReturnedTrue;
             }
 
             // TryParse returned false
             message = TryParseReturnedFalseMessage(type);
-            return true; // to indicate that we should display the message above and not try other means of conversion
+            return TryTryParseResult.TryParseReturnedFalse;
         }
         catch
         {
@@ -159,7 +157,7 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
             // or the method itself threw an exception (unlikely)
             parsed = default;
             message = string.Empty;
-            return false;
+            return TryTryParseResult.TryParseFailedOrNotFound;
         }
     }
 
@@ -202,4 +200,11 @@ internal class DefaultUserEntryHandler : IUserEntryHandler
         tryParseMethod = map.TargetMethods[index];
         return tryParseMethod != null;
     }
+}
+
+public enum TryTryParseResult
+{
+    TryParseReturnedTrue,
+    TryParseReturnedFalse,
+    TryParseFailedOrNotFound,
 }

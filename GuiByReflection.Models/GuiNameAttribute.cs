@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+
 namespace GuiByReflection.Models;
 
 /// <summary>
@@ -6,24 +7,24 @@ namespace GuiByReflection.Models;
 /// If not specified, the property or parameter name used in the code will appear.
 /// </summary>
 [AttributeUsage(AttributeTargets.All)]
-public class GuiTitleAttribute : Attribute
+public class GuiNameAttribute : Attribute
 {
-    public static readonly GuiTitleAttribute Default = new();
+    public static readonly GuiNameAttribute Default = new();
 
     public string Value { get; }
 
-    public GuiTitleAttribute()
+    public GuiNameAttribute()
         : this(string.Empty)
     {
     }
 
-    public GuiTitleAttribute(string value)
+    public GuiNameAttribute(string value)
     {
         Value = value;
     }
 
     public override bool Equals([NotNullWhen(true)] object? obj) =>
-        obj is GuiTitleAttribute other && other.Value == Value;
+        obj is GuiNameAttribute other && other.Value == Value;
 
     public override int GetHashCode() => Value?.GetHashCode() ?? 0;
 

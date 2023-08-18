@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+
 namespace GuiByReflection.Models;
 
 /// <summary>
@@ -20,6 +21,11 @@ public class GuiHelpAttribute : Attribute
     public GuiHelpAttribute(string value)
     {
         Value = value;
+    }
+
+    public GuiHelpAttribute(params string[] lines)
+    {
+        Value = string.Join(Environment.NewLine, lines);
     }
 
     public override bool Equals([NotNullWhen(true)] object? obj) =>

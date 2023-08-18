@@ -4,9 +4,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:local="clr-namespace:GuiByReflection.Views"
-    mc:Ignorable="d" 
-    d:DataContext="{d:DesignInstance Type=local:DesignParameterVM, IsDesignTimeCreatable=True}"
+    xmlns:designInstances="clr-namespace:GuiByReflection.Views.DesignInstances"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=designInstances:DesignParameterVM, IsDesignTimeCreatable=True}"
 >
     <TextBox VerticalAlignment="Center" Text="{Binding UserEntry}" MinWidth="100" />
 </UserControl>

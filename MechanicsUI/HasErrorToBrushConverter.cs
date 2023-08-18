@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
+using System.Windows.Media;
 
-namespace GuiByReflection.Views;
+namespace MechanicsUI;
 
-public class EnumTypeToItemsSourceConverter : IValueConverter
+public class HasErrorToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is Type type && type.IsEnum)
-        {
-            return Enum.GetValues(type);
-        }
-
-        return Array.Empty<object>();
+        return false.Equals(value) ? Brushes.Transparent : Brushes.Red;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
