@@ -45,6 +45,8 @@ public class SimulationVM : INotifyPropertyChanged
     public string GlowRatioTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes.";
+    public string LeapTimeText => 
+        "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
     private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
@@ -70,6 +72,11 @@ public class SimulationVM : INotifyPropertyChanged
     {
         Model = model;
         BodyVMs = Model.Bodies.Select(b => new BodyVM(b, this)).ToArray();
+        StepsPerLeapVM.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
+                PropertyChanged?.Invoke(this, new(nameof(LeapTimeText)));
+        };
     }
 
     private string GetTitleOrConfig(string separator)

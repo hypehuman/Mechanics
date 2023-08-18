@@ -39,6 +39,7 @@ public static class ScenarioGallery
         1024
     );
 
+    [GuiHelp("This is the same setup used for the Rust unit tests.")]
     public static Scenario SunEarthMoon
     {
         get
@@ -57,6 +58,20 @@ public static class ScenarioGallery
             );
         }
     }
+
+    [GuiHelp("What would happen if the Earth and Moon lost their momentum around the Sun?")]
+    public static Scenario SunEarthMoon_EarthStopped => new(
+        new SunEarthMoon(
+            earthVelocityY: 0,
+            moonVelocityY: 0
+        ),
+        new()
+        {
+            StepTime = 1,
+            GravityConfig = GravityType.Newton_LinearAfterTouching
+        },
+        900
+    );
 
     [GuiName("Collapsing: Earth and Moon")]
     [GuiHelp("What would happen if you smashed the Earth and Moon? Would they re-form?")]

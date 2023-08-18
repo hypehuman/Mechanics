@@ -38,9 +38,9 @@ mod tests {
     use super::*;
     use cgmath::assert_relative_eq;
 
-    const SUN_MASS:f64 = 1.98847e30;
-    const EARTH_MASS:f64 = 5.9722e24;
-    const MOON_MASS:f64 = 7.34767309e22;
+    const SUN_MASS:f64 = 1.9885e30;
+    const EARTH_MASS:f64 = 5.9724e24;
+    const MOON_MASS:f64 = 7.3476e22;
 
     const SUN_EARTH_DISTANCE:f64 = 1.4960e11;
     const EARTH_MOON_DISTANCE:f64 = 3.84399e8;
@@ -76,9 +76,9 @@ mod tests {
         ];
 
         let expected_accelerations:[Vector3<f64>; 3] = [
-            Vector3::new(1.8030e-08, 5.6304e-13, 0.0000e00),
-            Vector3::new(-5.9301e-03, 3.3189e-05, 0.0000e00),
-            Vector3::new(-5.9300e-03, -2.7128e-03, 0.0000e00),
+            Vector3::new(1.8030e-08, 5.6303e-13, 0.0000e00),
+            Vector3::new(-5.9301e-03, 3.3188e-05, 0.0000e00),
+            Vector3::new(-5.9301e-03, -2.7129e-03, 0.0000e00),
         ];
 
         for i in 0..3 {

@@ -12,7 +12,7 @@ public class Simulation
     #region Current state
 
     public long NumStepsPerformed { get; private set; }
-    public double t => NumStepsPerformed * PhysicsConfig.StepTime;
+    public double ElapsedTime => NumStepsPerformed * PhysicsConfig.StepTime;
     public Vector3D DisplayBound0 { get; }
     public Vector3D DisplayBound1 { get; }
 
@@ -298,7 +298,7 @@ public class Simulation
     public IEnumerable<string> GetStateSummaryLines()
     {
         yield return $"Step {NumStepsPerformed}";
-        yield return GetTimeString();
+        yield return GetElapsedTimeString();
         yield return $"{ExistingBodies.Count()} bodies";
         if (HasError)
         {
@@ -306,9 +306,14 @@ public class Simulation
         }
     }
 
-    private string GetTimeString()
+    private string GetElapsedTimeString()
     {
-        var secStr = $"t = {DoubleToString(t)} seconds";
+        return $"t = {TimeToString(ElapsedTime)}";
+    }
+
+    public static string TimeToString(double t)
+    {
+        var secStr = $"{DoubleToString(t)} seconds";
         if (t < 1d / 1000)
         {
             // TimeSpan.FromSeconds is only accurate to the nearest millisecond.

@@ -170,7 +170,7 @@ internal class Program
     {
         var sim = new Simulation(config);
         sim.DumpState();
-        while (sim.t < Constants.SecondsPerYear)
+        while (sim.ElapsedTime < Constants.SecondsPerYear)
         {
             sim.Leap(config.SuggestedStepsPerLeap);
             sim.DumpState();
