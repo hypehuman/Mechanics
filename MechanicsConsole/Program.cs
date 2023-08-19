@@ -10,6 +10,9 @@ internal class Program
     static void Main(string[] args)
     {
         Console.WriteLine("Running performance tests:");
+        var wpfScenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
+        SeeHowLongItTakes(wpfScenario, 1, 100000);
+        return;
 
         var ballHuge = new Scenario(
             new Ball(
@@ -87,13 +90,14 @@ internal class Program
         }
     }
 
-    private static void SeeHowLongItTakes(Scenario config, int numLeaps)
+    private static void SeeHowLongItTakes(Scenario config, int numLeaps, int? stepsPerLeap = null)
     {
+        stepsPerLeap ??= config.SuggestedStepsPerLeap;
         var sim = new Simulation(config);
         var sw = Stopwatch.StartNew();
-        for (int leapI = 0; leapI < 5; leapI++)
+        for (int leapI = 0; leapI < numLeaps; leapI++)
         {
-            sim.Leap(config.SuggestedStepsPerLeap);
+            sim.Leap(stepsPerLeap.Value);
             Console.WriteLine("Leap " + leapI);
             foreach (var line in sim.GetStateSummaryLines())
             {
