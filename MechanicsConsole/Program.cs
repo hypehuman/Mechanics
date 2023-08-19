@@ -1,8 +1,6 @@
-﻿using MathNet.Spatial.Euclidean;
-using MechanicsCore;
+﻿using MechanicsCore;
 using MechanicsCore.Arrangements;
 using MechanicsCore.PhysicsConfiguring;
-using MechanicsCore.Rust.mechanics_fast;
 using System.Diagnostics;
 
 namespace MechanicsConsole;
@@ -29,53 +27,6 @@ internal class Program
             },
             SuggestedStepsPerLeap: 128
         );
-        if (!ballHuge.PhysicsConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
-        var sim = new Simulation(ballHuge);
-        var n = sim.Bodies.Count;
-        var m = new double[n];
-        var p = new Vector3D[n];
-        for (var i = 0; i < n; i++)
-        {
-            m[i] = sim.Bodies[i].Mass;
-            p[i] = sim.Bodies[i].Position;
-        };
-        Vector3D[] a()
-        {
-            var a = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, i);
-            };
-            return a;
-        }
-        Vector3D[] b()
-        {
-            var n = sim.Bodies.Count;
-            var m = new double[n];
-            var p = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                m[i] = sim.Bodies[i].Mass;
-                p[i] = sim.Bodies[i].Position;
-            };
-            var a = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, i);
-            };
-            return a;
-        }
-        Vector3D[] c()
-        {
-            var a = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies, sim.PhysicsConfig);
-            };
-            return a;
-        };
-        HeadToHead(new[] { a, b, c }, 8, 32);
-
         SeeHowLongItTakes(ScenarioGallery.MoonFromRing_Insane_102691847, 5);
         SeeHowFarItGoes(ScenarioGallery.SunEarthMoon, 10000);
         SeeHowFarItGoes(ScenarioGallery.TwoBodies_Buoyant_Drag_0, 10000);
