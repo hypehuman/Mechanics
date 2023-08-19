@@ -1,6 +1,6 @@
 ﻿using MathNet.Spatial.Euclidean;
-using MechanicsCore.Rust.mechanics_fast;
 using MechanicsCore.PhysicsConfiguring;
+using MechanicsCore.Rust.mechanics_fast;
 
 namespace MechanicsCore;
 
@@ -50,7 +50,7 @@ public class Body
         var a = default(Vector3D);
         foreach (var body2 in allBodies)
         {
-            if (!body2.Exists || body2 == this)
+            if (body2 == this)
             {
                 continue;
             }
