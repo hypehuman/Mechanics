@@ -54,7 +54,7 @@ public class SimulationVM : INotifyPropertyChanged
         set
         {
             _isAutoLeaping = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAutoLeaping)));
+            PropertyChanged?.Invoke(this, IsAutoLeapingChangedArgs);
             DoAutoLeap(Dispatcher.CurrentDispatcher);
         }
     }
@@ -67,6 +67,8 @@ public class SimulationVM : INotifyPropertyChanged
             RefreshBounds();
         }
     }
+
+    public event EventHandler? DoingAutoLeap;
 
     public SimulationVM(Simulation model)
     {
@@ -101,6 +103,14 @@ public class SimulationVM : INotifyPropertyChanged
             return;
         }
 
+        DoingAutoLeap?.Invoke(this, EventArgs.Empty);
+
+        // Check again; the event subscriber may have turned auto-leap off.
+        if (!_isAutoLeaping)
+        {
+            return;
+        }
+
         LeapAndRefresh();
         dispatcher.InvokeAsync(() => DoAutoLeap(dispatcher), DispatcherPriority.Background);
     }
@@ -113,6 +123,7 @@ public class SimulationVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs CanvasScaleYChangedArgs = new(nameof(CanvasScaleY));
     private static readonly PropertyChangedEventArgs MinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
     private static readonly PropertyChangedEventArgs MinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
+    private static readonly PropertyChangedEventArgs IsAutoLeapingChangedArgs = new(nameof(IsAutoLeaping));
 
     private void RefreshSim()
     {
