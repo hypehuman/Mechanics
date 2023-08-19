@@ -103,16 +103,11 @@ public class BodyVM : INotifyPropertyChanged
 
     private Point ComputeCenterXY()
     {
-        return Model.Exists ? new(Model.Position.X, Model.Position.Y) : new(double.NaN, double.NaN);
+        return new(Model.Position.X, Model.Position.Y);
     }
 
     private int ComputePanelZIndex()
     {
-        if (!Model.Exists)
-        {
-            return 0;
-        }
-
         // Compute Z scaled to the range [0,1] relative to the simulation bounds.
         var z = Model.Position.Z;
         SimulationVM.Sort(Simulation.DisplayBound0.Z, Simulation.DisplayBound1.Z, out var zMin, out var zMax);

@@ -1,5 +1,6 @@
 ﻿using MechanicsCore;
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -14,7 +15,7 @@ public class SimulationVM : INotifyPropertyChanged
     public string Config => GetTitleOrConfig(Environment.NewLine);
     public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
 
-    public BodyVM[] BodyVMs { get; }
+    public ObservableCollection<BodyVM> BodyVMs { get; }
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
     public double CanvasTranslateX { get; private set; }
     public double CanvasTranslateY { get; private set; }
@@ -73,7 +74,7 @@ public class SimulationVM : INotifyPropertyChanged
     public SimulationVM(Simulation model)
     {
         Model = model;
-        BodyVMs = Model.Bodies.Select(b => new BodyVM(b, this)).ToArray();
+        BodyVMs = new(Model.Bodies.Select(b => new BodyVM(b, this)));
         StepsPerLeapVM.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
@@ -129,9 +130,17 @@ public class SimulationVM : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, StateSummaryChangedArgs);
 
-        foreach (var bodyVM in BodyVMs)
+        for (var i = BodyVMs.Count - 1; i >= 0; i--)
         {
-            bodyVM.Refresh();
+            var bodyVM = BodyVMs[i];
+            if (bodyVM.Model.Exists)
+            {
+                bodyVM.Refresh();
+            }
+            else
+            {
+                BodyVMs.RemoveAt(i);
+            }
         }
     }
 
