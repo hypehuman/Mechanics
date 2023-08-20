@@ -37,7 +37,20 @@ fn compute_gravitational_acceleration_many_on_one(masses: &[f64], positions: &[V
     acceleration
 }
 
-fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[Vector3<f64>], accelerations: &mut [Vector3<f64>]) {
+fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[Vector3<f64>], accelerations: &mut [Vector3<f64>]) -> Vec<Vector3<f64>> {
+        let mut computed_accelerations = Vec::with_capacity(masses.len());
+
+    for i in 0..masses.len() {
+        if let Some(body_mass) = masses.get(i) {
+            let accel = compute_gravitational_acceleration_many_on_one(masses, positions, i);
+            computed_accelerations.push(accel);
+        } else {
+            computed_accelerations.push(Vector3::new(0.0, 0.0, 0.0));
+        }
+    }
+    accelerations.copy_from_slice(&computed_accelerations);
+
+    computed_accelerations
 }
 
 #[cfg(test)]
