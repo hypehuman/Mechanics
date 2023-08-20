@@ -79,6 +79,7 @@ partial class SimulationLauncherView
 
     private void OnFirstLoaded()
     {
+        return;
         // Run performance test
         var launcherVM = ViewModel;
         var scenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
