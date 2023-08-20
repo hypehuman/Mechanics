@@ -1,4 +1,5 @@
 use cgmath::{InnerSpace, Vector3};
+use std::ptr;
 
 #[no_mangle]
 pub extern "C" fn pub_compute_gravitational_acceleration_one_on_one(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
