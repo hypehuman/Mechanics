@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.17.1" />
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
+    <PackageReference Include="MathNet.Spatial" Version="0.6.0" />
   </ItemGroup>
 
   <ItemGroup>

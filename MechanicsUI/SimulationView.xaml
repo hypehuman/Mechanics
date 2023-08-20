@@ -61,7 +61,7 @@
                         >
                             <Canvas.RenderTransform>
                                 <TransformGroup>
-                                    <ScaleTransform ScaleX="{Binding CanvasScaleX}" ScaleY="{Binding CanvasScaleY}" />
+                                    <ScaleTransform ScaleX="{Binding CanvasScale}" ScaleY="{Binding CanvasScale}" />
                                     <TranslateTransform X="{Binding CanvasTranslateX}" Y="{Binding CanvasTranslateY}" />
                                 </TransformGroup>
                             </Canvas.RenderTransform>
@@ -73,7 +73,7 @@
                         <Path>
                             <Path.Data>
                                 <EllipseGeometry
-                                    Center="{Binding CenterXY}" 
+                                    Center="{Binding PanelCenterXY}" 
                                     RadiusX="{Binding GlowRadius}" 
                                     RadiusY="{Binding GlowRadius}"
                                 />

@@ -1,4 +1,5 @@
-﻿using MechanicsCore;
+﻿using MathNet.Spatial.Euclidean;
+using MechanicsCore;
 using System;
 using System.ComponentModel;
 using System.Windows;
@@ -29,19 +30,19 @@ public class BodyVM : INotifyPropertyChanged
         }
     }
 
-    private Simulation Simulation => SimulationVM.Model;
+    private Vector3D PositionOnPanel => SimulationVM.Perspective.SimToPanel(Model.Position);
 
-    private static readonly PropertyChangedEventArgs sCenterXYChangedArgs = new(nameof(CenterXY));
-    private Point _centerXY;
-    public Point CenterXY
+    private static readonly PropertyChangedEventArgs sPanelCenterXYChangedArgs = new(nameof(PanelCenterXY));
+    private Point _panelCenterXY;
+    public Point PanelCenterXY
     {
-        get => _centerXY;
+        get => _panelCenterXY;
         private set
         {
-            if (_centerXY == value)
+            if (_panelCenterXY == value)
                 return;
-            _centerXY = value;
-            PropertyChanged?.Invoke(this, sCenterXYChangedArgs);
+            _panelCenterXY = value;
+            PropertyChanged?.Invoke(this, sPanelCenterXYChangedArgs);
         }
     }
 
@@ -101,29 +102,30 @@ public class BodyVM : INotifyPropertyChanged
         }
     }
 
-    private Point ComputeCenterXY()
+    private Point ComputePanelCenterXY()
     {
-        return new(Model.Position.X, Model.Position.Y);
+        var panelPosition = PositionOnPanel;
+        return new(panelPosition.X, panelPosition.Y);
     }
 
     private int ComputePanelZIndex()
     {
         // Compute Z scaled to the range [0,1] relative to the simulation bounds.
-        var z = Model.Position.Z;
-        SimulationVM.Sort(Simulation.DisplayBound0.Z, Simulation.DisplayBound1.Z, out var zMin, out var zMax);
-        var relativeZ = (z - zMin) / (zMax - zMin);
+        var panelZUnscaled = PositionOnPanel.Z;
+        SimulationVM.Sort(SimulationVM.PanelDisplayBound0.Z, SimulationVM.PanelDisplayBound1.Z, out var minPanelZUnscaled, out var maxPanelZUnscaled);
+        var panelZScaled = (panelZUnscaled - minPanelZUnscaled) / (maxPanelZUnscaled - minPanelZUnscaled);
 
         // special cases if out of bounds
-        if (relativeZ < 0)
+        if (panelZScaled < 0)
             return int.MinValue;
-        if (relativeZ > 1)
+        if (panelZScaled > 1)
             return int.MaxValue;
 
         // Compute Z scaled to half the range of int.
         // Using only half the range to avoid conversion exceptions.
         var minOut = int.MinValue / 2d;
         var maxOut = int.MaxValue / 2d;
-        var doubleOut = relativeZ * (maxOut - minOut) + minOut;
+        var doubleOut = panelZScaled * (maxOut - minOut) + minOut;
         return
             double.IsNaN(doubleOut) ? 0 : // z was probably NaN
             doubleOut < int.MinValue + 1 ? int.MinValue : // z was probably negative infinity
@@ -150,7 +152,7 @@ public class BodyVM : INotifyPropertyChanged
 
     public void Refresh()
     {
-        CenterXY = ComputeCenterXY();
+        PanelCenterXY = ComputePanelCenterXY();
         PanelZIndex = ComputePanelZIndex();
         WinMediaColor = ComputeWinMediaColor();
 
