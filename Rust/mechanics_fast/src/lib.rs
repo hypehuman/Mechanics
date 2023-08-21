@@ -1,5 +1,4 @@
 use cgmath::{InnerSpace, Vector3};
-use std::ptr;
 
 #[no_mangle]
 pub extern "C" fn pub_compute_gravitational_acceleration_one_on_one(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
@@ -38,20 +37,20 @@ fn compute_gravitational_acceleration_many_on_one(masses: &[f64], positions: &[V
     acceleration
 }
 
-fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[Vector3<f64>], accelerations: &mut [Vector3<f64>]) -> Vec<Vector3<f64>> {
-        let mut computed_accelerations = Vec::with_capacity(masses.len());
+fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[Vector3<f64>]) -> Vec<Vector3<f64>> {
+    let mut accelerations = vec![Vector3::new(0.0, 0.0, 0.0); masses.len()];
 
     for i in 0..masses.len() {
-        if let Some(body_mass) = masses.get(i) {
-            let accel = compute_gravitational_acceleration_many_on_one(masses, positions, i);
-            computed_accelerations.push(accel);
-        } else {
-            computed_accelerations.push(Vector3::new(0.0, 0.0, 0.0));
+        for j in 0..masses.len() {
+            if i != j {
+                let displacement = positions[j] - positions[i];
+                let grav_acceleration = compute_gravitational_acceleration_one_on_one(displacement, masses[j]);
+                accelerations[i] += grav_acceleration;
+            }
         }
     }
-    accelerations.copy_from_slice(&computed_accelerations);
 
-    computed_accelerations
+    accelerations
 }
 
 #[cfg(test)]
@@ -104,8 +103,7 @@ mod tests {
             Vector3::new(-5.9301e-03, -2.7129e-03, 0.0000e00),
         ];
 
-        let mut actual:[Vector3<f64>; 3] = [Vector3::new(0.0,0.0,0.0); 3];
-        compute_gravitational_acceleration_many_on_many(masses, positions, &mut actual);
+        let actual = compute_gravitational_acceleration_many_on_many(masses, positions);
 
         for i in 0..3 {
             assert_relative_eq!(expected[i], actual[i], max_relative = 0.001);
