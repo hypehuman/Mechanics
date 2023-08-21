@@ -1,4 +1,5 @@
 use cgmath::{InnerSpace, Vector3};
+use rayon::prelude::*;
 
 #[no_mangle]
 pub extern "C" fn pub_compute_gravitational_acceleration_one_on_one(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
@@ -46,9 +47,7 @@ fn compute_gravitational_acceleration_many_on_one(masses: &[f64], positions: &[V
 }
 
 fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[Vector3<f64>], accelerations: &mut [Vector3<f64>]) {
-    for i in 0..masses.len() {
-        accelerations[i] = compute_gravitational_acceleration_many_on_one(masses, positions, i);
-    }
+    (0..masses.len()).into_par_iter().for_each(|i| accelerations[i] = compute_gravitational_acceleration_many_on_one(masses, positions, i))
 }
 
 #[cfg(test)]
