@@ -14,6 +14,15 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_one(masses: *co
     acceleration
 }
 
+#[no_mangle]
+pub extern "C" fn pub_compute_gravitational_acceleration_many_on_many(masses: *const f64, positions: *const Vector3<f64>, num_bodies: usize) -> *mut Vector3<f64> {
+    let masses_slice = unsafe { std::slice::from_raw_parts(masses, num_bodies) };
+    let positions_slice = unsafe { std::slice::from_raw_parts(positions, num_bodies) };
+    let mut accelerations_vec = compute_gravitational_acceleration_many_on_many(masses_slice, positions_slice);
+    
+    accelerations_vec.as_mut_ptr()
+}
+
 fn compute_gravitational_acceleration_one_on_one(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
     const GRAVITATIONAL_CONSTANT: f64 = 6.67430e-11;
 
