@@ -36,10 +36,9 @@ public class SimulationVM : INotifyPropertyChanged
     {
         get
         {
-            // Minimum glow radius is a fraction of the entire frame's width or height, whichever is larger.
-            var frameWidth = Math.Abs(Model.DisplayBound1.X - Model.DisplayBound0.X);
-            var frameHeight = Math.Abs(Model.DisplayBound1.Y - Model.DisplayBound0.Y);
-            var minGlowRadius = _minGlowRadiusFractionOfFrame * Math.Max(frameWidth, frameHeight);
+            // Minimum glow radius is a fraction of the longest straight path through the simulation bounds.
+            var diagonalLength = (Model.DisplayBound1 - Model.DisplayBound0).Length;
+            var minGlowRadius = _minGlowRadiusFractionOfFrame * diagonalLength;
             return minGlowRadius;
         }
     }
@@ -162,7 +161,6 @@ public class SimulationVM : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, CanvasTranslateYChangedArgs);
         PropertyChanged?.Invoke(this, CanvasScaleXChangedArgs);
         PropertyChanged?.Invoke(this, CanvasScaleYChangedArgs);
-        PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
     }
 
     public static void Sort(double a, double b, out double min, out double max)
