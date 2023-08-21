@@ -41,13 +41,7 @@ fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[
     let mut accelerations = vec![Vector3::new(0.0, 0.0, 0.0); masses.len()];
 
     for i in 0..masses.len() {
-        for j in 0..masses.len() {
-            if i != j {
-                let displacement = positions[j] - positions[i];
-                let grav_acceleration = compute_gravitational_acceleration_one_on_one(displacement, masses[j]);
-                accelerations[i] += grav_acceleration;
-            }
-        }
+        accelerations[i] = compute_gravitational_acceleration_many_on_one(masses, positions, i);
     }
 
     accelerations
