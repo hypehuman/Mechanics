@@ -10,23 +10,8 @@
     d:DesignHeight="450" d:DesignWidth="800"
     d:DataContext="{d:DesignInstance Type=local:DefaultSimulationVM, IsDesignTimeCreatable=True}"
 >
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="{Binding AboveRenderVM.GridHeight}" />
-            <RowDefinition Height="5" />
-            <!-- spacer -->
-            <RowDefinition Height="{Binding FrontRenderVM.GridHeight}" />
-            <!-- Front.Height and Right.Height are the same because rotation. -->
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <!-- Front and Above perspectives are designed such that they have the same width. -->
-            <ColumnDefinition Width="{Binding FrontRenderVM.GridWidth}" />
-            <ColumnDefinition Width="5" />
-            <!-- spacer -->
-            <ColumnDefinition Width="{Binding RightRenderVM.GridWidth}" />
-            <!-- Front.Width and Above.Width are the same because of rotation. -->
-        </Grid.ColumnDefinitions>
-        <ScrollViewer Grid.Row="0" Grid.Column="2" HorizontalScrollBarVisibility="Auto">
+    <DockPanel LastChildFill="True">
+        <Expander DockPanel.Dock="Top" IsExpanded="True">
             <StackPanel Orientation="Horizontal">
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Configuration">
                     <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding Config, Mode=OneWay}" />
@@ -62,9 +47,22 @@
                     <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding StateSummary, Mode=OneWay}" />
                 </GroupBox>
             </StackPanel>
-        </ScrollViewer>
-        <local:RenderView Grid.Row="0" Grid.Column="0" DataContext="{Binding AboveRenderVM}" />
-        <local:RenderView Grid.Row="2" Grid.Column="0" DataContext="{Binding FrontRenderVM}" />
-        <local:RenderView Grid.Row="2" Grid.Column="2" DataContext="{Binding RightRenderVM}" />
-    </Grid>
+        </Expander>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="{Binding AboveRenderVM.GridHeight}" />
+                <RowDefinition Height="5" /> <!-- spacer -->
+                <RowDefinition Height="{Binding FrontRenderVM.GridHeight}" /> <!-- Front.Height and Right.Height are the same because rotation. -->
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <!-- Front and Above perspectives are designed such that they have the same width. -->
+                <ColumnDefinition Width="{Binding FrontRenderVM.GridWidth}" />
+                <ColumnDefinition Width="5" /> <!-- spacer -->
+                <ColumnDefinition Width="{Binding RightRenderVM.GridWidth}" /> <!-- Front.Width and Above.Width are the same because of rotation. -->
+            </Grid.ColumnDefinitions>
+            <local:RenderView Grid.Row="0" Grid.Column="0" DataContext="{Binding AboveRenderVM}" />
+            <local:RenderView Grid.Row="2" Grid.Column="0" DataContext="{Binding FrontRenderVM}" />
+            <local:RenderView Grid.Row="2" Grid.Column="2" DataContext="{Binding RightRenderVM}" />
+        </Grid>
+    </DockPanel>
 </UserControl>
