@@ -1,31 +1,23 @@
-﻿using MathNet.Spatial.Euclidean;
-using MechanicsCore;
+﻿using MechanicsCore;
 using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Windows;
 using System.Windows.Threading;
 
 namespace MechanicsUI;
 
 public class SimulationVM : INotifyPropertyChanged
 {
-    public static Perspective Perspective => Perspective.Orthogonal_FromAbove;
-
+    public event PropertyChangedEventHandler? PropertyChanged;
     public Simulation Model { get; }
+    public RenderVM RenderVM { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
     public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
 
-    public ObservableCollection<BodyVM> BodyVMs { get; }
+    private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
-    public Vector3D PanelDisplayBound0 => Perspective.SimToPanel(Model.DisplayBound0);
-    public Vector3D PanelDisplayBound1 => Perspective.SimToPanel(Model.DisplayBound1);
-    public double CanvasTranslateX { get; private set; }
-    public double CanvasTranslateY { get; private set; }
-    public double CanvasScale { get; private set; } = 1;
 
+    private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
     private double _minGlowRadiusFractionOfFrame = 0.002;
     public double MinGlowRadiusFractionOfFrame
     {
@@ -33,11 +25,12 @@ public class SimulationVM : INotifyPropertyChanged
         set
         {
             _minGlowRadiusFractionOfFrame = value;
-            PropertyChanged?.Invoke(this, MinGlowRadiusFractionOfFrameChangedArgs);
-            PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
+            PropertyChanged?.Invoke(this, sMinGlowRadiusFractionOfFrameChangedArgs);
+            PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
         }
     }
 
+    private static readonly PropertyChangedEventArgs sMinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
     public double MinGlowRadius
     {
         get
@@ -56,6 +49,7 @@ public class SimulationVM : INotifyPropertyChanged
     public string LeapTimeText =>
         "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
 
+    private static readonly PropertyChangedEventArgs sIsAutoLeapingChangedArgs = new(nameof(IsAutoLeaping));
     private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
@@ -63,18 +57,8 @@ public class SimulationVM : INotifyPropertyChanged
         set
         {
             _isAutoLeaping = value;
-            PropertyChanged?.Invoke(this, IsAutoLeapingChangedArgs);
+            PropertyChanged?.Invoke(this, sIsAutoLeapingChangedArgs);
             DoAutoLeap(Dispatcher.CurrentDispatcher);
-        }
-    }
-
-    private Size _availableSizePix;
-    public Size AvailableSizePix
-    {
-        set
-        {
-            _availableSizePix = value;
-            RefreshBounds();
         }
     }
 
@@ -83,7 +67,7 @@ public class SimulationVM : INotifyPropertyChanged
     public SimulationVM(Simulation model)
     {
         Model = model;
-        BodyVMs = new(Model.Bodies.Select(b => new BodyVM(b, this)));
+        RenderVM = new RenderVM(this, Perspective.Orthogonal_FromAbove);
         StepsPerLeapVM.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
@@ -125,63 +109,11 @@ public class SimulationVM : INotifyPropertyChanged
         dispatcher.InvokeAsync(() => DoAutoLeap(dispatcher), DispatcherPriority.Background);
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private static readonly PropertyChangedEventArgs StateSummaryChangedArgs = new(nameof(StateSummary));
-    private static readonly PropertyChangedEventArgs CanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
-    private static readonly PropertyChangedEventArgs CanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
-    private static readonly PropertyChangedEventArgs CanvasScaleChangedArgs = new(nameof(CanvasScale));
-    private static readonly PropertyChangedEventArgs MinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
-    private static readonly PropertyChangedEventArgs MinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
-    private static readonly PropertyChangedEventArgs IsAutoLeapingChangedArgs = new(nameof(IsAutoLeaping));
-
     private void RefreshSim()
     {
-        PropertyChanged?.Invoke(this, StateSummaryChangedArgs);
+        PropertyChanged?.Invoke(this, sStateSummaryChangedArgs);
 
-        for (var i = BodyVMs.Count - 1; i >= 0; i--)
-        {
-            var bodyVM = BodyVMs[i];
-            if (bodyVM.Model.Exists)
-            {
-                bodyVM.Refresh();
-            }
-            else
-            {
-                BodyVMs.RemoveAt(i);
-            }
-        }
-    }
-
-    private void RefreshBounds()
-    {
-        var panelBound0 = PanelDisplayBound0;
-        var panelBound1 = PanelDisplayBound1;
-        Sort(panelBound0.X, panelBound1.X, out var xMin, out var xMax);
-        Sort(panelBound0.Y, panelBound1.Y, out var yMin, out var yMax);
-        var systemWidth = xMax - xMin;
-        var systemHeight = yMax - yMin;
-        var xScale = _availableSizePix.Width / systemWidth;
-        var yScale = _availableSizePix.Height / systemHeight;
-        CanvasScale = Math.Min(xScale, yScale);
-        CanvasTranslateX = -(xMin + xMax) / 2 * xScale;
-        CanvasTranslateY = -(yMin + yMax) / 2 * yScale;
-        PropertyChanged?.Invoke(this, CanvasTranslateXChangedArgs);
-        PropertyChanged?.Invoke(this, CanvasTranslateYChangedArgs);
-        PropertyChanged?.Invoke(this, CanvasScaleChangedArgs);
-    }
-
-    public static void Sort(double a, double b, out double min, out double max)
-    {
-        if (a > b)
-        {
-            min = b;
-            max = a;
-        }
-        else
-        {
-            min = a;
-            max = b;
-        }
+        RenderVM.RefreshSim();
     }
 }
 

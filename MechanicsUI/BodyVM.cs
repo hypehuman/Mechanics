@@ -10,13 +10,13 @@ namespace MechanicsUI;
 public class BodyVM : INotifyPropertyChanged
 {
     public Body Model { get; }
-    public SimulationVM SimulationVM { get; }
+    public RenderVM RenderVM { get; }
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public BodyVM(Body model, SimulationVM simulationVM)
+    public BodyVM(Body model, RenderVM renderVM)
     {
         Model = model;
-        SimulationVM = simulationVM;
+        RenderVM = renderVM;
 
         Refresh();
         SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
@@ -30,7 +30,8 @@ public class BodyVM : INotifyPropertyChanged
         }
     }
 
-    private Vector3D PositionOnPanel => SimulationVM.Perspective.SimToPanel(Model.Position);
+    private SimulationVM SimulationVM => RenderVM.SimulationVM;
+    private Vector3D PositionOnPanel => RenderVM.Perspective.SimToPanel(Model.Position);
 
     private static readonly PropertyChangedEventArgs sPanelCenterXYChangedArgs = new(nameof(PanelCenterXY));
     private Point _panelCenterXY;
@@ -112,7 +113,7 @@ public class BodyVM : INotifyPropertyChanged
     {
         // Compute Z scaled to the range [0,1] relative to the simulation bounds.
         var panelZUnscaled = PositionOnPanel.Z;
-        SimulationVM.Sort(SimulationVM.PanelDisplayBound0.Z, SimulationVM.PanelDisplayBound1.Z, out var minPanelZUnscaled, out var maxPanelZUnscaled);
+        RenderVM.Sort(RenderVM.PanelDisplayBound0.Z, RenderVM.PanelDisplayBound1.Z, out var minPanelZUnscaled, out var maxPanelZUnscaled);
         var panelZScaled = (panelZUnscaled - minPanelZUnscaled) / (maxPanelZUnscaled - minPanelZUnscaled);
 
         // special cases if out of bounds

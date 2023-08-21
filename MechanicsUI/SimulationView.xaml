@@ -48,57 +48,6 @@
                 </GroupBox>
             </StackPanel>
         </Expander>
-        <Border
-            local:SizeObserver.Observe="True"
-            local:SizeObserver.ObservedSize="{Binding AvailableSizePix, Mode=OneWayToSource}"
-        >
-            <ItemsControl ItemsSource="{Binding BodyVMs}" Background="Black">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Width="0" Height="0"
-                        >
-                            <Canvas.RenderTransform>
-                                <TransformGroup>
-                                    <ScaleTransform ScaleX="{Binding CanvasScale}" ScaleY="{Binding CanvasScale}" />
-                                    <TranslateTransform X="{Binding CanvasTranslateX}" Y="{Binding CanvasTranslateY}" />
-                                </TransformGroup>
-                            </Canvas.RenderTransform>
-                        </Canvas>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Path>
-                            <Path.Data>
-                                <EllipseGeometry
-                                    Center="{Binding PanelCenterXY}" 
-                                    RadiusX="{Binding GlowRadius}" 
-                                    RadiusY="{Binding GlowRadius}"
-                                />
-                            </Path.Data>
-                            <Path.Fill>
-                                <RadialGradientBrush>
-                                    <!-- Maximum opacity from center to true radius. Opacity drops off to zero at glow radius. -->
-                                    <GradientStop Offset="0" Color="{Binding WinMediaColor}" />
-                                    <GradientStop Offset="{Binding TrueRadiusOverGlowRadius}" Color="{Binding WinMediaColor}" />
-                                    <GradientStop Offset="1" Color="Transparent" />
-                                </RadialGradientBrush>
-                            </Path.Fill>
-                        </Path>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-                <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="{x:Type ContentPresenter}">
-                        <Setter Property="Panel.ZIndex" Value="{Binding PanelZIndex}" />
-                        <!-- This is a hack to allow us to click the Leap button even when a body is overlapping it. -->
-                        <!-- This will make it impossible to interact with the body via the mouse. -->
-                        <!-- A better solution would be to clip the canvas so that the bodies don't extend outside of it. -->
-                        <Setter Property="IsHitTestVisible" Value="False" />
-                    </Style>
-                </ItemsControl.ItemContainerStyle>
-            </ItemsControl>
-        </Border>
+        <local:RenderView DataContext="{Binding RenderVM}" />
     </DockPanel>
 </UserControl>
