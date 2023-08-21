@@ -15,7 +15,7 @@ public static class mechanics_fast
     private static unsafe extern Vector3D pub_compute_gravitational_acceleration_many_on_one(double* masses, Vector3D* positions, UIntPtr num_bodies, UIntPtr index_of_self);
 
     [DllImport("mechanics_fast.dll")]
-    private static unsafe extern IntPtr pub_compute_gravitational_acceleration_many_on_many(double* masses, Vector3D* positions, UIntPtr num_bodies);
+    private static unsafe extern IntPtr pub_compute_gravitational_acceleration_many_on_many(double* masses, Vector3D* positions, UIntPtr num_bodies, Vector3D* accelerationsOut);
 
     public static Vector3D ComputeGravitationalAcceleration(Vector3D displacement, double m2)
     {
@@ -44,9 +44,10 @@ public static class mechanics_fast
             {
                 fixed (Vector3D* positionsPtr = positions)
                 {
-                    var accelerationsPtr = pub_compute_gravitational_acceleration_many_on_many(massesPtr, positionsPtr, (UIntPtr)numBodies);
-                    var doubles = new double[3 * numBodies];
-                    Marshal.Copy(accelerationsPtr, accelerationsOut, doubles, doubles.Length);
+                    fixed (Vector3D* accelerationsPtr = accelerationsOut)
+                    {
+                        pub_compute_gravitational_acceleration_many_on_many(massesPtr, positionsPtr, (UIntPtr)numBodies, accelerationsPtr);
+                    }
                 }
             }
         }
