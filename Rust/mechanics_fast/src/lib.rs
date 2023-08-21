@@ -47,7 +47,9 @@ fn compute_gravitational_acceleration_many_on_one(masses: &[f64], positions: &[V
 }
 
 fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[Vector3<f64>], accelerations: &mut [Vector3<f64>]) {
-    (0..masses.len()).into_par_iter().for_each(|i| accelerations[i] = compute_gravitational_acceleration_many_on_one(masses, positions, i))
+    accelerations.par_iter_mut().enumerate().for_each(|(i, a)| {
+        *a = compute_gravitational_acceleration_many_on_one(masses, positions, i);
+    });
 }
 
 #[cfg(test)]
