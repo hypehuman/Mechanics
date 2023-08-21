@@ -1,5 +1,6 @@
 ﻿using MechanicsCore;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Threading;
 
@@ -9,7 +10,9 @@ public class SimulationVM : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     public Simulation Model { get; }
-    public RenderVM RenderVM { get; }
+    public RenderVM AboveRenderVM { get; }
+    public RenderVM FrontRenderVM { get; }
+    public RenderVM RightRenderVM { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
     public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
@@ -67,12 +70,24 @@ public class SimulationVM : INotifyPropertyChanged
     public SimulationVM(Simulation model)
     {
         Model = model;
-        RenderVM = new RenderVM(this, Perspective.Orthogonal_FromAbove);
+        AboveRenderVM = new RenderVM(this, Perspective.Orthogonal_FromAbove);
+        FrontRenderVM = new RenderVM(this, Perspective.Orthogonal_FromFront);
+        RightRenderVM = new RenderVM(this, Perspective.Orthogonal_FromRight);
         StepsPerLeapVM.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
                 PropertyChanged?.Invoke(this, new(nameof(LeapTimeText)));
         };
+    }
+
+    public IEnumerable<RenderVM> RenderVMs
+    {
+        get
+        {
+            yield return AboveRenderVM;
+            yield return FrontRenderVM;
+            yield return RightRenderVM;
+        }
     }
 
     private string GetTitleOrConfig(string separator)
@@ -113,7 +128,10 @@ public class SimulationVM : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, sStateSummaryChangedArgs);
 
-        RenderVM.RefreshSim();
+        foreach (var rvm in RenderVMs)
+        {
+            rvm.RefreshSim();
+        }
     }
 }
 
