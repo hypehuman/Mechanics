@@ -80,7 +80,6 @@ public class Simulation
             };
             for (var i = 0; i < n; i++)
             {
-                var body = Bodies[i];
                 a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, numBodies, i);
             };
         }
