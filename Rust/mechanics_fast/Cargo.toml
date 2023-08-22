@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 [dependencies]
 cgmath = "0.18.0"
 approx = "0.5.1"
+rayon = "1.7.0"

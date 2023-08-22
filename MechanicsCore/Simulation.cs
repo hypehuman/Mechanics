@@ -78,9 +78,7 @@ public class Simulation
                 m[i] = body.Mass;
                 p[i] = body.Position;
             };
-            Parallel.For(0, n, i =>
-                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, numBodies, i)
-            );
+            mechanics_fast.ComputeGravitationalAcceleration(m, p, numBodies, a);
         }
         else
 #endif
