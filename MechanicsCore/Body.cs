@@ -177,7 +177,7 @@ public class Body
         throw Utils.OutOfRange(nameof(gravity), gravity);
     }
 
-    private static Vector3D ComputePointlikeNewtonianGravitationalAcceleration(Vector3D displacement, double m2)
+    public static Vector3D ComputePointlikeNewtonianGravitationalAcceleration(Vector3D displacement, double m2)
     {
 #if DISABLE_RUST
         var distance = displacement.Length;

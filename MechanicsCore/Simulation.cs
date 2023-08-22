@@ -67,9 +67,9 @@ public class Simulation
         // To make deterministic, parallelizable, and order-insensitive:
         // first compute all accelerations, then move bodies.
         var n = Bodies.Count;
-#if !DISABLE_RUST
         if (PhysicsConfig.CanTakeSimpleShortcut())
         {
+#if !DISABLE_RUST
             // The indexing in Bodies will be different from what we pass to Rust,
             // since Rust doesn't yet know to ignore bodies that have stopped existing.
             var numBodies = Bodies.Count;
@@ -80,21 +80,41 @@ public class Simulation
                 p[i] = body.Position;
             };
             mechanics_fast.ComputeGravitationalAcceleration(m, p, numBodies, a);
+#else
+            Parallel.For(0, n, i =>
+            {
+                Vector3D ai = default;
+                var body1 = Bodies[i];
+                for (var j = 0; j < n; j++)
+                {
+                    if (i != j)
+                    {
+                        var body2 = Bodies[j];
+
+                        var displacement = body2.Position - body1.Position;
+                        var m2 = body2.Mass;
+
+                        // Shortcut for simpler simulations
+                        ai += Body.ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2);
+                    }
+                }
+                a[i] = ai;
+            });
+#endif
         }
         else
-#endif
         {
-            for (var i = 0; i < n; i++)
+            Parallel.For(0, n, i =>
             {
                 var body = Bodies[i];
                 a[i] = body.ComputeAcceleration(Bodies, PhysicsConfig);
-            };
+            });
         }
-        for (var i = 0; i < n; i++)
+        Parallel.For(0, n, i =>
         {
             var body = Bodies[i];
             body.ComputeStep(PhysicsConfig.StepTime, a[i], out p[i], out v[i]);
-        };
+        });
     }
 
     private void ApplyStep()
@@ -102,11 +122,11 @@ public class Simulation
         // Now we've started editing the bodies, so there's no way to recover from an exception.
 
         var n = Bodies.Count;
-        for (var i = 0; i < n; i++)
+        Parallel.For(0, n, i =>
         {
             var body = Bodies[i];
             body.Step(p[i], v[i]);
-        };
+        });
 
         if (PhysicsConfig.CollisionConfig == CollisionType.Combine)
         {
