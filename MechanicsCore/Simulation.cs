@@ -42,6 +42,7 @@ public class Simulation
     private readonly Vector3D[] p;
     private readonly Vector3D[] v;
     private readonly Vector3D[] a;
+    private readonly Dictionary<Body, List<Body>> overlapping = new();
 
     private bool TryComputeStep()
     {
@@ -118,7 +119,6 @@ public class Simulation
     private void CombineOverlappingBodies()
     {
         var n = Bodies.Count;
-        var overlapping = new Dictionary<Body, List<Body>>();
         for (int i = 0; i < n; i++)
         {
             var body1 = Bodies[i];
