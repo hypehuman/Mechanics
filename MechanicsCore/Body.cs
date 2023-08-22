@@ -1,4 +1,5 @@
-﻿using MathNet.Spatial.Euclidean;
+﻿#define DISABLE_RUST
+using MathNet.Spatial.Euclidean;
 using MechanicsCore.PhysicsConfiguring;
 using MechanicsCore.Rust.mechanics_fast;
 
