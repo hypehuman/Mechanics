@@ -12,6 +12,7 @@ internal class Program
         Console.WriteLine("Running performance tests:");
         var wpfScenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
         SeeHowLongItTakes(wpfScenario, 1, 100000);
+        Console.ReadLine();
         return;
 
         var ballHuge = new Scenario(
