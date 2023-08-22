@@ -16,15 +16,30 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_one(masses: *co
 }
 
 #[no_mangle]
-pub extern "C" fn pub_compute_gravitational_acceleration_many_on_many(masses: *const f64, positions: *const Vector3<f64>, num_bodies: usize, accelerations: *mut Vector3<f64>) {
-    let masses_slice = unsafe { std::slice::from_raw_parts(masses, num_bodies) };
-    let positions_slice = unsafe { std::slice::from_raw_parts(positions, num_bodies) };
-    let accelerations_slice = unsafe { std::slice::from_raw_parts_mut(accelerations, num_bodies) };
-    compute_gravitational_acceleration_many_on_many(masses_slice, positions_slice, accelerations_slice);
+pub extern "C" fn pub_compute_gravitational_acceleration_many_on_many(masses_ptr: *const f64, positions_ptr: *const Vector3<f64>, num_bodies: usize, accelerations_ptr: *mut Vector3<f64>) {
+    const GRAVITATIONAL_CONSTANT: f64 = 6.67430e-11;
+    
+    let masses = unsafe { std::slice::from_raw_parts(masses_ptr, num_bodies) };
+    let positions = unsafe { std::slice::from_raw_parts(positions_ptr, num_bodies) };
+    let accelerations = unsafe { std::slice::from_raw_parts_mut(accelerations_ptr, num_bodies) };
+
+    accelerations.par_iter_mut().enumerate().for_each(|(i, a)| {
+        let mut acceleration = Vector3::new(0.0, 0.0, 0.0);
+        for j in 0..masses.len() {
+            if j != i {
+                let displacement = positions[j] - positions[i];
+                let distance = displacement.magnitude();
+                let grav_acceleration = displacement * (GRAVITATIONAL_CONSTANT * masses[j]) / (distance * distance * distance);
+                acceleration += grav_acceleration;
+            }
+        }
+        *a = acceleration;
+    });
 }
 
+const GRAVITATIONAL_CONSTANT: f64 = 6.67430e-11;
+
 fn compute_gravitational_acceleration_one_on_one(displacement: Vector3<f64>, m2: f64) -> Vector3<f64> {
-    const GRAVITATIONAL_CONSTANT: f64 = 6.67430e-11;
 
     let distance = displacement.magnitude();
 
@@ -48,7 +63,16 @@ fn compute_gravitational_acceleration_many_on_one(masses: &[f64], positions: &[V
 
 fn compute_gravitational_acceleration_many_on_many(masses: &[f64], positions: &[Vector3<f64>], accelerations: &mut [Vector3<f64>]) {
     accelerations.par_iter_mut().enumerate().for_each(|(i, a)| {
-        *a = compute_gravitational_acceleration_many_on_one(masses, positions, i);
+        let mut acceleration = Vector3::new(0.0, 0.0, 0.0);
+        for j in 0..masses.len() {
+            if j != i {
+                let displacement = positions[j] - positions[i];
+                let distance = displacement.magnitude();
+                let grav_acceleration = displacement * (GRAVITATIONAL_CONSTANT * masses[j]) / (distance * distance * distance);
+                acceleration += grav_acceleration;
+            }
+        }
+        *a = acceleration;
     });
 }
 
