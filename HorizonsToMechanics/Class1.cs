@@ -35,25 +35,30 @@ public class Class1
 
     public static IEnumerable<BodyData> IterateObjects()
     {
+        var time = new DateTime(2023, 08, 12, 0, 0, 0, DateTimeKind.Utc);
         using (var client = new HttpClient
         {
             BaseAddress = new("https://ssd.jpl.nasa.gov/api/horizons.api"),
         })
         {
-            foreach (var id in new[] { 0, 1, 2, 3, 4, 5, 10, 99, 199, 299, 301, 399, 499, 599 })
+            for (var id = 0; id < 623829; id++)
             {
-                var parameters = GetUrlParameters(id, DateTime.UtcNow);
+                var parameters = GetUrlParameters(id, time);
                 Console.WriteLine(parameters);
 
                 HttpResponseMessage response = client.GetAsync(parameters).Result;
                 if (response.IsSuccessStatusCode)
                 {
-                    var horizonsData = response.Content.ReadAsAsync<HorizonsObjectData>().Result;
-                    yield return new BodyData(
-                        id,
-                        ParseName(horizonsData.result),
-                        ParseMass(horizonsData.result)
-                    );
+                    using (var fileStream = File.Create(id + ".json"))
+                    {
+                        response.Content.CopyToAsync(fileStream).Wait();
+                    }
+                    //var horizonsData = .ReadAsAsync<HorizonsObjectData>().Result;
+                    //yield return new BodyData(
+                    //    id,
+                    //    ParseName(horizonsData.result),
+                    //    ParseMass(horizonsData.result)
+                    //);
                 }
                 else
                 {
