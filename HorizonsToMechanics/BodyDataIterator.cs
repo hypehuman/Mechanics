@@ -54,6 +54,19 @@ public partial class BodyDataIterator
                     continue;
                 }
 
+                var resultPath = Path.Combine(outPath, id + ".txt");
+                if (responseObject.result != null && !File.Exists(resultPath))
+                {
+                    // for debugging, since the newlines in the string make things hard to read
+                    File.WriteAllText(resultPath, responseObject.result);
+                }
+
+                if (responseObject.error != null)
+                {
+                    Console.WriteLine($"Object {id} has error: " + responseObject.error);
+                    continue;
+                }
+
                 yield return BodyDataParser.ParseBodyData(id, responseObject);
                 Console.WriteLine();
             }

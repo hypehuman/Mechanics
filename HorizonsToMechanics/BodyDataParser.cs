@@ -34,7 +34,7 @@ internal static partial class BodyDataParser
 
     private static readonly Regex sMassPattern = MassPattern();
     [GeneratedRegex(
-        """\bMass\s*x\s*10+\s*\^\s*(?<exponent>[-\d.])+\s*\(\s*kg\s*\)\s*=\s*(?<mantissa>[-\d.])+\b""",
+        """\bMass\s*x\s*10+\s*\^\s*(?<exponent>[-\d.]+)\s*\(\s*kg\s*\)\s*=\s*(?<mantissa>[-\d.]+)\b""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled
     )]
     private static partial Regex MassPattern();
