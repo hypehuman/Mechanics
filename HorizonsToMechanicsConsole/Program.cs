@@ -7,7 +7,8 @@ internal class Program
     static void Main(string[] args)
     {
         Console.WriteLine("Hello, World!");
-        foreach (var x in Class1.IterateObjects())
+        var path = "../../../../HorizonsToMechanics/Downloaded/";
+        foreach (var x in BodyDataIterator.IterateObjects(path))
         {
             Console.WriteLine(x);
         }
