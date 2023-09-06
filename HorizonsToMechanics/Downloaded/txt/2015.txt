@@ -1,0 +1,8 @@
+*******************************************************************************
+ Revised: Oct 10, 2014                  2015 PDC                        -399050
+ 
+ Simulated reference trajectory for PDC 2015 analysis.
+ Magnitude model: H=21.34, G=0.15
+*******************************************************************************
+
+No ephemeris for target "2015 PDC (simulation)" after A.D. 2022-SEP-03 03:52:10.1942 TDB

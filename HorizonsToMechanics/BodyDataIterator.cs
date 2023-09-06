@@ -7,11 +7,11 @@ namespace HorizonsToMechanics;
 /// </summary>
 public partial class BodyDataIterator
 {
-    public static IEnumerable<BodyData> IterateObjects(string outPath)
+    public static IEnumerable<BodyData> IterateObjects(string? jsonDir, string? txtDir)
     {
-        if (!Directory.Exists(outPath))
+        if (!Directory.Exists(jsonDir))
         {
-            throw new Exception("Directory does not exist: " + Path.GetFullPath(outPath));
+            throw new Exception("Directory does not exist: " + Path.GetFullPath(jsonDir));
         }
 
         var time = new DateTime(2023, 08, 12, 0, 0, 0, DateTimeKind.Utc);
@@ -19,7 +19,7 @@ public partial class BodyDataIterator
         {
             for (var id = -2; id < 623829; id++)
             {
-                var contentPath = Path.Combine(outPath, id + ".json");
+                var contentPath = Path.Combine(jsonDir, id + ".json");
 
                 HorizonsResponseContent responseObject;
                 try
@@ -54,11 +54,14 @@ public partial class BodyDataIterator
                     continue;
                 }
 
-                var resultPath = Path.Combine(outPath, id + ".txt");
-                if (responseObject.result != null && !File.Exists(resultPath))
+                if (txtDir != null && responseObject.result != null)
                 {
-                    // for debugging, since the newlines in the string make things hard to read
-                    File.WriteAllText(resultPath, responseObject.result);
+                    var resultPath = Path.Combine(txtDir, id + ".txt");
+                    if (!File.Exists(resultPath))
+                    {
+                        // for debugging, since the newlines in the string make things hard to read
+                        File.WriteAllText(resultPath, responseObject.result);
+                    }
                 }
 
                 if (responseObject.error != null)

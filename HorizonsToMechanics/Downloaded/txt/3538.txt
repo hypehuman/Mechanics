@@ -1,0 +1,132 @@
+*******************************************************************************
+JPL/HORIZONS              3538 Nelsonia (6548 P-L)         2023-Sep-04 11:24:09
+Rec #:    3538 (+COV) Soln.date: 2023-Aug-23_11:17:43   # obs: 3472 (1960-2023)
+ 
+IAU76/J2000 helio. ecliptic osc. elements (au, days, deg., period=Julian yrs):
+ 
+  EPOCH=  2457751.5 ! 2016-Dec-29.00 (TDB)         Residual RMS= .2514
+   EC= .2687153956702834   QR= 1.931736041795095   TP= 2457793.3768807054
+   OM= 170.5196847499597   W=  263.2063268236793   IN= 4.204186423709252
+   A= 2.641565308988957    MA= 350.3863928761776   ADIST= 3.351394576182819
+   PER= 4.29339            N= .229568367           ANGMOM= .026930067
+   DAN= 2.53129            DDN= 2.37532            L= 73.7078533
+   B= -4.1746145           MOID= .95147002         TP= 2017-Feb-08.8768807054
+ 
+Asteroid physical parameters (km, seconds, rotational period in hours):
+   GM= n.a.                RAD= 5.5605             ROTPER= n.a.
+   H= 13.71                G= .150                 B-V= n.a.
+                           ALBEDO= .062            STYP= n.a.
+
+ASTEROID comments: 
+1: soln ref.= JPL#47, OCC=0
+2: source=ORB
+*******************************************************************************
+
+
+*******************************************************************************
+Ephemeris / API_USER Mon Sep  4 11:24:09 2023 Pasadena, USA      / Horizons
+*******************************************************************************
+Target body name: 3538 Nelsonia (6548 P-L)        {source: JPL#47}
+Center body name: Solar System Barycenter (0)     {source: DE441}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 2023-Aug-12 00:00:00.0000 TDB
+Stop  time      : A.D. 2023-Aug-13 00:00:00.0000 TDB
+Step-size       : 2880 minutes
+*******************************************************************************
+Center geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.0, 0.0, 0.0                   {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : (undefined)
+Small perturbers: Yes                             {source: SB441-N16}
+Output units    : KM-S
+Calendar mode   : Mixed Julian/Gregorian
+Output type     : GEOMETRIC cartesian states
+Output format   : 2 (position and velocity)
+Reference frame : Ecliptic of J2000.0
+*******************************************************************************
+Initial IAU76/J2000 heliocentric ecliptic osculating elements (au, days, deg.):
+  EPOCH=  2457751.5 ! 2016-Dec-29.00 (TDB)         Residual RMS= .2514         
+   EC= .2687153956702834   QR= 1.931736041795095   TP= 2457793.3768807054      
+   OM= 170.5196847499597   W=  263.2063268236793   IN= 4.204186423709252       
+  Equivalent ICRF heliocentric cartesian coordinates (au, au/d):
+   X= 1.075031724324913E+00  Y= 1.540032695420609E+00  Z= 5.253258335911807E-01
+  VX=-1.200155399723192E-02 VY= 6.449276534592029E-03 VZ= 2.411086103032463E-03
+Asteroid physical parameters (km, seconds, rotational period in hours):        
+   GM= n.a.                RAD= 5.5605             ROTPER= n.a.                
+   H= 13.71                G= .150                 B-V= n.a.                   
+                           ALBEDO= .062            STYP= n.a.                  
+*******************************************************************************
+JDTDB
+   X     Y     Z
+   VX    VY    VZ
+*******************************************************************************
+$$SOE
+2460168.500000000 = A.D. 2023-Aug-12 00:00:00.0000 TDB 
+ X =-1.139578823887912E+08 Y =-4.873395608585361E+08 Z = 3.673185284491301E+07
+ VX= 1.360337636113727E+01 VY=-2.953368763223712E+00 VZ= 3.965053322002499E-02
+$$EOE
+*******************************************************************************
+ 
+TIME
+
+  Barycentric Dynamical Time ("TDB" or T_eph) output was requested. This
+continuous coordinate time is equivalent to the relativistic proper time
+of a clock at rest in a reference frame co-moving with the solar system
+barycenter but outside the system's gravity well. It is the independent
+variable in the solar system relativistic equations of motion.
+
+  TDB runs at a uniform rate of one SI second per second and is independent
+of irregularities in Earth's rotation.
+ 
+CALENDAR SYSTEM
+
+  Mixed calendar mode was active such that calendar dates after AD 1582-Oct-15
+(if any) are in the modern Gregorian system. Dates prior to 1582-Oct-5 (if any)
+are in the Julian calendar system, which is automatically extended for dates
+prior to its adoption on 45-Jan-1 BC.  The Julian calendar is useful for
+matching historical dates. The Gregorian calendar more accurately corresponds
+to the Earth's orbital motion and seasons. A "Gregorian-only" calendar mode is
+available if such physical events are the primary interest.
+
+REFERENCE FRAME AND COORDINATES
+
+  Ecliptic at the standard reference epoch
+
+    Reference epoch: J2000.0
+    X-Y plane: adopted Earth orbital plane at the reference epoch
+               Note: IAU76 obliquity of 84381.448 arcseconds wrt ICRF X-Y plane
+    X-axis   : ICRF
+    Z-axis   : perpendicular to the X-Y plane in the directional (+ or -) sense
+               of Earth's north pole at the reference epoch.
+
+  Symbol meaning:
+
+    JDTDB    Julian Day Number, Barycentric Dynamical Time
+      X      X-component of position vector (km)
+      Y      Y-component of position vector (km)
+      Z      Z-component of position vector (km)
+      VX     X-component of velocity vector (km/sec)                           
+      VY     Y-component of velocity vector (km/sec)                           
+      VZ     Z-component of velocity vector (km/sec)                           
+
+ABERRATIONS AND CORRECTIONS
+
+ Geometric state vectors have NO corrections or aberrations applied.
+
+Computations by ...
+
+    Solar System Dynamics Group, Horizons On-Line Ephemeris System
+    4800 Oak Grove Drive, Jet Propulsion Laboratory
+    Pasadena, CA  91109   USA
+
+    General site: https://ssd.jpl.nasa.gov/
+    Mailing list: https://ssd.jpl.nasa.gov/email_list.html
+    System news : https://ssd.jpl.nasa.gov/horizons/news.html
+    User Guide  : https://ssd.jpl.nasa.gov/horizons/manual.html
+    Connect     : browser        https://ssd.jpl.nasa.gov/horizons/app.html#/x
+                  API            https://ssd-api.jpl.nasa.gov/doc/horizons.html
+                  command-line   telnet ssd.jpl.nasa.gov 6775
+                  e-mail/batch   https://ssd.jpl.nasa.gov/ftp/ssd/hrzn_batch.txt
+                  scripts        https://ssd.jpl.nasa.gov/ftp/ssd/SCRIPTS
+    Author      : Jon.D.Giorgini@jpl.nasa.gov
+*******************************************************************************

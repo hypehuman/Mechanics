@@ -1,0 +1,132 @@
+*******************************************************************************
+ Added:    Oct 15, 2018                 2019 PDC                        -937011
+
+ Access the SIMULATED ASTEROID reference trajectory for PDC 2019 analysis.
+ Impact time: 2027-Apr-29.1676 TDB (2027-Apr-29 04:00:16.5 UTC)
+
+ To produce statistical uncertainty output, telnet users executing 
+ "telnet ssd.jpl.nasa.gov 6775" from a UNIX/Linux/Mac command-line may ...
+
+ 1. Enter Horizons user-input mode by typing a ';' (semi-colon) at the 
+     Horizons prompt. 
+ 2. Then "cut-and-paste" the block of data below.
+ 3. If you make a mistake, just re-enter with the correct value to over-ride,
+     noting SRC input re-do must start from the "SRC=..." line.
+     SRC lines MUST be entered in the order shown.
+ 4. Press a blank <return> when done. 
+ 5. Then respond "J2000" when asked about ecliptic coordinate system used. 
+ 6. Enter a name for the object ("2019 PDC"), 
+
+ The rest of the output set-up proceeds as usual. Data to cut-and-paste:
+ 
+ EPOCH= 2458705.5
+  EC= .5341447408222021  QR= .8940998581953564  TP= 2458645.8671281013136
+  OM= 38.42485188856197  W = 226.7149408523268  IN= 17.99750929335642
+  SRC=  5.768451674867575E-8 -5.429221585179013E-8  1.665391272106021E-8
+       -3.515853343386151E-8  6.096586464133849E-9  1.187423629017885E-6
+        1.589963955676750E-8 -1.861211717613133E-9  1.529831485714655E-6
+        3.559549562383798E-8  1.086105369009639E-9 -1.778017061376463E-9
+        1.037377603221587E-6 -5.181728129728535E-8  6.970915828799288E-8
+        3.376633358153743E-7 -6.766740704099438E-8 -2.476395446030395E-6
+       -1.032982624889745E-7  1.085387188165522E-7  1.852119950231313E-7
+  H= 21.7 G= 0.15
+
+ This can also be done using one of the automation scripts available here:
+    ftp://ssd.jpl.nasa.gov/pub/ssd/SCRIPTS/
+*******************************************************************************
+
+
+*******************************************************************************
+Ephemeris / API_USER Mon Sep  4 11:15:31 2023 Pasadena, USA      / Horizons
+*******************************************************************************
+Target body name: 2019 PDC (simulation) (-937011) {source: 2019_PDC-merged-DE431}
+Center body name: Solar System Barycenter (0)     {source: DE441}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 2023-Aug-12 00:00:00.0000 TDB
+Stop  time      : A.D. 2023-Aug-13 00:00:00.0000 TDB
+Step-size       : 2880 minutes
+*******************************************************************************
+Center geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.0, 0.0, 0.0                   {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : (undefined)
+Output units    : KM-S
+Calendar mode   : Mixed Julian/Gregorian
+Output type     : GEOMETRIC cartesian states
+Output format   : 2 (position and velocity)
+Reference frame : Ecliptic of J2000.0
+*******************************************************************************
+JDTDB
+   X     Y     Z
+   VX    VY    VZ
+*******************************************************************************
+$$SOE
+2460168.500000000 = A.D. 2023-Aug-12 00:00:00.0000 TDB 
+ X =-2.027186934227620E+07 Y = 4.194840979546194E+08 Z = 1.107344939619440E+08
+ VX=-1.167589357624310E+01 VY=-3.113873951844337E+00 VZ= 1.567933968906185E+00
+$$EOE
+*******************************************************************************
+ 
+TIME
+
+  Barycentric Dynamical Time ("TDB" or T_eph) output was requested. This
+continuous coordinate time is equivalent to the relativistic proper time
+of a clock at rest in a reference frame co-moving with the solar system
+barycenter but outside the system's gravity well. It is the independent
+variable in the solar system relativistic equations of motion.
+
+  TDB runs at a uniform rate of one SI second per second and is independent
+of irregularities in Earth's rotation.
+ 
+CALENDAR SYSTEM
+
+  Mixed calendar mode was active such that calendar dates after AD 1582-Oct-15
+(if any) are in the modern Gregorian system. Dates prior to 1582-Oct-5 (if any)
+are in the Julian calendar system, which is automatically extended for dates
+prior to its adoption on 45-Jan-1 BC.  The Julian calendar is useful for
+matching historical dates. The Gregorian calendar more accurately corresponds
+to the Earth's orbital motion and seasons. A "Gregorian-only" calendar mode is
+available if such physical events are the primary interest.
+
+REFERENCE FRAME AND COORDINATES
+
+  Ecliptic at the standard reference epoch
+
+    Reference epoch: J2000.0
+    X-Y plane: adopted Earth orbital plane at the reference epoch
+               Note: IAU76 obliquity of 84381.448 arcseconds wrt ICRF X-Y plane
+    X-axis   : ICRF
+    Z-axis   : perpendicular to the X-Y plane in the directional (+ or -) sense
+               of Earth's north pole at the reference epoch.
+
+  Symbol meaning:
+
+    JDTDB    Julian Day Number, Barycentric Dynamical Time
+      X      X-component of position vector (km)
+      Y      Y-component of position vector (km)
+      Z      Z-component of position vector (km)
+      VX     X-component of velocity vector (km/sec)                           
+      VY     Y-component of velocity vector (km/sec)                           
+      VZ     Z-component of velocity vector (km/sec)                           
+
+ABERRATIONS AND CORRECTIONS
+
+ Geometric state vectors have NO corrections or aberrations applied.
+
+Computations by ...
+
+    Solar System Dynamics Group, Horizons On-Line Ephemeris System
+    4800 Oak Grove Drive, Jet Propulsion Laboratory
+    Pasadena, CA  91109   USA
+
+    General site: https://ssd.jpl.nasa.gov/
+    Mailing list: https://ssd.jpl.nasa.gov/email_list.html
+    System news : https://ssd.jpl.nasa.gov/horizons/news.html
+    User Guide  : https://ssd.jpl.nasa.gov/horizons/manual.html
+    Connect     : browser        https://ssd.jpl.nasa.gov/horizons/app.html#/x
+                  API            https://ssd-api.jpl.nasa.gov/doc/horizons.html
+                  command-line   telnet ssd.jpl.nasa.gov 6775
+                  e-mail/batch   https://ssd.jpl.nasa.gov/ftp/ssd/hrzn_batch.txt
+                  scripts        https://ssd.jpl.nasa.gov/ftp/ssd/SCRIPTS
+    Author      : Jon.D.Giorgini@jpl.nasa.gov
+*******************************************************************************
