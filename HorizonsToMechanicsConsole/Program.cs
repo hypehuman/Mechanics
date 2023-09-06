@@ -11,7 +11,7 @@ internal class Program
         var txtDir = "../../../../HorizonsToMechanics/Downloaded/txt";
         foreach (var x in BodyDataIterator.IterateObjects(jsonDir, txtDir))
         {
-            //Console.WriteLine(x);
+            Console.WriteLine(x);
         }
     }
 }

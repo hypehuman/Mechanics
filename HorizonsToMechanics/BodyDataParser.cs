@@ -5,16 +5,27 @@ namespace HorizonsToMechanics;
 internal static partial class BodyDataParser
 {
     /// <summary>
-    /// A null return value means that I know what I'm looking at, and it's not interesting.
+    /// A null return value means that I know what I'm looking at, and it's not relevant.
     /// </summary>
     public static BodyData? ParseBodyData(int id, HorizonsResponseContent responseObject)
     {
         var category = IdentifyFormat(id, responseObject.result);
-        if (category == ObjectDataFormat.Nonexistant || category == ObjectDataFormat.DynamicalPoint)
-            return null;
+        switch (category)
+        {
+            case ObjectDataFormat.Nonexistant:
+            case ObjectDataFormat.DynamicalPoint:
+            case ObjectDataFormat.SimulatedAsteroid:
+            case ObjectDataFormat.Lagrange:
+            case ObjectDataFormat.RecentlyDiscovered:
+                return null;
+        }
 
         var name = ParseName(responseObject.result);
         if (name.ContainsIgnoreCase("Barycenter"))
+            return null;
+
+        var mass = ParseMass(responseObject.result);
+        if (mass == null)
             return null;
 
         var pv = ParsePositionAndVelocity(responseObject.result);
@@ -22,7 +33,7 @@ internal static partial class BodyDataParser
         return new(
             id,
             name,
-            ParseMass(responseObject.result),
+            mass,
             pv.Item1, pv.Item2, pv.Item3, pv.Item4, pv.Item5, pv.Item6
         );
     }
@@ -50,9 +61,9 @@ internal static partial class BodyDataParser
         SatellitePhysicalProperties,
         SatellitePhysicalP,
         SatelliteGeneralPhysicalProperties,
-
         AsteroidPhysicalParameters,
         CometPhysical,
+
         SimulatedAsteroid,
         Lagrange,
         RecentlyDiscovered,
@@ -198,26 +209,127 @@ internal static partial class BodyDataParser
         throw new("Could not file name");
     }
 
+    // 401 Phobos is interesting.
+    // There is no GM listed, only mass.
+    // The mass of 1.08e16 kg is represented as "Mass (10^20 kg )        =  1.08 (10^-4)"
     private static readonly Regex sMassPattern = MassPattern();
     [GeneratedRegex(
-        """\bMass\s*x\s*10+\s*\^\s*(?<exponent>[-\d.]+)\s*\(\s*kg\s*\)\s*=\s*(?<mantissa>[-\d.]+)\b""",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled
+        """(?<!Rocky core )\bMass\b(?! ratio| of atmosphere| layers|-energy conv rate),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?)""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex MassPattern();
 
+    // |\) is to not get confused by 852 Wladilena (A916 GM)
+    // 2013 Siding Spring has the units explained in its Comet Physical line "Comet physical (GM= km^3/s^2; RAD= km):  "
+    private static readonly Regex sGmPattern = GmPattern();
+    [GeneratedRegex(
+        """(?<!Comet physical \()\bGM\b(?! 1-sigma|\)),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?)""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
+    )]
+    private static partial Regex GmPattern();
+
+    private static readonly Regex sMassUnitsPattern = MassUnitsPattern();
+    [GeneratedRegex(
+        """^\s*\(?\s*x?\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\(?\s*kg\s*\)?\s*$""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
+    )]
+    private static partial Regex MassUnitsPattern();
+
+    private static readonly Regex sMassValuePattern = MassValuePattern();
+    [GeneratedRegex(
+        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\-\s*[\d.]+\s*)?(\(\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\))?\s*$""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
+    )]
+    private static partial Regex MassValuePattern();
+
+    private static readonly Regex sGmUnitsPattern = GmUnitsPattern();
+    [GeneratedRegex(
+        """^\s*\(?\s*km\s*\^\s*3\s*/\s*s\s*\^\s*2\s*\)?\s*$""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
+    )]
+    private static partial Regex GmUnitsPattern();
+
+    private static readonly Regex sGmValuePattern = GmValuePattern();
+    [GeneratedRegex(
+        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*$""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
+    )]
+    private static partial Regex GmValuePattern();
+
+    /// <summary>
+    /// Null return value means that the mass is explicitly not available.
+    /// If not found or couldn't parse, throws an exception.
+    /// </summary>
     private static double? ParseMass(string dataResult)
     {
-        var match = sMassPattern.Match(dataResult);
-        if (!match.Success)
+        var parsedMasses = sMassPattern.Matches(dataResult).Select(ParseMass).Distinct().ToList();
+        if (parsedMasses.Count > 1)
+            throw new("Expected 0 or 1 mass, found " + parsedMasses.Count);
+
+        // 11 Parthenope has the "Asteroid physical parameters" listed twice.
+        var parsedGms = sGmPattern.Matches(dataResult).Select(ParseGm).Distinct().ToList();
+        if (parsedGms.Count > 1)
+            throw new("Expected 0 or 1 GM, found " + parsedGms.Count);
+
+        if (parsedMasses.Count == 0 && parsedGms.Count == 0)
+            throw new("Found neither mass nor GM.");
+
+        var massesFromGm = parsedGms.Select(gm => gm / 6.6743e-20); // e-20 instead of e-11 because we're using km^3 instead of m^3
+
+        double? prevMass = null;
+        foreach (var mass in parsedMasses.Concat(massesFromGm).Where(m => m != null).Select(m => m.Value))
+        {
+            if (prevMass.HasValue && Math.Abs((mass - prevMass.Value) / prevMass.Value) > 0.01)
+                throw new Exception($"Masses disagree: {prevMass}, {mass}");
+            prevMass = mass;
+        }
+
+        return prevMass;
+    }
+
+    private static double? ParseMass(Match match)
+    {
+        var valueStr = match.Groups["value"].Value.Trim();
+        var unitsStr = match.Groups["units"].Value.Trim();
+
+        var unitsMatch = sMassUnitsPattern.Match(unitsStr);
+        if (!unitsMatch.Success || !double.TryParse(unitsMatch.Groups["exponent"].Value, out var unitsExponent))
+            throw new Exception("Could not parse mass units: " + unitsStr);
+
+        var valueMatch = sMassValuePattern.Match(valueStr);
+        if (!valueMatch.Success || !double.TryParse(valueMatch.Groups["mantissa"].Value, out var mantissa))
+            throw new Exception("Could not parse mass value: " + valueStr);
+
+        var valueExponentGroup = valueMatch.Groups["exponent"];
+        double valueExponent;
+        if (!valueExponentGroup.Success)
+            valueExponent = 0;
+        else if (!double.TryParse(valueExponentGroup.Value, out valueExponent))
+            throw new Exception("Could not parse mass value exponent: " + valueExponentGroup.Value);
+
+        return mantissa * Math.Pow(10, unitsExponent + valueExponent);
+    }
+
+    private static double? ParseGm(Match match)
+    {
+        var valueStr = match.Groups["value"].Value.Trim();
+
+        if (valueStr == "n.a.")
             return null;
 
-        if (!double.TryParse(match.Groups["mantissa"].Value, out var mantissa))
-            return null;
+        var unitsStr = match.Groups["units"].Value.Trim();
+        if (unitsStr != "") // if empty units, just assume the default
+        {
+            var unitsMatch = sGmUnitsPattern.Match(unitsStr);
+            if (!unitsMatch.Success /*|| !double.TryParse(unitsMatch.Groups["exponent"].Value, out var unitsExponent)*/)
+                throw new Exception("Could not parse GM units: " + unitsStr);
+        }
 
-        if (!double.TryParse(match.Groups["exponent"].Value, out var exponent))
-            return null;
+        var valueMatch = sGmValuePattern.Match(valueStr);
+        if (!valueMatch.Success || !double.TryParse(valueMatch.Groups["mantissa"].Value, out var mantissa))
+            throw new Exception("Could not parse GM value: " + valueStr);
 
-        return mantissa * Math.Pow(10, exponent);
+        return mantissa /* * Math.Pow(10, unitsExponent)*/;
     }
 
     // $$SOE = "start of ephemeris"
