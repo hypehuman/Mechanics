@@ -17,10 +17,13 @@ internal static partial class BodyDataParser
         if (name.ContainsIgnoreCase("Barycenter"))
             return null;
 
+        var pv = ParsePositionAndVelocity(responseObject.result);
+
         return new(
             id,
-            ParseName(responseObject.result),
-            ParseMass(responseObject.result)
+            name,
+            ParseMass(responseObject.result),
+            pv.Item1, pv.Item2, pv.Item3, pv.Item4, pv.Item5, pv.Item6
         );
     }
 
@@ -215,6 +218,42 @@ internal static partial class BodyDataParser
             return null;
 
         return mantissa * Math.Pow(10, exponent);
+    }
+
+    // $$SOE = "start of ephemeris"
+    // $$EOE = "end of ephemeris"
+    private static readonly Regex sEphemerisPattern = EphemerisPattern();
+    [GeneratedRegex(
+        """\n\$\$SOE\n.*\n\$\$EOE\n""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Singleline
+    )]
+    private static partial Regex EphemerisPattern();
+
+    private static readonly Regex sPositionVelocityPattern = PositionVelocityPattern();
+    [GeneratedRegex(
+        """\s*X\s*\=\s*(?<px>\S+)\s+Y\s*\=\s*(?<py>\S+)\s+Z\s*\=\s*(?<pz>\S+)\s*VX\s*\=\s*(?<vx>\S+)\s+VY\s*\=\s*(?<vy>\S+)\s+VZ\s*\=\s*(?<vz>\S+)\s*""",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Singleline
+    )]
+    private static partial Regex PositionVelocityPattern();
+
+    private static (double, double, double, double, double, double) ParsePositionAndVelocity(string dataResult)
+    {
+        var ephemerisMatches = sEphemerisPattern.Matches(dataResult);
+        if (ephemerisMatches.Count != 1)
+            throw new("Expected 1 ephemeris, found " + ephemerisMatches.Count);
+        var ephemeris = ephemerisMatches[0].Value;
+        var pvMatches = sPositionVelocityPattern.Matches(ephemeris);
+        if (pvMatches.Count != 1)
+            throw new("Expected 1 position/velocity entry, found " + pvMatches.Count);
+        var pvMatch = pvMatches[0];
+        return (
+            double.Parse(pvMatch.Groups["px"].Value),
+            double.Parse(pvMatch.Groups["py"].Value),
+            double.Parse(pvMatch.Groups["pz"].Value),
+            double.Parse(pvMatch.Groups["vx"].Value),
+            double.Parse(pvMatch.Groups["vy"].Value),
+            double.Parse(pvMatch.Groups["vz"].Value)
+        );
     }
 }
 
