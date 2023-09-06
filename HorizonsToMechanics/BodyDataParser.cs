@@ -4,9 +4,19 @@ namespace HorizonsToMechanics;
 
 internal static partial class BodyDataParser
 {
-    public static BodyData ParseBodyData(int id, HorizonsResponseContent responseObject)
+    /// <summary>
+    /// A null return value means that I know what I'm looking at, and it's not interesting.
+    /// </summary>
+    public static BodyData? ParseBodyData(int id, HorizonsResponseContent responseObject)
     {
         var category = IdentifyFormat(id, responseObject.result);
+        if (category == ObjectDataFormat.Nonexistant || category == ObjectDataFormat.DynamicalPoint)
+            return null;
+
+        var name = ParseName(responseObject.result);
+        if (name.ContainsIgnoreCase("Barycenter"))
+            return null;
+
         return new(
             id,
             ParseName(responseObject.result),
@@ -25,16 +35,29 @@ internal static partial class BodyDataParser
         DynamicalPoint,
         Spacecraft,
 
+        /// <summary>
+        /// Careful: objects 1 (Mercury Barycenter) and 199 (Mercury)
+        /// differ only in the "Target body name" property.
+        /// Even the name in the body data section is identical.
+        /// </summary>
         PhysicalData,
         PhysicalProperties,
         GeophysicalData,
         GeophysicalProperties,
         SatellitePhysicalProperties,
         SatellitePhysicalP,
+        SatelliteGeneralPhysicalProperties,
 
         AsteroidPhysicalParameters,
+        CometPhysical,
+        SimulatedAsteroid,
         Lagrange,
         RecentlyDiscovered,
+
+        /// <summary>
+        /// My code could not figure it out
+        /// </summary>
+        Unrecognized,
     }
 
     [GeneratedRegex(
@@ -76,6 +99,9 @@ internal static partial class BodyDataParser
         bool bdTrimStartsWith(int lineI, string start) => bdLineOrEmpty(lineI).Trim().StartsWith(start);
         IEnumerable<string> bdLines() => Enumerable.Range(bodyDataOpenI + 1, bodyDataCloseI - bodyDataOpenI - 1).Select(i => lines[i]);
 
+        if (bdTrimStartsWith(1, $"Multiple major-bodies match string \"{id}\""))
+            return ObjectDataFormat.Nonexistant;
+
         if (bdTrimStartsWith(4, "http://nssdc.gsfc.nasa.gov/nmc/spacecraftDisplay"))
             return ObjectDataFormat.Spacecraft;
 
@@ -83,7 +109,10 @@ internal static partial class BodyDataParser
         if (bdTrimStartsWith(3, "Dynamical point"))
             return ObjectDataFormat.DynamicalPoint;
 
-        if (bdTrimStartsWith(3, "PHYSICAL DATA"))
+        if (
+            bdTrimStartsWith(3, "PHYSICAL DATA") ||
+            bdTrimStartsWith(6, "PHYSICAL DATA")
+        )
             return ObjectDataFormat.PhysicalData;
 
         if (bdTrimStartsWith(3, "PHYSICAL PROPERTIES"))
@@ -101,7 +130,17 @@ internal static partial class BodyDataParser
             bdTrimStartsWith(5, "SATELLITE PHYSICAL PROPERTIES") ||
             bdTrimStartsWith(6, "SATELLITE PHYSICAL PROPERTIES")
         )
+        {
+            // TODO: Many of these have more info that can be looked up at https://ssd.jpl.nasa.gov/sats/phys_par/
+            // Some, e.g., object 716 (Caliban) don't appear in the table, but you can look it up by the
+            // {source: ura116} and make the URL https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura116.bsp
             return ObjectDataFormat.SatellitePhysicalProperties;
+        }
+
+        if (bdTrimStartsWith(6, "SATELLITE GENERAL PHYSICAL PROPERTIES"))
+        {
+            return ObjectDataFormat.SatelliteGeneralPhysicalProperties;
+        }
 
         if (bdTrimStartsWith(3, "SATELLITE PHYSICAL P"))
             return ObjectDataFormat.SatellitePhysicalP;
@@ -109,12 +148,18 @@ internal static partial class BodyDataParser
         if (bdTrimStartsWith(14, "Asteroid physical parameters"))
             return ObjectDataFormat.AsteroidPhysicalParameters;
 
-        if (bodyDataCloseI <= 8 && bdLines().Any(l =>
+        if (bdTrimStartsWith(22, "Comet physical"))
+            return ObjectDataFormat.CometPhysical;
+
+        if (bdLineOrEmpty(3).ContainsIgnoreCase("SIMULATED ASTEROID"))
+            return ObjectDataFormat.SimulatedAsteroid;
+
+        if (bodyDataCloseI <= 13 && bdLines().Any(l =>
                 l.ContainsIgnoreCase("discover") ||
                 l.ContainsIgnoreCase("recently recovered") || // I'm guessing they meant "recently discovered"
                 l.ContainsIgnoreCase("Initial designation") ||
                 l.ContainsIgnoreCase("irregular") ||
-                l.ContainsIgnoreCase("Solution fit to all data")
+                l.ContainsIgnoreCase("fit to ")
             ))
         {
             return ObjectDataFormat.RecentlyDiscovered;
@@ -123,7 +168,8 @@ internal static partial class BodyDataParser
         if (sLagrangePattern.IsMatch(bdLineOrEmpty(2)))
             return ObjectDataFormat.Lagrange;
 
-        throw new($"Unrecognized category for object {id}");
+        Console.WriteLine($"Object {id}: Unrecognized category");
+        return ObjectDataFormat.Unrecognized;
     }
 
     // Name ends with the ID in parentheses, or with the ID of a related object.
@@ -136,13 +182,17 @@ internal static partial class BodyDataParser
     private static partial Regex NamePattern();
     private static readonly Regex sNamePattern = NamePattern();
 
-    private static string? ParseName(string dataResult)
+    private static string ParseName(string dataResult)
     {
-        var match = sNamePattern.Match(dataResult);
-        if (!match.Success)
-            return null;
+        var matches = sNamePattern.Matches(dataResult);
+        var names = matches.Select(m => m.Groups["name"].Value.Trim()).Distinct().ToList();
+        if (names.Count == 1)
+            return names[0];
 
-        return match.Groups["name"].Value.Trim();
+        if (names.Count > 1)
+            throw new("Multiple names: " + string.Join(", ", names));
+
+        throw new("Could not file name");
     }
 
     private static readonly Regex sMassPattern = MassPattern();

@@ -49,29 +49,49 @@ public partial class BodyDataIterator
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to get data for object {id}: ");
+                    Console.WriteLine($"Object {id}: Failed to get response:");
                     Console.WriteLine(ex);
                     continue;
                 }
 
-                if (txtDir != null && responseObject.result != null)
+                try
                 {
-                    var resultPath = Path.Combine(txtDir, id + ".txt");
-                    if (!File.Exists(resultPath))
+                    if (txtDir != null && responseObject.result != null)
                     {
-                        // for debugging, since the newlines in the string make things hard to read
-                        File.WriteAllText(resultPath, responseObject.result);
+                        var resultPath = Path.Combine(txtDir, id + ".txt");
+                        if (!File.Exists(resultPath))
+                        {
+                            // for debugging, since the newlines in the string make things hard to read
+                            File.WriteAllText(resultPath, responseObject.result);
+                        }
                     }
+                }
+                catch
+                {
+                    // These files are only for debugging anyway
                 }
 
                 if (responseObject.error != null)
                 {
-                    Console.WriteLine($"Object {id} has error: " + responseObject.error);
+                    Console.WriteLine($"Object {id}: Response has error:");
+                    Console.WriteLine(responseObject.error);
                     continue;
                 }
 
-                yield return BodyDataParser.ParseBodyData(id, responseObject);
-                Console.WriteLine();
+                BodyData? bd;
+                try
+                {
+                    bd = BodyDataParser.ParseBodyData(id, responseObject);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Object {id}: Failed to parse:");
+                    Console.WriteLine(ex);
+                    bd = null;
+                }
+
+                if (bd != null)
+                    yield return bd;
             }
         }
     }
