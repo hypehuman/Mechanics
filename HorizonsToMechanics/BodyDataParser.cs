@@ -214,19 +214,19 @@ internal static partial class BodyDataParser
     // The mass of 1.08e16 kg is represented as "Mass (10^20 kg )        =  1.08 (10^-4)"
     private static readonly Regex sMassPattern = MassPattern();
     [GeneratedRegex(
-        """(?<!Rocky core )\bMass\b(?! ratio| of atmosphere| layers|-energy conv rate),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?(?:[^\n\s]|\s(!:[A-Z])))""",
+        """(?<!Rocky core )\bMass\b(?! ratio| of atmosphere| layers|-energy conv rate),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex MassPattern();
 
     // |\) is to not get confused by 852 Wladilena (A916 GM)
     // 2013 Siding Spring has the units explained in its Comet Physical line "Comet physical (GM= km^3/s^2; RAD= km):  "
-    // End with """(?:[^\n\s]|\s(!:[A-Z]))""", which keeps matching anything until we find a space followed by a capital letter,
+    // End with """([^A-Z]|(?<!\s)[A-Z])+""", which keeps matching anything until we find a capital letter preceded by a space,
     //     which probably signals the start of a new property name.
     //     E.g.: GM (km^3/s^2)          = 5959.9155+- 0.004 Geometric Albedo  = 0.63  +- 0.02
     private static readonly Regex sGmPattern = GmPattern();
     [GeneratedRegex(
-        """(?<!Comet physical \()\bGM\b(?! 1-sigma|\)),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?(?:[^\n\s]|\s(!:[A-Z])))""",
+        """(?<!Comet physical \()\bGM\b(?! 1-sigma|\)),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex GmPattern();
@@ -240,7 +240,7 @@ internal static partial class BodyDataParser
 
     private static readonly Regex sMassValuePattern = MassValuePattern();
     [GeneratedRegex(
-        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\-\s*[\d.]+\s*)?(\(\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\))?\s*$""",
+        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\-\s*[\d.]+)?\s*(\(\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\))?\s*$""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex MassValuePattern();
@@ -254,7 +254,7 @@ internal static partial class BodyDataParser
 
     private static readonly Regex sGmValuePattern = GmValuePattern();
     [GeneratedRegex(
-        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*$""",
+        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\-\s*[\d.]+)?\s*$""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled
     )]
     private static partial Regex GmValuePattern();
