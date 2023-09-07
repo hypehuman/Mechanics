@@ -118,9 +118,25 @@ public partial class BodyDataEnumerable : IAsyncEnumerable<BodyData>
                     }
                 });
 
-                BodyData bd = new(id);
+                BodyData? bd;
+                try
+                {
+                    bd = BodyDataParser.ParseBodyData(id, responseObject);
+                    if (bd == null)
+                    {
+                        // I know what I'm looking at, and it's not relevant.
+                        TryWithTextPath(id, File.Delete);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Object {id}: Failed to parse:");
+                    Console.WriteLine(ex);
+                    bd = null;
+                }
 
-                yield return bd;
+                if (bd != null)
+                    yield return bd;
             }
         }
     }
