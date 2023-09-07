@@ -214,7 +214,7 @@ internal static partial class BodyDataParser
     // The mass of 1.08e16 kg is represented as "Mass (10^20 kg )        =  1.08 (10^-4)"
     private static readonly Regex sMassPattern = MassPattern();
     [GeneratedRegex(
-        """(?<!Rocky core )\bMass\b(?! ratio| of atmosphere| layers|-energy conv rate),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
+        """(?<!Rocky core )\bMass\b(?! ratio| of atmosphere| layers|-energy conv rate),?\s*(?<units>[^=]*)\s*\=(?<value>\s*[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex MassPattern();
@@ -226,21 +226,21 @@ internal static partial class BodyDataParser
     //     E.g.: GM (km^3/s^2)          = 5959.9155+- 0.004 Geometric Albedo  = 0.63  +- 0.02
     private static readonly Regex sGmPattern = GmPattern();
     [GeneratedRegex(
-        """(?<!Comet physical \()\bGM\b(?! 1-sigma|\)),?\s*(?<units>[^=]*)\s*\=\s*(?<value>[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
+        """(?<!Comet physical \()\bGM\b(?! 1-sigma|\)),?\s*(?<units>[^=]*)\s*\=(?<value>\s*[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex GmPattern();
 
     private static readonly Regex sMassUnitsPattern = MassUnitsPattern();
     [GeneratedRegex(
-        """^\s*\(?\s*x?\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\(?\s*kg\s*\)?\s*$""",
+        """^\s*\(?\s*x?\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\(?\s*(?<unit>k?g)\s*\)?\s*$""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled
     )]
     private static partial Regex MassUnitsPattern();
 
     private static readonly Regex sMassValuePattern = MassValuePattern();
     [GeneratedRegex(
-        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\-\s*[\d.]+)?\s*(\(\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\))?\s*$""",
+        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\s*/?\s*\-\s*[\d.]+)?\s*(\(\s*10\s*\^\s*(?<exponent>[-\d.]+)\s*\))?\s*$""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex MassValuePattern();
@@ -254,7 +254,7 @@ internal static partial class BodyDataParser
 
     private static readonly Regex sGmValuePattern = GmValuePattern();
     [GeneratedRegex(
-        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\-\s*[\d.]+)?\s*$""",
+        """^\s*~?\s*(?<mantissa>[-\d.]+)\s*(\+\s*/?\s*\-\s*[\d.]+)?\s*$""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled
     )]
     private static partial Regex GmValuePattern();
@@ -292,12 +292,26 @@ internal static partial class BodyDataParser
 
     private static double? ParseMass(Match match)
     {
+        // 507 Elara just has whitespace for the mass (i.e., it's missing).
+        if (match.Groups["value"].Value.StartsWith("     ") && (
+                match.Groups["value"].Value.Trim().StartsWith("Geometric") ||
+                match.Groups["value"].Value.Trim().StartsWith("Hill")
+            ))
+            return null;
+
         var valueStr = match.Groups["value"].Value.Trim();
         var unitsStr = match.Groups["units"].Value.Trim();
 
         var unitsMatch = sMassUnitsPattern.Match(unitsStr);
         if (!unitsMatch.Success || !double.TryParse(unitsMatch.Groups["exponent"].Value, out var unitsExponent))
             throw new Exception("Could not parse mass units: " + unitsStr);
+        var unitFactor = unitsMatch.Groups["unit"].Value switch
+        {
+            "kg" => 1,
+            "g" => 0.001,
+            "" => 1, // if missing, assume kg
+            _ => throw new Exception("Unusual mass units: " + unitsMatch.Groups["unit"].Value)
+        };
 
         var valueMatch = sMassValuePattern.Match(valueStr);
         if (!valueMatch.Success || !double.TryParse(valueMatch.Groups["mantissa"].Value, out var mantissa))
@@ -310,7 +324,7 @@ internal static partial class BodyDataParser
         else if (!double.TryParse(valueExponentGroup.Value, out valueExponent))
             throw new Exception("Could not parse mass value exponent: " + valueExponentGroup.Value);
 
-        return mantissa * Math.Pow(10, unitsExponent + valueExponent);
+        return mantissa * Math.Pow(10, unitsExponent + valueExponent) * unitFactor;
     }
 
     private static double? ParseGm(Match match)

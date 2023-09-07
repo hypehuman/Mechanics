@@ -4,6 +4,7 @@
 /// Report to NASA:
 ///  - object 553 "recently recovered"; should be "recently discovered" to match 551, 552, etc?
 ///  - https://ssd.jpl.nasa.gov/sats/phys_par/ link "glossary definition of GM" points to https://ssd.jpl.nasa.gov/glossary/albedo.html should be https://ssd.jpl.nasa.gov/glossary/GM.html
+///  All where Mass and GM are more than 1% different; we know G better than that!
 /// </summary>
 internal class HorizonsQuerier : IDisposable
 {
