@@ -24,7 +24,7 @@ internal static partial class BodyDataParser
         if (name.ContainsIgnoreCase("Barycenter"))
             return null;
 
-        var mass = ParseMass(responseObject.result);
+        var mass = ParseMass(id, responseObject.result);
         if (mass == null)
             return null;
 
@@ -263,7 +263,7 @@ internal static partial class BodyDataParser
     /// Null return value means that the mass is explicitly not available.
     /// If not found or couldn't parse, throws an exception.
     /// </summary>
-    private static double? ParseMass(string dataResult)
+    private static double? ParseMass(int id, string dataResult)
     {
         var parsedMasses = sMassPattern.Matches(dataResult).Select(ParseMass).Distinct().ToList();
         if (parsedMasses.Count > 1)
@@ -279,15 +279,16 @@ internal static partial class BodyDataParser
 
         var massesFromGm = parsedGms.Select(gm => gm / 6.6743e-20); // e-20 instead of e-11 because we're using km^3 instead of m^3
 
+        var convertedMasses = parsedMasses.Concat(massesFromGm).Where(m => m != null).Select(m => m.Value).ToList();
         double? prevMass = null;
-        foreach (var mass in parsedMasses.Concat(massesFromGm).Where(m => m != null).Select(m => m.Value))
+        foreach (var mass in convertedMasses)
         {
             if (prevMass.HasValue && Math.Abs((mass - prevMass.Value) / prevMass.Value) > 0.01)
-                throw new Exception($"Masses disagree: {prevMass}, {mass}");
+                Console.WriteLine($"Masses {prevMass} and {mass} disagree: taking average.");
             prevMass = mass;
         }
 
-        return prevMass;
+        return convertedMasses.Any()? convertedMasses.Average() : null;
     }
 
     private static double? ParseMass(Match match)
@@ -304,25 +305,25 @@ internal static partial class BodyDataParser
 
         var unitsMatch = sMassUnitsPattern.Match(unitsStr);
         if (!unitsMatch.Success || !double.TryParse(unitsMatch.Groups["exponent"].Value, out var unitsExponent))
-            throw new Exception("Could not parse mass units: " + unitsStr);
+            throw new("Could not parse mass units: " + unitsStr);
         var unitFactor = unitsMatch.Groups["unit"].Value switch
         {
             "kg" => 1,
             "g" => 0.001,
             "" => 1, // if missing, assume kg
-            _ => throw new Exception("Unusual mass units: " + unitsMatch.Groups["unit"].Value)
+            _ => throw new("Unusual mass units: " + unitsMatch.Groups["unit"].Value)
         };
 
         var valueMatch = sMassValuePattern.Match(valueStr);
         if (!valueMatch.Success || !double.TryParse(valueMatch.Groups["mantissa"].Value, out var mantissa))
-            throw new Exception("Could not parse mass value: " + valueStr);
+            throw new("Could not parse mass value: " + valueStr);
 
         var valueExponentGroup = valueMatch.Groups["exponent"];
         double valueExponent;
         if (!valueExponentGroup.Success)
             valueExponent = 0;
         else if (!double.TryParse(valueExponentGroup.Value, out valueExponent))
-            throw new Exception("Could not parse mass value exponent: " + valueExponentGroup.Value);
+            throw new("Could not parse mass value exponent: " + valueExponentGroup.Value);
 
         return mantissa * Math.Pow(10, unitsExponent + valueExponent) * unitFactor;
     }
@@ -339,12 +340,12 @@ internal static partial class BodyDataParser
         {
             var unitsMatch = sGmUnitsPattern.Match(unitsStr);
             if (!unitsMatch.Success /*|| !double.TryParse(unitsMatch.Groups["exponent"].Value, out var unitsExponent)*/)
-                throw new Exception("Could not parse GM units: " + unitsStr);
+                throw new("Could not parse GM units: " + unitsStr);
         }
 
         var valueMatch = sGmValuePattern.Match(valueStr);
         if (!valueMatch.Success || !double.TryParse(valueMatch.Groups["mantissa"].Value, out var mantissa))
-            throw new Exception("Could not parse GM value: " + valueStr);
+            throw new("Could not parse GM value: " + valueStr);
 
         return mantissa /* * Math.Pow(10, unitsExponent)*/;
     }
