@@ -214,7 +214,7 @@ internal static partial class BodyDataParser
     // The mass of 1.08e16 kg is represented as "Mass (10^20 kg )        =  1.08 (10^-4)"
     private static readonly Regex sMassPattern = MassPattern();
     [GeneratedRegex(
-        """(?<!Rocky core )\bMass\b(?! ratio| of atmosphere| layers|-energy conv rate),?\s*(?<units>[^=]*)\s*\=(?<value>\s*[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
+        """(?<!Rocky core |Charon )\bMass\b(?! ratio| of atmosphere| layers|-energy conv rate),?\s*(?<units>[^=]*)\s*\=(?<value>\s*[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex MassPattern();
@@ -226,7 +226,7 @@ internal static partial class BodyDataParser
     //     E.g.: GM (km^3/s^2)          = 5959.9155+- 0.004 Geometric Albedo  = 0.63  +- 0.02
     private static readonly Regex sGmPattern = GmPattern();
     [GeneratedRegex(
-        """(?<!Comet physical \()\bGM\b(?! 1-sigma|\)),?\s*(?<units>[^=]*)\s*\=(?<value>\s*[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
+        """(?<!Comet physical \()\bGM\b( \(planet\))?(?! 1-sigma|\)),?\s*(?<units>[^=]*)\s*\=(?<value>\s*[\S]+\s*(\([^)]*\))?([^A-Z]|(?<!\s)[A-Z])+)""",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.ExplicitCapture
     )]
     private static partial Regex GmPattern();
