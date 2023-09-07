@@ -5,13 +5,22 @@ namespace HorizonsToMechanics;
 /// <summary>
 /// List of APIs: https://ssd.jpl.nasa.gov/api.html
 /// </summary>
-public partial class BodyDataIterator
+public partial class BodyDataEnumerable : IAsyncEnumerable<BodyData>
 {
-    public static IEnumerable<BodyData> IterateObjects(string? jsonDir, string? txtDir)
+    private readonly string? _jsonDir;
+    private readonly string? _txtDir;
+
+    public BodyDataEnumerable(string? jsonDir, string? txtDir)
     {
-        if (!Directory.Exists(jsonDir))
+        _jsonDir = jsonDir;
+        _txtDir = txtDir;
+    }
+
+    public async IAsyncEnumerator<BodyData> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        if (!Directory.Exists(_jsonDir))
         {
-            throw new Exception("Directory does not exist: " + Path.GetFullPath(jsonDir));
+            throw new Exception("Directory does not exist: " + (_jsonDir == null ? "" : Path.GetFullPath(_jsonDir)));
         }
 
         var time = new DateTime(2023, 08, 12, 0, 0, 0, DateTimeKind.Utc);
@@ -19,7 +28,7 @@ public partial class BodyDataIterator
         {
             for (var id = -2; id < 623829; id++)
             {
-                var contentPath = Path.Combine(jsonDir, id + ".json");
+                var contentPath = Path.Combine(_jsonDir, id + ".json");
 
                 HorizonsResponseContent responseObject;
                 try
@@ -27,25 +36,39 @@ public partial class BodyDataIterator
                     if (File.Exists(contentPath))
                     {
                         using var fileStream = File.OpenRead(contentPath);
-                        responseObject = JsonSerializer.Deserialize<HorizonsResponseContent>(fileStream)
+                        responseObject = await JsonSerializer.DeserializeAsync<HorizonsResponseContent>(fileStream, cancellationToken: cancellationToken)
                         ?? throw new NullReferenceException("The serializer returned null.");
                     }
                     else
                     {
-                        var response = querier.Get(id, time).Result;
+                        var response = await querier.GetAsync(id, time, cancellationToken: cancellationToken);
                         if (response.IsSuccessStatusCode)
                         {
-                            responseObject = response.Content.ReadAsAsync<HorizonsResponseContent>().Result;
+                            responseObject = await response.Content.ReadAsAsync<HorizonsResponseContent>(cancellationToken: cancellationToken);
                         }
                         else
                         {
                             throw new Exception($"{(int)response.StatusCode} ({response.ReasonPhrase})");
                         }
-                        using (var fileStream = File.Create(contentPath))
+
+                        try
                         {
-                            response.Content.CopyToAsync(fileStream).Wait();
+                            using (var fileStream = File.Create(contentPath))
+                            {
+                                await response.Content.CopyToAsync(fileStream, cancellationToken: cancellationToken);
+                            }
+                        }
+                        catch
+                        {
+                            // Get rid of any partially written file
+                            File.Delete(contentPath);
+                            throw;
                         }
                     }
+                }
+                catch (TaskCanceledException)
+                {
+                    yield break;
                 }
                 catch (Exception ex)
                 {
@@ -56,9 +79,9 @@ public partial class BodyDataIterator
 
                 try
                 {
-                    if (txtDir != null && responseObject.result != null)
+                    if (_txtDir != null && responseObject.result != null)
                     {
-                        var resultPath = Path.Combine(txtDir, id + ".txt");
+                        var resultPath = Path.Combine(_txtDir, id + ".txt");
                         if (!File.Exists(resultPath))
                         {
                             // for debugging, since the newlines in the string make things hard to read

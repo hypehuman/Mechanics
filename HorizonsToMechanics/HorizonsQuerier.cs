@@ -22,12 +22,12 @@ internal class HorizonsQuerier : IDisposable
         }
     }
 
-    public Task<HttpResponseMessage> Get(int id, DateTime time)
+    public async Task<HttpResponseMessage> GetAsync(int id, DateTime time, CancellationToken cancellationToken = default)
     {
         var parameters = GetUrlParameters(id, time);
         Console.WriteLine(parameters);
 
-        return Client.GetAsync(parameters);
+        return await Client.GetAsync(parameters, cancellationToken: cancellationToken);
     }
 
     /// <summary>
