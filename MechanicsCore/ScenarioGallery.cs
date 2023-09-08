@@ -40,24 +40,15 @@ public static class ScenarioGallery
     );
 
     [GuiHelp("This is the same setup used for the Rust unit tests.")]
-    public static Scenario SunEarthMoon
-    {
-        get
+    public static Scenario SunEarthMoon => new(
+        new SunEarthMoon(),
+        new()
         {
-            const double step_time = 16;
-            const double leaps_per_year = 365.24;
-            const double steps_per_leap = Constants.SecondsPerYear / leaps_per_year / step_time;
-            return new(
-                new SunEarthMoon(),
-                new()
-                {
-                    StepTime = step_time,
-                    GravityConfig = GravityType.Newton_Pointlike,
-                },
-                Convert.ToInt32(steps_per_leap)
-            );
-        }
-    }
+            StepTime = 16,
+            GravityConfig = GravityType.Newton_Pointlike,
+        },
+        TimeSpan.FromDays(1)
+    );
 
     [GuiHelp("What would happen if the Earth and Moon lost their momentum around the Sun?")]
     public static Scenario SunEarthMoon_EarthStopped => new(
@@ -71,6 +62,18 @@ public static class ScenarioGallery
             GravityConfig = GravityType.Newton_LinearAfterTouching
         },
         900
+    );
+
+    [GuiName(Arrangements.ModernSolarSystem.MssGuiName)]
+    [GuiHelp(Arrangements.ModernSolarSystem.MssGuiHelp)]
+    public static Scenario ModernSolarSystem => new(
+        new ModernSolarSystem(),
+        new()
+        {
+            StepTime = 16,
+            GravityConfig = GravityType.Newton_Pointlike,
+        },
+        TimeSpan.FromDays(1)
     );
 
     [GuiName("Collapsing: Earth and Moon")]
