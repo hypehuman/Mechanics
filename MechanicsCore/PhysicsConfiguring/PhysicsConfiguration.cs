@@ -66,7 +66,7 @@ public class PhysicsConfiguration : IGetConstructorParameters
             yield return $"Drag coefficient: {Simulation.DoubleToString(DragCoefficient)}";
     }
 
-    public bool CanTakeSimpleShortcut() =>
-        GravityConfig == GravityType.Newton_Pointlike &&
-        CollisionConfig != CollisionType.Drag;
+    public bool CanTakeSimpleShortcut() => false;
+        //GravityConfig == GravityType.Newton_Pointlike &&
+        //CollisionConfig != CollisionType.Drag;
 }
