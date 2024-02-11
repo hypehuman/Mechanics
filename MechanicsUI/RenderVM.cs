@@ -38,8 +38,8 @@ public class RenderVM : INotifyPropertyChanged
     private Simulation Simulation => SimulationVM.Model;
     public Vector3D PanelDisplayBound0 => Perspective.SimToPanel(Simulation.DisplayBound0);
     public Vector3D PanelDisplayBound1 => Perspective.SimToPanel(Simulation.DisplayBound1);
-    public GridLength GridWidth => new(Math.Abs(PanelDisplayBound1.X - PanelDisplayBound0.X), GridUnitType.Star);
-    public GridLength GridHeight => new(Math.Abs(PanelDisplayBound1.Y - PanelDisplayBound0.Y), GridUnitType.Star);
+    public double GridWidth => Math.Abs(PanelDisplayBound1.X - PanelDisplayBound0.X);
+    public double GridHeight => Math.Abs(PanelDisplayBound1.Y - PanelDisplayBound0.Y);
 
     private static readonly PropertyChangedEventArgs sCanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
     private static readonly PropertyChangedEventArgs sCanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
