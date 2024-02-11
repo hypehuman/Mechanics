@@ -48,16 +48,22 @@
                                 <GradientStop Offset="1" Color="Transparent" />
                             </RadialGradientBrush>
                         </Path.Fill>
+                        <Path.ToolTip>
+                            <!-- BUG: The tooltip closes almost immediately after opening; there's barely enough time to read it. -->
+                            <!-- Add a handler for Path.ToolTipClosing to debug it. -->
+                            <ToolTip StaysOpen="True" BorderBrush="White" BorderThickness="2" Background="Black" Padding="2" IsHitTestVisible="False">
+                                <ToolTip.Foreground>
+                                    <SolidColorBrush Color="{Binding WinMediaColor}" />
+                                </ToolTip.Foreground>
+                                <TextBlock Text="{Binding LabelText}" FontWeight="ExtraBold" />
+                            </ToolTip>
+                        </Path.ToolTip>
                     </Path>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
             <ItemsControl.ItemContainerStyle>
                 <Style TargetType="{x:Type ContentPresenter}">
                     <Setter Property="Panel.ZIndex" Value="{Binding PanelZIndex}" />
-                    <!-- This is a hack to allow us to click the Leap button even when a body is overlapping it. -->
-                    <!-- This will make it impossible to interact with the body via the mouse. -->
-                    <!-- A better solution would be to clip the canvas so that the bodies don't extend outside of it. -->
-                    <Setter Property="IsHitTestVisible" Value="False" />
                 </Style>
             </ItemsControl.ItemContainerStyle>
         </ItemsControl>

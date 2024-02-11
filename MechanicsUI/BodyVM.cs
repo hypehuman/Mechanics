@@ -103,6 +103,8 @@ public class BodyVM : INotifyPropertyChanged
         }
     }
 
+    public string LabelText => Model.Name ?? Model.ID.ToString();
+
     private Point ComputePanelCenterXY()
     {
         var panelPosition = PositionOnPanel;
