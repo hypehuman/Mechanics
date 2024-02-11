@@ -9,63 +9,75 @@
     d:DesignHeight="450" d:DesignWidth="800"
     d:DataContext="{d:DesignInstance Type=local:DesignRenderVM, IsDesignTimeCreatable=True}"
 >
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="bvc" />
+    </UserControl.Resources>
     <Border
+        x:Name="TheBorder"
         local:SizeObserver.Observe="True"
         local:SizeObserver.ObservedSize="{Binding AvailableSizePix, Mode=OneWayToSource}"
         ClipToBounds="True"
     >
-        <ItemsControl ItemsSource="{Binding BodyVMs}" Background="Black">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <Canvas
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Width="0" Height="0"
-                    >
-                        <Canvas.RenderTransform>
-                            <TransformGroup>
-                                <ScaleTransform ScaleX="{Binding CanvasScale}" ScaleY="{Binding CanvasScale}" />
-                                <TranslateTransform X="{Binding CanvasTranslateX}" Y="{Binding CanvasTranslateY}" />
-                            </TransformGroup>
-                        </Canvas.RenderTransform>
-                    </Canvas>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Path>
-                        <Path.Data>
-                            <EllipseGeometry
-                                Center="{Binding PanelCenterXY}" 
-                                RadiusX="{Binding GlowRadius}" 
-                                RadiusY="{Binding GlowRadius}"
-                            />
-                        </Path.Data>
-                        <Path.Fill>
-                            <RadialGradientBrush>
-                                <!-- Maximum opacity from center to true radius. Opacity drops off to zero at glow radius. -->
-                                <GradientStop Offset="0" Color="{Binding WinMediaColor}" />
-                                <GradientStop Offset="{Binding TrueRadiusOverGlowRadius}" Color="{Binding WinMediaColor}" />
-                                <GradientStop Offset="1" Color="Transparent" />
-                            </RadialGradientBrush>
-                        </Path.Fill>
-                        <Path.ToolTip>
-                            <!-- BUG: The tooltip closes almost immediately after opening; there's barely enough time to read it. -->
-                            <!-- Add a handler for Path.ToolTipClosing to debug it. -->
-                            <ToolTip StaysOpen="True" BorderBrush="White" BorderThickness="2" Background="Black" Padding="2" IsHitTestVisible="False">
-                                <ToolTip.Foreground>
-                                    <SolidColorBrush Color="{Binding WinMediaColor}" />
-                                </ToolTip.Foreground>
-                                <TextBlock Text="{Binding LabelText}" FontWeight="ExtraBold" />
-                            </ToolTip>
-                        </Path.ToolTip>
-                    </Path>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-            <ItemsControl.ItemContainerStyle>
-                <Style TargetType="{x:Type ContentPresenter}">
-                    <Setter Property="Panel.ZIndex" Value="{Binding PanelZIndex}" />
-                </Style>
-            </ItemsControl.ItemContainerStyle>
-        </ItemsControl>
+        <Grid>
+            <ItemsControl x:Name="BodiesItemsControl" ItemsSource="{Binding BodyVMs}" Background="Black">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Width="0" Height="0"
+                        >
+                            <Canvas.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform ScaleX="{Binding CanvasScale}" ScaleY="{Binding CanvasScale}" />
+                                    <TranslateTransform X="{Binding CanvasTranslateX}" Y="{Binding CanvasTranslateY}" />
+                                </TransformGroup>
+                            </Canvas.RenderTransform>
+                        </Canvas>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Path>
+                            <Path.Data>
+                                <EllipseGeometry
+                                    Center="{Binding PanelCenterXY}" 
+                                    RadiusX="{Binding GlowRadius}" 
+                                    RadiusY="{Binding GlowRadius}"
+                                />
+                            </Path.Data>
+                            <Path.Fill>
+                                <RadialGradientBrush>
+                                    <!-- Maximum opacity from center to true radius. Opacity drops off to zero at glow radius. -->
+                                    <GradientStop Offset="0" Color="{Binding WinMediaColor}" />
+                                    <GradientStop Offset="{Binding TrueRadiusOverGlowRadius}" Color="{Binding WinMediaColor}" />
+                                    <GradientStop Offset="1" Color="Transparent" />
+                                </RadialGradientBrush>
+                            </Path.Fill>
+                        </Path>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="{x:Type ContentPresenter}">
+                        <Setter Property="Panel.ZIndex" Value="{Binding PanelZIndex}" />
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+            </ItemsControl>
+            <ItemsControl
+                Visibility="{Binding ElementName=TheBorder, Path=IsMouseOver, Converter={StaticResource bvc}}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                ItemsSource="{Binding BodyVMsByDistance}"
+            >
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding LabelText}" FontWeight="ExtraBold">
+                            <TextBlock.Foreground>
+                                <SolidColorBrush Color="{Binding WinMediaColor}" />
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
     </Border>
 </UserControl>
