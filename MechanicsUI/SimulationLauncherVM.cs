@@ -67,6 +67,11 @@ public class SimulationLauncherVM : INotifyPropertyChanged
             ?? throw new NullReferenceException($"'{savedScenarioVM.ActualGuiName}' was null");
         var scenario = (Scenario)invoked;
 
+        LoadScenarioConfig(scenario);
+    }
+
+    public void LoadScenarioConfig(Scenario scenario)
+    {
         var arrangementType = scenario.InitialArrangement.GetType();
         SelectedArranger = ArrangerVMs.First(avm => avm.Model == arrangementType);
         ArrangementConstructorVM.TrySetParameterValues(scenario.InitialArrangement.GetConstructorParameters());

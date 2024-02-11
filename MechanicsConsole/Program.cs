@@ -1,8 +1,6 @@
-﻿using MathNet.Spatial.Euclidean;
-using MechanicsCore;
+﻿using MechanicsCore;
 using MechanicsCore.Arrangements;
 using MechanicsCore.PhysicsConfiguring;
-using MechanicsCore.Rust.mechanics_fast;
 using System.Diagnostics;
 
 namespace MechanicsConsole;
@@ -12,6 +10,9 @@ internal class Program
     static void Main(string[] args)
     {
         Console.WriteLine("Running performance tests:");
+        var wpfScenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
+        SeeHowLongItTakes(wpfScenario, 1, 100000);
+        return;
 
         var ballHuge = new Scenario(
             new Ball(
@@ -29,53 +30,6 @@ internal class Program
             },
             SuggestedStepsPerLeap: 128
         );
-        if (!ballHuge.PhysicsConfig.CanTakeSimpleShortcut()) { throw new Exception("Config should have made it simple."); }
-        var sim = new Simulation(ballHuge);
-        var n = sim.Bodies.Count;
-        var m = new double[n];
-        var p = new Vector3D[n];
-        for (var i = 0; i < n; i++)
-        {
-            m[i] = sim.Bodies[i].Mass;
-            p[i] = sim.Bodies[i].Position;
-        };
-        Vector3D[] a()
-        {
-            var a = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, i);
-            };
-            return a;
-        }
-        Vector3D[] b()
-        {
-            var n = sim.Bodies.Count;
-            var m = new double[n];
-            var p = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                m[i] = sim.Bodies[i].Mass;
-                p[i] = sim.Bodies[i].Position;
-            };
-            var a = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, i);
-            };
-            return a;
-        }
-        Vector3D[] c()
-        {
-            var a = new Vector3D[n];
-            for (var i = 0; i < n; i++)
-            {
-                a[i] = sim.Bodies[i].ComputeAcceleration(sim.Bodies, sim.PhysicsConfig);
-            };
-            return a;
-        };
-        HeadToHead(new[] { a, b, c }, 8, 32);
-
         SeeHowLongItTakes(ScenarioGallery.MoonFromRing_Insane_102691847, 5);
         SeeHowFarItGoes(ScenarioGallery.SunEarthMoon, 10000);
         SeeHowFarItGoes(ScenarioGallery.TwoBodies_Buoyant_Drag_0, 10000);
@@ -136,13 +90,14 @@ internal class Program
         }
     }
 
-    private static void SeeHowLongItTakes(Scenario config, int numLeaps)
+    private static void SeeHowLongItTakes(Scenario config, int numLeaps, int? stepsPerLeap = null)
     {
+        stepsPerLeap ??= config.SuggestedStepsPerLeap;
         var sim = new Simulation(config);
         var sw = Stopwatch.StartNew();
-        for (int leapI = 0; leapI < 5; leapI++)
+        for (int leapI = 0; leapI < numLeaps; leapI++)
         {
-            sim.Leap(config.SuggestedStepsPerLeap);
+            sim.Leap(stepsPerLeap.Value);
             Console.WriteLine("Leap " + leapI);
             foreach (var line in sim.GetStateSummaryLines())
             {

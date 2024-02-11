@@ -16,8 +16,7 @@ public class Simulation
     public Vector3D DisplayBound0 { get; }
     public Vector3D DisplayBound1 { get; }
 
-    public IReadOnlyList<Body> Bodies { get; }
-    public IEnumerable<Body> ExistingBodies => Bodies.Where(b => b.Exists);
+    public List<Body> Bodies { get; }
 
     public bool HasError { get; private set; }
     public string? LatestErrorMessage { get; private set; }
@@ -27,17 +26,19 @@ public class Simulation
     public Simulation(Scenario config)
     {
         InitialArrangement = config.InitialArrangement;
-        Bodies = InitialArrangement.GenerateInitialState(out var displayBound0, out var displayBound1);
+        Bodies = InitialArrangement.GenerateInitialState(out var displayBound0, out var displayBound1).ToList();
         DisplayBound0 = displayBound0;
         DisplayBound1 = displayBound1;
         PhysicsConfig = config.PhysicsConfig;
 
+        m = new double[Bodies.Count];
         p = new Vector3D[Bodies.Count];
         v = new Vector3D[Bodies.Count];
         a = new Vector3D[Bodies.Count];
     }
 
     // Reuse these collections on each step to reduce garbage
+    private readonly double[] m;
     private readonly Vector3D[] p;
     private readonly Vector3D[] v;
     private readonly Vector3D[] a;
@@ -70,23 +71,17 @@ public class Simulation
         {
             // The indexing in Bodies will be different from what we pass to Rust,
             // since Rust doesn't yet know to ignore bodies that have stopped existing.
-            var numExistingBodies = ExistingBodies.Count();
-            var rustMasses = new double[numExistingBodies];
-            var rustPositions = new Vector3D[numExistingBodies];
-            int rustI = 0;
-            foreach (var body in ExistingBodies)
+            var numBodies = Bodies.Count;
+            for (var i = 0; i < Bodies.Count; i++)
             {
-                rustMasses[rustI] = body.Mass;
-                rustPositions[rustI] = body.Position;
-                rustI++;
+                var body = Bodies[i];
+                m[i] = body.Mass;
+                p[i] = body.Position;
             };
-            rustI = 0;
             for (var i = 0; i < n; i++)
             {
                 var body = Bodies[i];
-                if (!body.Exists) continue;
-                a[i] = mechanics_fast.ComputeGravitationalAcceleration(rustMasses, rustPositions, rustI);
-                rustI++;
+                a[i] = mechanics_fast.ComputeGravitationalAcceleration(m, p, numBodies, i);
             };
         }
         else
@@ -95,14 +90,12 @@ public class Simulation
             for (var i = 0; i < n; i++)
             {
                 var body = Bodies[i];
-                if (!body.Exists) continue;
                 a[i] = body.ComputeAcceleration(Bodies, PhysicsConfig);
             };
         }
         for (var i = 0; i < n; i++)
         {
             var body = Bodies[i];
-            if (!body.Exists) continue;
             body.ComputeStep(PhysicsConfig.StepTime, a[i], out p[i], out v[i]);
         };
     }
@@ -115,7 +108,6 @@ public class Simulation
         for (var i = 0; i < n; i++)
         {
             var body = Bodies[i];
-            if (!body.Exists) continue;
             body.Step(p[i], v[i]);
         };
 
@@ -134,11 +126,9 @@ public class Simulation
         for (int i = 0; i < n; i++)
         {
             var body1 = Bodies[i];
-            if (!body1.Exists) continue;
             for (int j = i + 1; j < n; j++)
             {
                 var body2 = Bodies[j];
-                if (!body2.Exists) continue;
                 if ((body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
                 {
                     if (!overlapping.ContainsKey(body1)) overlapping.Add(body1, new());
@@ -148,6 +138,9 @@ public class Simulation
                 }
             }
         }
+
+        if (!overlapping.Any())
+            return;
 
         while (overlapping.Any())
         {
@@ -165,6 +158,13 @@ public class Simulation
             }
             Check(overlapping.Keys.First());
             CombineBodies(group);
+        }
+
+        for (var i = Bodies.Count - 1; i >= 0; i--)
+        {
+            var body = Bodies[i];
+            if (!body.Exists)
+                Bodies.RemoveAt(i);
         }
     }
 
@@ -299,7 +299,7 @@ public class Simulation
     {
         yield return $"Step {NumStepsPerformed}";
         yield return GetElapsedTimeString();
-        yield return $"{ExistingBodies.Count()} bodies";
+        yield return $"{Bodies.Count} bodies";
         if (HasError)
         {
             yield return LatestErrorMessage;
@@ -341,16 +341,14 @@ public class Simulation
         {
             Console.WriteLine(s);
         }
-        foreach (var b in ExistingBodies)
+        foreach (var b in Bodies)
         {
             Console.WriteLine($"{b.Name} : {VectToString(b.Position)}");
         }
         for (int i = 0; i < Bodies.Count - 1; i++)
         {
             var a = Bodies[i];
-            if (!a.Exists) continue;
             var b = Bodies[i + 1];
-            if (!b.Exists) continue;
             var displacement = b.Position - a.Position;
             var distance = displacement.Length;
             var heading = displacement / distance;

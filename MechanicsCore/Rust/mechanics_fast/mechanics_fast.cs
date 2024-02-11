@@ -19,7 +19,7 @@ public static class mechanics_fast
         return pub_compute_gravitational_acceleration_one_on_one(displacement, m2);
     }
 
-    public static Vector3D ComputeGravitationalAcceleration(double[] masses, Vector3D[] positions, int index_of_self)
+    public static Vector3D ComputeGravitationalAcceleration(double[] masses, Vector3D[] positions, int numBodies, int index_of_self)
     {
         unsafe
         {
@@ -27,7 +27,7 @@ public static class mechanics_fast
             {
                 fixed (Vector3D* positionsPtr = positions)
                 {
-                    return pub_compute_gravitational_acceleration_many_on_one(massesPtr, positionsPtr, (UIntPtr)masses.Length, (UIntPtr)index_of_self);
+                    return pub_compute_gravitational_acceleration_many_on_one(massesPtr, positionsPtr, (UIntPtr)numBodies, (UIntPtr)index_of_self);
                 }
             }
         }

@@ -1,25 +1,29 @@
 ﻿using MechanicsCore;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace MechanicsUI;
 
 public class SimulationVM : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
     public Simulation Model { get; }
+    public RenderOrNotVM AboveRenderVM { get; }
+    public RenderOrNotVM FrontRenderVM { get; }
+    public RenderOrNotVM RightRenderVM { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
     public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
 
-    public BodyVM[] BodyVMs { get; }
+    private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
-    public double CanvasTranslateX { get; private set; }
-    public double CanvasTranslateY { get; private set; }
-    public double CanvasScaleX { get; private set; } = 1;
-    public double CanvasScaleY { get; private set; } = -1;
+
+    private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
     private double _minGlowRadiusFractionOfFrame = 0.002;
     public double MinGlowRadiusFractionOfFrame
     {
@@ -27,26 +31,31 @@ public class SimulationVM : INotifyPropertyChanged
         set
         {
             _minGlowRadiusFractionOfFrame = value;
-            PropertyChanged?.Invoke(this, MinGlowRadiusFractionOfFrameChangedArgs);
-            PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
+            PropertyChanged?.Invoke(this, sMinGlowRadiusFractionOfFrameChangedArgs);
+            PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
         }
     }
+
+    private static readonly PropertyChangedEventArgs sMinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
     public double MinGlowRadius
     {
         get
         {
-            // Minimum glow radius is a fraction of the entire frame's width or height, whichever is larger.
-            var frameWidth = Math.Abs(Model.DisplayBound1.X - Model.DisplayBound0.X);
-            var frameHeight = Math.Abs(Model.DisplayBound1.Y - Model.DisplayBound0.Y);
-            var minGlowRadius = _minGlowRadiusFractionOfFrame * Math.Max(frameWidth, frameHeight);
+            // Minimum glow radius is a fraction of the longest straight path through the simulation bounds.
+            var diagonalLength = (Model.DisplayBound1 - Model.DisplayBound0).Length;
+            var minGlowRadius = _minGlowRadiusFractionOfFrame * diagonalLength;
             return minGlowRadius;
         }
     }
+
     public string GlowRatioTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes.";
-    public string LeapTimeText => 
+
+    public string LeapTimeText =>
         "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
+
+    private static readonly PropertyChangedEventArgs sIsAutoLeapingChangedArgs = new(nameof(IsAutoLeaping));
     private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
@@ -54,29 +63,34 @@ public class SimulationVM : INotifyPropertyChanged
         set
         {
             _isAutoLeaping = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAutoLeaping)));
+            PropertyChanged?.Invoke(this, sIsAutoLeapingChangedArgs);
             DoAutoLeap(Dispatcher.CurrentDispatcher);
         }
     }
-    private Size _availableSizePix;
-    public Size AvailableSizePix
-    {
-        set
-        {
-            _availableSizePix = value;
-            RefreshBounds();
-        }
-    }
+
+    public event EventHandler? DoingAutoLeap;
 
     public SimulationVM(Simulation model)
     {
         Model = model;
-        BodyVMs = Model.Bodies.Select(b => new BodyVM(b, this)).ToArray();
+        AboveRenderVM = new(this, Perspective.Orthogonal_FromAbove) { ShouldRender = true };
+        FrontRenderVM = new(this, Perspective.Orthogonal_FromFront);
+        RightRenderVM = new(this, Perspective.Orthogonal_FromRight);
         StepsPerLeapVM.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
                 PropertyChanged?.Invoke(this, new(nameof(LeapTimeText)));
         };
+    }
+
+    public IEnumerable<RenderOrNotVM> RenderVMs
+    {
+        get
+        {
+            yield return AboveRenderVM;
+            yield return FrontRenderVM;
+            yield return RightRenderVM;
+        }
     }
 
     private string GetTitleOrConfig(string separator)
@@ -101,62 +115,56 @@ public class SimulationVM : INotifyPropertyChanged
             return;
         }
 
+        DoingAutoLeap?.Invoke(this, EventArgs.Empty);
+
+        // Check again; the event subscriber may have turned auto-leap off.
+        if (!_isAutoLeaping)
+        {
+            return;
+        }
+
         LeapAndRefresh();
         dispatcher.InvokeAsync(() => DoAutoLeap(dispatcher), DispatcherPriority.Background);
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private static readonly PropertyChangedEventArgs StateSummaryChangedArgs = new(nameof(StateSummary));
-    private static readonly PropertyChangedEventArgs CanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
-    private static readonly PropertyChangedEventArgs CanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
-    private static readonly PropertyChangedEventArgs CanvasScaleXChangedArgs = new(nameof(CanvasScaleX));
-    private static readonly PropertyChangedEventArgs CanvasScaleYChangedArgs = new(nameof(CanvasScaleY));
-    private static readonly PropertyChangedEventArgs MinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
-    private static readonly PropertyChangedEventArgs MinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
-
     private void RefreshSim()
     {
-        PropertyChanged?.Invoke(this, StateSummaryChangedArgs);
+        PropertyChanged?.Invoke(this, sStateSummaryChangedArgs);
 
-        foreach (var bodyVM in BodyVMs)
+        foreach (var rvm in RenderVMs)
         {
-            bodyVM.Refresh();
+            rvm.NullableRenderVM?.RefreshSim();
         }
     }
+}
 
-    private void RefreshBounds()
+public class SimulationVM_RenderGridSizeConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        Sort(Model.DisplayBound0.X, Model.DisplayBound1.X, out var xMin, out var xMax);
-        Sort(Model.DisplayBound0.Y, Model.DisplayBound1.Y, out var yMin, out var yMax);
-        var systemWidth = xMax - xMin;
-        var systemHeight = yMax - yMin;
-        var xScale = _availableSizePix.Width / systemWidth;
-        var yScale = _availableSizePix.Height / systemHeight;
-        xScale = Math.Min(xScale, yScale);
-        yScale = -xScale;
-        CanvasScaleX = xScale;
-        CanvasScaleY = yScale;
-        CanvasTranslateX = -(xMin + xMax) / 2 * xScale;
-        CanvasTranslateY = -(yMin + yMax) / 2 * yScale;
-        PropertyChanged?.Invoke(this, CanvasTranslateXChangedArgs);
-        PropertyChanged?.Invoke(this, CanvasTranslateYChangedArgs);
-        PropertyChanged?.Invoke(this, CanvasScaleXChangedArgs);
-        PropertyChanged?.Invoke(this, CanvasScaleYChangedArgs);
-        PropertyChanged?.Invoke(this, MinGlowRadiusChangedArgs);
+        double max = 0;
+        foreach (var item in values)
+            if (item is double value)
+                max = Math.Max(max, value);
+        return new GridLength(max, GridUnitType.Star);
     }
 
-    public static void Sort(double a, double b, out double min, out double max)
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
     {
-        if (a > b)
-        {
-            min = b;
-            max = a;
-        }
-        else
-        {
-            min = a;
-            max = b;
-        }
+        throw new NotImplementedException();
+    }
+}
+
+public class SimulationVM_SpacerGridSizeConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return new GridLength(true.Equals(value) ? 5 : 0);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
     }
 }
 

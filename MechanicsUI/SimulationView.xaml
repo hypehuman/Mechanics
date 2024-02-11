@@ -10,6 +10,9 @@
     d:DesignHeight="450" d:DesignWidth="800"
     d:DataContext="{d:DesignInstance Type=local:DefaultSimulationVM, IsDesignTimeCreatable=True}"
 >
+    <UserControl.Resources>
+        <local:SimulationVM_SpacerGridSizeConverter x:Key="SpacerGridSizeConverter" />
+    </UserControl.Resources>
     <DockPanel LastChildFill="True">
         <Expander DockPanel.Dock="Top" IsExpanded="True">
             <StackPanel Orientation="Horizontal">
@@ -32,6 +35,14 @@
                                 IsSnapToTickEnabled="True" TickFrequency="0.0001"
                             />
                         </StackPanel>
+                        <!-- The presence of this ItemsControl, even if it's not bound to anything, somehow causes binding errors for BodyVM properties. -->
+                        <ItemsControl ItemsSource="{Binding RenderVMs}" Margin="5">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding ShouldRender}" Content="{Binding Perspective}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                         <DockPanel Margin="5">
                             <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Steps per leap: " />
                             <local:ValidationTextBox VerticalAlignment="Center" DataContext="{Binding StepsPerLeapVM}" />
@@ -48,57 +59,68 @@
                 </GroupBox>
             </StackPanel>
         </Expander>
-        <Border
-            local:SizeObserver.Observe="True"
-            local:SizeObserver.ObservedSize="{Binding AvailableSizePix, Mode=OneWayToSource}"
-        >
-            <ItemsControl ItemsSource="{Binding BodyVMs}" Background="Black">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Width="0" Height="0"
-                        >
-                            <Canvas.RenderTransform>
-                                <TransformGroup>
-                                    <ScaleTransform ScaleX="{Binding CanvasScaleX}" ScaleY="{Binding CanvasScaleY}" />
-                                    <TranslateTransform X="{Binding CanvasTranslateX}" Y="{Binding CanvasTranslateY}" />
-                                </TransformGroup>
-                            </Canvas.RenderTransform>
-                        </Canvas>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Path>
-                            <Path.Data>
-                                <EllipseGeometry
-                                    Center="{Binding CenterXY}" 
-                                    RadiusX="{Binding GlowRadius}" 
-                                    RadiusY="{Binding GlowRadius}"
-                                />
-                            </Path.Data>
-                            <Path.Fill>
-                                <RadialGradientBrush>
-                                    <!-- Maximum opacity from center to true radius. Opacity drops off to zero at glow radius. -->
-                                    <GradientStop Offset="0" Color="{Binding WinMediaColor}" />
-                                    <GradientStop Offset="{Binding TrueRadiusOverGlowRadius}" Color="{Binding WinMediaColor}" />
-                                    <GradientStop Offset="1" Color="Transparent" />
-                                </RadialGradientBrush>
-                            </Path.Fill>
-                        </Path>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-                <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="{x:Type ContentPresenter}">
-                        <Setter Property="Panel.ZIndex" Value="{Binding PanelZIndex}" />
-                        <!-- This is a hack to allow us to click the Leap button even when a body is overlapping it. -->
-                        <!-- This will make it impossible to interact with the body via the mouse. -->
-                        <!-- A better solution would be to clip the canvas so that the bodies don't extend outside of it. -->
-                        <Setter Property="IsHitTestVisible" Value="False" />
-                    </Style>
-                </ItemsControl.ItemContainerStyle>
-            </ItemsControl>
-        </Border>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition>
+                    <RowDefinition.Height>
+                        <MultiBinding>
+                            <MultiBinding.Converter>
+                                <local:SimulationVM_RenderGridSizeConverter />
+                            </MultiBinding.Converter>
+                            <MultiBinding.Bindings>
+                                <Binding Path="AboveRenderVM.GridHeight" />
+                            </MultiBinding.Bindings>
+                        </MultiBinding>
+                    </RowDefinition.Height>
+                </RowDefinition>
+                <RowDefinition Height="{Binding FrontRenderVM.ShouldRender, Converter={StaticResource SpacerGridSizeConverter}}" />
+                <RowDefinition>
+                    <RowDefinition.Height>
+                        <MultiBinding>
+                            <MultiBinding.Converter>
+                                <local:SimulationVM_RenderGridSizeConverter />
+                            </MultiBinding.Converter>
+                            <MultiBinding.Bindings>
+                                <!-- Front.Height and Right.Height are the same because rotation. -->
+                                <Binding Path="FrontRenderVM.GridHeight" />
+                                <Binding Path="RightRenderVM.GridHeight" />
+                            </MultiBinding.Bindings>
+                        </MultiBinding>
+                    </RowDefinition.Height>
+                </RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition>
+                    <ColumnDefinition.Width>
+                        <MultiBinding>
+                            <MultiBinding.Converter>
+                                <local:SimulationVM_RenderGridSizeConverter />
+                            </MultiBinding.Converter>
+                            <MultiBinding.Bindings>
+                                <!-- Front and Above perspectives are designed such that they have the same width. -->
+                                <Binding Path="FrontRenderVM.GridWidth" />
+                                <Binding Path="AboveRenderVM.GridWidth" />
+                            </MultiBinding.Bindings>
+                        </MultiBinding>
+                    </ColumnDefinition.Width>
+                </ColumnDefinition>
+                <ColumnDefinition Width="{Binding RightRenderVM.ShouldRender, Converter={StaticResource SpacerGridSizeConverter}}" />
+                <ColumnDefinition>
+                    <ColumnDefinition.Width>
+                        <MultiBinding>
+                            <MultiBinding.Converter>
+                                <local:SimulationVM_RenderGridSizeConverter />
+                            </MultiBinding.Converter>
+                            <MultiBinding.Bindings>
+                                <Binding Path="RightRenderVM.GridWidth" />
+                            </MultiBinding.Bindings>
+                        </MultiBinding>
+                    </ColumnDefinition.Width>
+                </ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <local:RenderOrNotView Grid.Row="0" Grid.Column="0" DataContext="{Binding AboveRenderVM}" />
+            <local:RenderOrNotView Grid.Row="2" Grid.Column="0" DataContext="{Binding FrontRenderVM}" />
+            <local:RenderOrNotView Grid.Row="2" Grid.Column="2" DataContext="{Binding RightRenderVM}" />
+        </Grid>
     </DockPanel>
 </UserControl>
