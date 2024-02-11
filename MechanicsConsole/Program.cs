@@ -10,8 +10,10 @@ internal class Program
     static void Main(string[] args)
     {
         Console.WriteLine("Running performance tests:");
+        var sw = Stopwatch.StartNew();
         var wpfScenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
         SeeHowLongItTakes(wpfScenario, 1, 100000);
+        File.WriteAllText("performance test results.txt", sw.ElapsedMilliseconds.ToString());
         return;
 
         var ballHuge = new Scenario(
