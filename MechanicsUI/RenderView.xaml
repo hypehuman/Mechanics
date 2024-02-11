@@ -12,6 +12,7 @@
     <Border
         local:SizeObserver.Observe="True"
         local:SizeObserver.ObservedSize="{Binding AvailableSizePix, Mode=OneWayToSource}"
+        ClipToBounds="True"
     >
         <ItemsControl ItemsSource="{Binding BodyVMs}" Background="Black">
             <ItemsControl.ItemsPanel>
