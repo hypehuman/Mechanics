@@ -22,4 +22,23 @@ public static class BodySystem
             body.Velocity -= systemVelocity;
         }
     }
+
+    /// <summary>
+    /// Adjust our frame of reference such that the system's center of mass is at the origin.
+    /// </summary>
+    public static void SetNetZeroLevelArm(IEnumerable<Body> bodies)
+    {
+        var systemMass = 0d;
+        var systemLeverArm = default(Vector3D);
+        foreach (var body in bodies)
+        {
+            systemMass += body.Mass;
+            systemLeverArm += body.Mass * body.Position;
+        }
+        var systemVelocity = systemLeverArm / systemMass;
+        foreach (var body in bodies)
+        {
+            body.Position -= systemVelocity;
+        }
+    }
 }

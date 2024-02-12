@@ -62,7 +62,7 @@ public class Ball : RandomArrangement
         var bound = (_systemRadius + solidRadius) * 2;
         displayBound1 = new(bound, bound, bound);
         displayBound0 = -displayBound1;
-        var bodies = new Body[_numBodies];
+        var bodies = new Body[_numBodies + 1];
         for (int i = 0; i < _numBodies; i++)
         {
             var bodyPosition = RandomPointInBall(Random, _systemRadius);
@@ -74,7 +74,14 @@ public class Ball : RandomArrangement
                 velocity: bodyVelocity
             );
         }
+        bodies[_numBodies] = new(NextBodyID,
+            mass: bodyMass,
+            radius: bodyRadius,
+            position: new(_systemRadius * 100, 0, 0),
+            velocity: new(-_maxSpeed * 100, 0, 0)
+        );
         BodySystem.SetNetZeroMomentum(bodies);
+        BodySystem.SetNetZeroLevelArm(bodies);
         return bodies;
     }
 
