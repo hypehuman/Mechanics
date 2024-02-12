@@ -14,9 +14,12 @@ public class RenderVM : INotifyPropertyChanged
     public SimulationVM SimulationVM { get; }
     public Perspective Perspective { get; }
     public ObservableCollection<BodyVM> BodyVMs { get; }
+    public ObservableCollection<BodyVM> BodyVMsByDistance { get; set; } = new ObservableCollection<BodyVM>();
     public double CanvasTranslateX { get; private set; }
     public double CanvasTranslateY { get; private set; }
     public double CanvasScale { get; private set; } = 1;
+
+    private Point? _mousePosition;
 
     private Size _availableSizePix;
     public Size AvailableSizePix
@@ -59,6 +62,25 @@ public class RenderVM : INotifyPropertyChanged
                 BodyVMs.RemoveAt(i);
             }
         }
+        RefreshByDistance(_mousePosition);
+    }
+
+    public void RefreshByDistance(Point? mousePosition)
+    {
+        _mousePosition = mousePosition;
+        if (mousePosition == null)
+            return;
+        BodyVMsByDistance.Clear();
+        var byDistance = BodyVMs
+            .OrderBy(b =>
+            {
+                var dx = b.PanelCenterXY.X - mousePosition.Value.X;
+                var dy = b.PanelCenterXY.Y - mousePosition.Value.Y;
+                return Math.Sqrt(dx * dx + dy * dy);
+            })
+            .Take(10);
+        foreach (var b in byDistance)
+            BodyVMsByDistance.Add(b);
     }
 
     private void RefreshBounds()

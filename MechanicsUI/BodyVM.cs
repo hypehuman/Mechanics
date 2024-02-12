@@ -61,6 +61,20 @@ public class BodyVM : INotifyPropertyChanged
         }
     }
 
+    private static readonly PropertyChangedEventArgs sLabelTextChangedArgs = new(nameof(LabelText));
+    private string _labelText;
+    public string LabelText
+    {
+        get => _labelText;
+        private set
+        {
+            if (value == _labelText)
+                return;
+            _labelText = value;
+            PropertyChanged?.Invoke(this, sLabelTextChangedArgs);
+        }
+    }
+
     private static readonly PropertyChangedEventArgs sWinMediaColorChangedArgs = new(nameof(WinMediaColor));
     private Color _winMediaColor;
     public Color WinMediaColor
@@ -94,7 +108,7 @@ public class BodyVM : INotifyPropertyChanged
     public double TrueRadiusOverGlowRadius
     {
         get => _trueRadiusOverGlowRadius;
-        set
+        private set
         {
             if (value == _trueRadiusOverGlowRadius)
                 return;
@@ -155,6 +169,7 @@ public class BodyVM : INotifyPropertyChanged
     {
         PanelCenterXY = ComputePanelCenterXY();
         PanelZIndex = ComputePanelZIndex();
+        LabelText = Model.Name;
         WinMediaColor = ComputeWinMediaColor();
 
         RefreshRadii();

@@ -8,7 +8,7 @@ namespace MechanicsCore;
 public class Body
 {
     public int ID { get; }
-    public string Name { get; }
+    public string Name { get; set; }
     public BodyColor Color { get; set; }
     public double Mass { get; set; }
     public double Radius { get; set; }
