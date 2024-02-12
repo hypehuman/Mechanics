@@ -59,7 +59,6 @@ public class Body
             }
             a += GetAccelerationOn1DueTo2(this, body2, config);
         }
-        a += 1e-27 * ComputeEarthAtmosphericDrag(this);
         return a;
     }
 
@@ -266,35 +265,6 @@ public class Body
 
         // Will be NaN if the relative velocity was 0.
         return double.IsFinite(component.Length) ? component : default;
-    }
-
-    /// <summary>
-    /// Drag on a smooth sphere moving through Earth's atmosphere at STP
-    /// </summary>
-    private static Vector3D ComputeEarthAtmosphericDrag(Body body)
-    {
-        var crossSectionalArea = Math.PI * body.Radius * body.Radius;
-        return ComputeDragForce(1.293, -body.Velocity, 0.47, crossSectionalArea);
-    }
-
-    private static Vector3D ComputeDragForce(double fluidDensity, Vector3D fluidVelocity, double dragCoefficient, double bodyCrossSectionalArea)
-    {
-        var fluidSpeed = fluidVelocity.Length;
-        if (fluidSpeed == 0)
-            return default;
-
-        var fdMagnitude =
-            0.5 *
-            fluidDensity *
-            (fluidVelocity * fluidVelocity) *
-            dragCoefficient * bodyCrossSectionalArea;
-
-        // compute the unit vector of the force's direction
-        var fdDirectionUnit = fluidVelocity / fluidSpeed;
-        // compute the force vector
-        var fd = fdMagnitude * fdDirectionUnit;
-
-        return fd;
     }
 
     private static bool WillBounce(Body body1, Body body2, Vector3D relativeVelocity, Vector3D force, double stepTime, bool isDoubleCheck)

@@ -36,13 +36,26 @@ public partial class ModernSolarSystem : Arrangement
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var bodies = CreateBodies();
+        var toMirror = bodies.Where(b => b.Name.Contains("Earth") || b.Name.Contains("Moon")).ToList();
+        foreach (var orig in toMirror)
+        {
+            bodies.Add(new(
+                -orig.ID,
+                new string(orig.Name.Reverse().ToArray()),
+                new ((byte)(byte.MaxValue - orig.Color.R), (byte)(byte.MaxValue - orig.Color.G), (byte)(byte.MaxValue - orig.Color.B)),
+                orig.Mass,
+                orig.Radius,
+                -orig.Position,
+                -orig.Velocity
+            ));
+        }
         if (_numBodies != null)
         {
             bodies = bodies.OrderByDescending(b => b.Mass).Take(_numBodies.Value).OrderBy(b => b.ID).ToList();
         }
-        var maxDist = 1.1 * 778 * 1000 * 1e6; // Just past Jupiter's radius
-        displayBound0 = new(-maxDist, -maxDist, -maxDist / 4);
-        displayBound1 = new(maxDist, maxDist, maxDist / 4);
+        var maxDist = 1.1 * Constants.EarthOrbitSunDistance;
+        displayBound0 = new(-maxDist, -maxDist, -maxDist);
+        displayBound1 = new(maxDist, maxDist, maxDist);
         return bodies;
     }
 }
