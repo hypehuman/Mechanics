@@ -194,6 +194,7 @@ public class Simulation
             {
                 body.Position = WeightedAverage(group, b => b.Position, b => b.Mass);
                 body.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
+                body.Name = string.Join(" + ", group.Select(b => b.Name));
                 body.Color = new(
                     WeightedAverage(group, b => b.Color.R, b => b.Mass),
                     WeightedAverage(group, b => b.Color.G, b => b.Mass),
