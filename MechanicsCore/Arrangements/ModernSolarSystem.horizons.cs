@@ -11,6 +11,7 @@ partial class ModernSolarSystem
             mass: 1.988454935663211E+30,
             position: new(-1281176838.5190501, -271859905.4134986, 32106144.00454015),
             velocity: new(5.853415464662635, -14.130795622482701, -0.01526220644724845)
+            /* Manually entered!*/ , radius: Constants.SunRadius
         ),
         new(16,
             name: "16 Psyche (A852 FA)",
@@ -59,12 +60,14 @@ partial class ModernSolarSystem
             mass: 7.3473945851999455E+22,
             position: new(112687513823.6017, -99868749783.09918, 67592033.89120102),
             velocity: new(18196.638605759643, 22295.77663067795, 40.46660565550475)
+            /* Manually entered!*/ , radius: Constants.MoonRadius
         ),
         new(399,
             name: "Earth (399)",
             mass: 5.97217919936173E+24,
             position: new(112689171137.1744, -100266996260.3551, 36355544.05023903),
             velocity: new(19178.533987924213, 22264.916451045563, -1.824599613842182)
+            /* Manually entered!*/ , radius: Constants.EarthRadius
         ),
         new(401,
             name: "Phobos (401)",
@@ -149,6 +152,7 @@ partial class ModernSolarSystem
             mass: 1.8981559229017275E+27,
             position: new(624043337534.9043, 399677513004.8553, -15619756826.31148),
             velocity: new(-7192.4971236680485, 11618.26963733758, 112.66697342459061)
+            /* Manually entered!*/ , radius: 69911000
         ),
         new(601,
             name: "Mimas (601)",

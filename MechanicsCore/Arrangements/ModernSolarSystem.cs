@@ -40,9 +40,9 @@ public partial class ModernSolarSystem : Arrangement
         {
             bodies = bodies.OrderByDescending(b => b.Mass).Take(_numBodies.Value).OrderBy(b => b.ID).ToList();
         }
-        var maxDist = 1.1 * bodies.Select(p => p.Position.Length).Max();
-        displayBound0 = new(-maxDist, -maxDist, -maxDist);
-        displayBound1 = new(maxDist, maxDist, maxDist);
+        var maxDist = 1.1 * 778 * 1000 * 1e6; // Just past Jupiter's radius
+        displayBound0 = new(-maxDist, -maxDist, -maxDist / 4);
+        displayBound1 = new(maxDist, maxDist, maxDist / 4);
         return bodies;
     }
 }
