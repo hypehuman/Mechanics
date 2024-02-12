@@ -19,7 +19,7 @@ public partial class RenderView : UserControl
         if (DataContext is not RenderVM vm)
             return;
 
-        var mousePosition = GetCanvasMousePosition(e);
+        var mousePosition = GetCanvasMousePosition(vm, e);
         vm.RefreshByDistance(mousePosition);
     }
 
@@ -30,7 +30,7 @@ public partial class RenderView : UserControl
         (DataContext as RenderVM)?.RefreshByDistance(null);
     }
 
-    private Point? GetCanvasMousePosition(MouseEventArgs e)
+    private Point? GetCanvasMousePosition(RenderVM vm, MouseEventArgs e)
     {
         var canvas = GetItemsPanel(BodiesItemsControl);
         if (canvas == null)
@@ -38,11 +38,19 @@ public partial class RenderView : UserControl
             return null;
         }
 
-        // BUG:
+        // This solution is simpler, but didn't always work:
         // This only works for smaller systems like MoonFromRing.
         // But for larger systems like SunEarthMoon,
         // where the computed mouse position is always (0,0) for some reason.
-        return e.GetPosition(canvas);
+        //return e.GetPosition(canvas);
+
+        // This solution is very dependent on how we set up the canvas alignments and transforms.
+        var rawPosition = e.GetPosition(this);
+        return new
+        (
+            (rawPosition.X - ActualWidth / 2 - vm.CanvasTranslateX) / vm.CanvasScale,
+            (rawPosition.Y - ActualHeight / 2 - vm.CanvasTranslateY) / vm.CanvasScale
+        );
     }
 
     private static Panel? GetItemsPanel(ItemsControl itemsControl)
