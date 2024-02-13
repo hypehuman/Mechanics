@@ -1,6 +1,7 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -14,6 +15,7 @@ public class RenderVM : INotifyPropertyChanged
     public SimulationVM SimulationVM { get; }
     public Perspective Perspective { get; }
     public ObservableCollection<BodyVM> BodyVMs { get; }
+    private Dictionary<Body, BodyVM> _bodyVMsByModel { get; }
     public ObservableCollection<BodyVM> BodyVMsByDistance { get; set; } = new ObservableCollection<BodyVM>();
     public double CanvasTranslateX { get; private set; }
     public double CanvasTranslateY { get; private set; }
@@ -36,12 +38,29 @@ public class RenderVM : INotifyPropertyChanged
         SimulationVM = simulationVM;
         Perspective = perspective;
         BodyVMs = new(Simulation.Bodies.Select(b => new BodyVM(b, this)));
+        _bodyVMsByModel = BodyVMs.ToDictionary(b => b.Model);
+        RefreshSim();
+
+        SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
     }
 
     public void Unhook()
     {
-        foreach (var bodyVM in BodyVMs)
-            bodyVM.Unhook();
+        SimulationVM.PropertyChanged -= SimulationVM_PropertyChanged;
+    }
+
+    private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(SimulationVM.MinGlowRadius):
+            case nameof(SimulationVM.GlowPush):
+                // We used to only refresh the radii when the glow radius changed,
+                // but now the glow radius can affect the position,
+                // so let's just refresh everything.
+                RefreshSim();
+                break;
+        }
     }
 
     private Simulation Simulation => SimulationVM.Model;
@@ -61,13 +80,17 @@ public class RenderVM : INotifyPropertyChanged
             var bodyVM = BodyVMs[i];
             if (bodyVM.Model.Exists)
             {
-                bodyVM.Refresh();
+                bodyVM.Refresh_1_of_2();
             }
             else
             {
                 BodyVMs.RemoveAt(i);
-                bodyVM.Unhook();
+                _bodyVMsByModel.Remove(bodyVM.Model);
             }
+        }
+        foreach (var bodyVM in BodyVMs)
+        {
+            bodyVM.Refresh_2_of_2(b => _bodyVMsByModel[b].GlowRadius);
         }
         RefreshByDistance(_mousePosition);
     }

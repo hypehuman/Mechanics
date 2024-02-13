@@ -17,26 +17,9 @@ public class BodyVM : INotifyPropertyChanged
     {
         Model = model;
         RenderVM = renderVM;
-
-        Refresh();
-        SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
-    }
-
-    public void Unhook()
-    {
-        SimulationVM.PropertyChanged -= SimulationVM_PropertyChanged;
-    }
-
-    private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(MechanicsUI.SimulationVM.MinGlowRadius))
-        {
-            RefreshRadii();
-        }
     }
 
     private SimulationVM SimulationVM => RenderVM.SimulationVM;
-    private Vector3D PositionOnPanel => RenderVM.Perspective.SimToPanel(Model.Position);
 
     private static readonly PropertyChangedEventArgs sPanelCenterXYChangedArgs = new(nameof(PanelCenterXY));
     private Point _panelCenterXY;
@@ -122,16 +105,23 @@ public class BodyVM : INotifyPropertyChanged
         }
     }
 
-    private Point ComputePanelCenterXY()
+    private Vector3D ComputePositionInPerspective(Func<Body, double> getGlowRadius)
     {
-        var panelPosition = PositionOnPanel;
-        return new(panelPosition.X, panelPosition.Y);
+        var pushedPos = !SimulationVM.GlowPush || SimulationVM.MinGlowRadius == 0
+            ? Model.Position
+            : Model.ComputePushedPosition(SimulationVM.Model.Bodies, getGlowRadius);
+        return RenderVM.Perspective.SimToPanel(pushedPos);
     }
 
-    private int ComputePanelZIndex()
+    private Point ComputePanelCenterXY(Vector3D positionInPerspective)
+    {
+        return new(positionInPerspective.X, positionInPerspective.Y);
+    }
+
+    private int ComputePanelZIndex(Vector3D positionInPerspective)
     {
         // Compute Z scaled to the range [0,1] relative to the simulation bounds.
-        var panelZUnscaled = PositionOnPanel.Z;
+        var panelZUnscaled = positionInPerspective.Z;
         RenderVM.Sort(RenderVM.PanelDisplayBound0.Z, RenderVM.PanelDisplayBound1.Z, out var minPanelZUnscaled, out var maxPanelZUnscaled);
         var panelZScaled = (panelZUnscaled - minPanelZUnscaled) / (maxPanelZUnscaled - minPanelZUnscaled);
 
@@ -160,29 +150,52 @@ public class BodyVM : INotifyPropertyChanged
         return Color.FromArgb(192, bc.R, bc.G, bc.B);
     }
 
-    private double ComputeGlowRadius()
+    public void Refresh_1_of_2()
     {
-        return Model.ComputeGlowRadius(SimulationVM.MinGlowRadius);
-    }
-
-    private double ComputeTrueRadiusOverGlowRadius()
-    {
-        return Model.Radius / GlowRadius;
-    }
-
-    public void Refresh()
-    {
-        PanelCenterXY = ComputePanelCenterXY();
-        PanelZIndex = ComputePanelZIndex();
-        LabelText = Model.Name;
-        WinMediaColor = ComputeWinMediaColor();
-
         RefreshRadii();
     }
 
+    /// <summary>
+    /// Because of "glow push", where we display bodies as farther apart than they really are,
+    /// the displayed position depends on each body knowing its glow radius.
+    /// </summary>
+    public void Refresh_2_of_2(Func<Body, double> getGlowRadius)
+    {
+        RefreshPosition(getGlowRadius);
+
+        RefreshLabel();
+        RefreshColor();
+    }
+
+    /// <inheritdoc <see cref="Refresh_2_of_2"/>/>
     private void RefreshRadii()
     {
-        GlowRadius = ComputeGlowRadius();
-        TrueRadiusOverGlowRadius = ComputeTrueRadiusOverGlowRadius();
+        if (SimulationVM.MinGlowRadius == 0)
+        {
+            GlowRadius = Model.Radius;
+            TrueRadiusOverGlowRadius = 1;
+        }
+        else
+        {
+            GlowRadius = Model.ComputeGlowRadius(SimulationVM.MinGlowRadius);
+            TrueRadiusOverGlowRadius = Model.Radius / GlowRadius;
+        }
+    }
+
+    private void RefreshPosition(Func<Body, double> getGlowRadius)
+    {
+        var positionInPerspective = ComputePositionInPerspective(getGlowRadius);
+        PanelCenterXY = ComputePanelCenterXY(positionInPerspective);
+        PanelZIndex = ComputePanelZIndex(positionInPerspective);
+    }
+
+    private void RefreshLabel()
+    {
+        LabelText = Model.Name;
+    }
+
+    private void RefreshColor()
+    {
+        WinMediaColor = ComputeWinMediaColor();
     }
 }

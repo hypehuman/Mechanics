@@ -42,6 +42,46 @@ public class Body
     /// </summary>
     public double ComputeGlowRadius(double minGlowRadius) => Math.Sqrt(Radius * Radius + minGlowRadius * minGlowRadius);
 
+    /// <summary>
+    /// Computes a position where bodies are pushed apart from each other in order to see them better.
+    /// Should work such that if the glow radius is the same as the true radius,
+    /// (i.e., there is no glow), then no pushing will occur.
+    /// </summary>
+    public Vector3D ComputePushedPosition(IReadOnlyList<Body> bodies, Func<Body, double> getGlowRadius)
+    {
+        Vector3D adjustmentSum = default;
+        int numAdjustments = 0;
+
+        // The two bodies should move apart by an amount equal to the overlap of the glow portion of their radii.
+        // The more massive body should move less, and the less massive should move more.
+        for (var i = 0; i < bodies.Count; i++)
+        {
+            var other = bodies[i];
+            if (other == this)
+                continue;
+
+            var dx = Position - other.Position;
+            var distance = dx.Length;
+            var overlap = getGlowRadius(this) + getGlowRadius(other) - distance;
+            var totalMovement = overlap - Radius - other.Radius; // the portion of the overlap that is attributable to glow
+            if (totalMovement <= 0)
+                continue;
+
+            // Move away by a share of the glow overlap proportional to the other's share of the mass.
+            var movementFraction = other.Mass / (Mass + other.Mass);
+            if (double.IsNaN(movementFraction))
+                movementFraction = 0.5; // both are 0 mass
+
+            var movementShare = movementFraction * totalMovement * (dx / distance);
+            adjustmentSum += movementShare;
+            numAdjustments++;
+        }
+
+        return numAdjustments == 0
+            ? Position
+            : Position + (adjustmentSum / numAdjustments);
+    }
+
     public Vector3D Position { get; set; }
     public Vector3D Velocity { get; set; }
 

@@ -34,6 +34,9 @@
                                 Minimum="0" Maximum="0.01"
                                 IsSnapToTickEnabled="True" TickFrequency="0.0001"
                             />
+                            <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowPushTooltip}">
+                                <CheckBox IsChecked="{Binding GlowPush}">Glow Push</CheckBox>
+                            </gbrViews:GuiHelpTooltipWrapper>
                         </StackPanel>
                         <!-- The presence of this ItemsControl, even if it's not bound to anything, somehow causes binding errors for BodyVM properties. -->
                         <ItemsControl ItemsSource="{Binding RenderVMs}" Margin="5">

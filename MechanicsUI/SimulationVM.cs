@@ -48,9 +48,28 @@ public class SimulationVM : INotifyPropertyChanged
         }
     }
 
+    private static readonly PropertyChangedEventArgs sGlowPushChangedArgs = new(nameof(GlowPush));
+    private bool _glowPush;
+    public bool GlowPush
+    {
+        get => _glowPush;
+        set
+        {
+            if (_glowPush == value)
+                return;
+
+            _glowPush = value;
+            PropertyChanged?.Invoke(this, sGlowPushChangedArgs);
+        }
+    }
+
     public string GlowRatioTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes.";
+
+    public string GlowPushTooltip =>
+        "When bodies' glows overlap, push them apart visually." + Environment.NewLine +
+        "Can severely degrade performance.";
 
     public string LeapTimeText =>
         "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
