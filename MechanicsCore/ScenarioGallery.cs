@@ -146,7 +146,7 @@ public static class ScenarioGallery
 
     [GuiName("Moon forms from a ring")]
     public static Scenario MoonFromRing => new(
-        new MoonFromRing(64),
+        new MoonFromRing(64, 0),
         new()
         {
             StepTime = 8,
@@ -162,7 +162,7 @@ public static class ScenarioGallery
         "Reducing the step time from 8 to 1 causes the oddity to disappear, revealing the oddity to be a simulation artifact."
     )]
     public static Scenario MoonFromRing_Insane_102691847 => new(
-        new MoonFromRing(1024, 102691847),
+        new MoonFromRing(1024, 0, 102691847),
         new()
         {
             StepTime = 8,

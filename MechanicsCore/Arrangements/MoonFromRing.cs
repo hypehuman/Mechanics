@@ -8,6 +8,7 @@ namespace MechanicsCore.Arrangements;
 public class MoonFromRing : RandomArrangement
 {
     private readonly int _numMoonFragments;
+    private readonly double _spreadFactor;
 
     public override IEnumerable<string> GetConfigLines()
     {
@@ -15,16 +16,20 @@ public class MoonFromRing : RandomArrangement
             yield return b;
 
         yield return $"Number of Moon fragments: {_numMoonFragments}";
+        yield return $"Z-spread factor: {_spreadFactor}";
     }
 
     public override object?[] GetConstructorParameters()
     {
-        return new object?[] { _numMoonFragments, _requestedSeed };
+        return new object?[] { _numMoonFragments, _spreadFactor, _requestedSeed };
     }
 
     public MoonFromRing(
         [GuiName("Number of Moon fragments")]
         int numMoonFragments,
+        [GuiName("Z-spread factor")]
+        [GuiHelp("0 will form a perfect circle. 1 will spread them out up or down up to the moon's radius, forming a cylinder.")]
+        double spreadFactor,
         [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]
         int? requestedSeed = null
@@ -32,6 +37,7 @@ public class MoonFromRing : RandomArrangement
         : base(requestedSeed)
     {
         _numMoonFragments = numMoonFragments;
+        _spreadFactor = Math.Min(1, spreadFactor);
     }
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
@@ -56,6 +62,13 @@ public class MoonFromRing : RandomArrangement
                 velocity: new(Constants.MoonOrbitEarthSpeed * -sin, Constants.MoonOrbitEarthSpeed * cos, 0)
             );
         }
+
+        var spreadMagnitude = _spreadFactor * Constants.MoonRadius;
+        for (int i = 0; i < _numMoonFragments; i++)
+        {
+            bodies[i].Position += new Vector3D(0, 0, spreadMagnitude * Random.NextDouble());
+        }
+
         bodies[_numMoonFragments] = new(NextBodyID,
             name: "Earth",
             color: BodyColors.Earth,
