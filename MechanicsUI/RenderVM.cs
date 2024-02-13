@@ -38,6 +38,12 @@ public class RenderVM : INotifyPropertyChanged
         BodyVMs = new(Simulation.Bodies.Select(b => new BodyVM(b, this)));
     }
 
+    public void Unhook()
+    {
+        foreach (var bodyVM in BodyVMs)
+            bodyVM.Unhook();
+    }
+
     private Simulation Simulation => SimulationVM.Model;
     public Vector3D PanelDisplayBound0 => Perspective.SimToPanel(Simulation.DisplayBound0);
     public Vector3D PanelDisplayBound1 => Perspective.SimToPanel(Simulation.DisplayBound1);
@@ -60,6 +66,7 @@ public class RenderVM : INotifyPropertyChanged
             else
             {
                 BodyVMs.RemoveAt(i);
+                bodyVM.Unhook();
             }
         }
         RefreshByDistance(_mousePosition);

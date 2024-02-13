@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
 
 namespace MechanicsUI;
 
@@ -22,8 +21,12 @@ public class RenderOrNotVM : INotifyPropertyChanged
         get => _nullableRenderVM;
         set
         {
-            if (_nullableRenderVM != null)
-                _nullableRenderVM.PropertyChanged -= NullableRenderVM_OnPropertyChanged;
+            var old = _nullableRenderVM;
+            if (old != null)
+            {
+                old.PropertyChanged -= NullableRenderVM_OnPropertyChanged;
+                old.Unhook();
+            }
 
             _nullableRenderVM = value;
 

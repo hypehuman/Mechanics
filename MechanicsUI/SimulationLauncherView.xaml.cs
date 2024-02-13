@@ -1,6 +1,7 @@
 ﻿using AdonisUI.Controls;
 using GuiByReflection.ViewModels;
 using MechanicsCore;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -60,12 +61,31 @@ partial class SimulationLauncherView
                 DataContext = simVm
             },
         };
-        simWindow.Closed += delegate
-        {
-            // Stop the simulation from running in the background
-            simVm.IsAutoLeaping = false;
-        };
+        simWindow.Closed += SimWindow_Closed;
         simWindow.Show();
+    }
+
+    private static void SimWindow_Closed(object? sender, EventArgs e)
+    {
+        if (sender is not AdonisWindow simWindow)
+            return;
+
+        simWindow.Closed -= SimWindow_Closed;
+
+        if ((simWindow.Content as FrameworkElement)?.DataContext is not SimulationVM simVm)
+            return;
+
+        // Stop the simulation from running in the background
+        simVm.IsAutoLeaping = false;
+
+        // The window has a memory leak. The leak appears to be through a DependencyObjectPropertyDescriptor
+        // created in AdonisWindow.HandleTitleBarActualHeightChanged.
+        // See https://github.com/benruehl/adonis-ui/issues/207
+        // The following code at least allows the SimulationVM to be released.
+        var simView = simWindow.Content as FrameworkElement;
+        simWindow.Content = null; // Trying to free up SimulationView, but it's still leaked.
+        if (simView != null)
+            simView.DataContext = null; // Frees up SimulationVM.
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

@@ -22,6 +22,11 @@ public class BodyVM : INotifyPropertyChanged
         SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
     }
 
+    public void Unhook()
+    {
+        SimulationVM.PropertyChanged -= SimulationVM_PropertyChanged;
+    }
+
     private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MechanicsUI.SimulationVM.MinGlowRadius))
