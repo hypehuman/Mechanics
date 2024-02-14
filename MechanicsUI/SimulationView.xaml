@@ -16,8 +16,8 @@
     <DockPanel LastChildFill="True">
         <Expander DockPanel.Dock="Top" IsExpanded="True">
             <StackPanel Orientation="Horizontal">
-                <GroupBox VerticalAlignment="Top" Margin="5" Header="Configuration">
-                    <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding Config, Mode=OneWay}" />
+                <GroupBox VerticalAlignment="Top" Margin="5" Header="Setup">
+                    <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding Setup, Mode=OneWay}" />
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Controls">
                     <StackPanel Margin="5">

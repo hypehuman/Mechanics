@@ -350,7 +350,7 @@ public class Simulation
 
     private static string HeadingVectToString(Vector3D v) => $"{v.X:0.00}, {v.Y:0.00}, {v.Z:0.00}";
 
-    public virtual IEnumerable<string> GetConfigLines()
+    public virtual IEnumerable<string> GetSetupLines()
     {
         foreach (var i in InitialArrangement.GetConfigLines())
             yield return i;

@@ -16,8 +16,8 @@ public class SimulationVM : INotifyPropertyChanged
     public RenderOrNotVM AboveRenderVM { get; }
     public RenderOrNotVM FrontRenderVM { get; }
     public RenderOrNotVM RightRenderVM { get; }
-    public string Title => GetTitleOrConfig(", ");
-    public string Config => GetTitleOrConfig(Environment.NewLine);
+    public string Title => GetTitleOrSetup(", ");
+    public string Setup => GetTitleOrSetup(Environment.NewLine);
     public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
 
     private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
@@ -112,9 +112,9 @@ public class SimulationVM : INotifyPropertyChanged
         }
     }
 
-    private string GetTitleOrConfig(string separator)
+    private string GetTitleOrSetup(string separator)
     {
-        return string.Join(separator, Model.GetConfigLines());
+        return string.Join(separator, Model.GetSetupLines());
     }
 
     public void LeapAndRefresh()
