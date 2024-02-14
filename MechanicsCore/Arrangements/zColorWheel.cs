@@ -10,7 +10,10 @@ namespace MechanicsCore.Arrangements;
 public class zColorWheel : Arrangement
 {
     private readonly ColorMapping _colorMapping;
-    private readonly bool _normalizeRadiance;
+    /// <summary>
+    /// See <see cref="BodyColor.ComputeRadiance"/>
+    /// </summary>
+    private readonly int? _radiance;
 
     public override IEnumerable<string> GetConfigLines()
     {
@@ -18,21 +21,34 @@ public class zColorWheel : Arrangement
             yield return b;
 
         yield return $"Color mapping: {_colorMapping}";
-        yield return $"Normalize radiance: {_normalizeRadiance}";
+        yield return $"Radiance: {_radiance?.ToString() ?? "[varying]"}";
     }
 
     public override object?[] GetConstructorParameters()
     {
-        return new object?[] { _colorMapping, _normalizeRadiance };
+        return new object?[] { _colorMapping, _radiance };
     }
 
-    public zColorWheel(ColorMapping colorMapping, bool normalizeRadiance)
+    public zColorWheel(
+        ColorMapping colorMapping,
+        [GuiHelp(
+            "null: No adjustment. Secondary colors are brighter than primary colors.",
+            "<=0: Always black.",
+            "1-254: Darken all colors.",
+            "255: Darken secondary colors to match the radiance of primary colors.",
+            "256-509: Darken secondary colors, brighten primary colors.",
+            "510: Brighten primary colors to match the radiance of secondary colors.",
+            "1-254: Brighten all colors.",
+            ">=765: Always white."
+        )]
+        int? radiance
+    )
     {
         // Call this to validate the argument
         var func = GetColorMappingFunction(colorMapping);
 
         _colorMapping = colorMapping;
-        _normalizeRadiance = normalizeRadiance;
+        _radiance = radiance;
     }
 
     public enum ColorMapping
@@ -62,9 +78,9 @@ public class zColorWheel : Arrangement
             {
                 var colorI = wheelI * numColorsPerWheel + bodyJ;
                 var color = getColor(colorI);
-                if (_normalizeRadiance)
+                if (_radiance.HasValue)
                 {
-                    color = NormalizeRadiance(color);
+                    color = NormalizeRadiance(color, _radiance.Value);
                 }
                 var angle01 = (double)bodyJ / numColorsPerWheel;
                 var angleRad = angle01 * 2 * Math.PI;
@@ -95,37 +111,35 @@ public class zColorWheel : Arrangement
     }
 
     /// <summary>
-    /// Radiance is "the radiant flux emitted, reflected, transmitted or received by a given surface, per unit solid angle per unit projected area."
-    /// For our purposes, let's define radiance as the sum of the R, G, and B values.
-    /// Pure white would have a radiance of 255+255+255 = 765.
-    /// Fully saturated primary colors (red, green, and blue) have a radiance of 255+0+0 = 255.
-    /// Fully saturated secondary colors (cyan, magenta, and yellow) have a radiance of 255+255+0 = 255.
-    /// Since _getColor returns only fully saturated colors, the minimum possible radiance is 255.
-    /// So any colors that have a radiance over 255, darken them to normalize.
+    /// "Radiance" is defined here: <see cref="BodyColor.ComputeRadiance"/>.
+    /// Due to rounding error, the output's radiance might be slightly off from the target radiance.
     /// </summary>
-    private static BodyColor NormalizeRadiance(BodyColor input)
+    public static BodyColor NormalizeRadiance(BodyColor inputColor, int targetRadiance)
     {
-        const int targetRadiance = 255;
-        var radiance = input.R + input.G + input.B;
-        if (radiance > targetRadiance)
-        {
-            var factor = (double)targetRadiance / radiance;
-            return new(
-                Convert.ToByte(factor * input.R),
-                Convert.ToByte(factor * input.G),
-                Convert.ToByte(factor * input.B)
-            );
-        }
-        else
-        {
-            if (radiance < targetRadiance)
-            {
-                // TODO: Increase the radiance of darker colors.
-                // This would make them whiter, e.g., red would become pink.
-                // Currently irrelevant because _getColors never returns radiances less than 510.
-            }
+        targetRadiance = Math.Max(0, Math.Min(765, targetRadiance));
+        var inputRadiance = inputColor.ComputeRadiance();
 
-            return input;
-        }
+        if (inputRadiance == targetRadiance)
+            return inputColor;
+
+        // Select an "adjustment" with which to average the input color
+        // (either black or white).
+        var adjustmentColor = inputRadiance < targetRadiance
+            ? new BodyColor(byte.MaxValue, byte.MaxValue, byte.MaxValue)
+            : new BodyColor(byte.MinValue, byte.MinValue, byte.MinValue);
+        var adjustmentRadiance = adjustmentColor.ComputeRadiance();
+
+        // Compute the weights that will result in the correct output radiance.
+        var inputWeight = ((float)targetRadiance - adjustmentRadiance) / (inputRadiance - adjustmentRadiance);
+        var adjustmentWeight = 1 - inputWeight;
+
+        // Perform the weighted average to obtain the output.
+        var output = new BodyColor(
+            Convert.ToByte(inputWeight * inputColor.R + adjustmentWeight * adjustmentColor.R),
+            Convert.ToByte(inputWeight * inputColor.G + adjustmentWeight * adjustmentColor.G),
+            Convert.ToByte(inputWeight * inputColor.B + adjustmentWeight * adjustmentColor.B)
+        );
+
+        return output;
     }
 }
