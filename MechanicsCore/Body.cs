@@ -27,7 +27,7 @@ public class Body
     {
         ID = id;
         Name = name ?? ID.ToString();
-        Color = color ?? BodyColors.GetSpacedCyclicColor(ID);
+        Color = color ?? BodyColors.NormalizeRadiance(BodyColors.GetSpacedCyclicColor(ID), 510);
         Mass = mass;
         Radius = radius;
         Position = position;

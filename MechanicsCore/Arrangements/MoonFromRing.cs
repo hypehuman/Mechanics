@@ -55,7 +55,7 @@ public class MoonFromRing : RandomArrangement
             var cos = Math.Cos(angleRad);
             var sin = Math.Sin(angleRad);
             bodies[i] = new(NextBodyID,
-                color: BodyColors.GetCloseCyclicColor((int)(angle01 * 256)),
+                color: BodyColors.NormalizeRadiance(BodyColors.GetCloseCyclicColor((int)(angle01 * 256)), 510),
                 mass: fragmentMass,
                 radius: fragmentRadius,
                 position: new(Constants.MoonOrbitEarthDistance * cos, Constants.MoonOrbitEarthDistance * sin, 0),

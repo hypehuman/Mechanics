@@ -80,7 +80,7 @@ public class zColorWheel : Arrangement
                 var color = getColor(colorI);
                 if (_radiance.HasValue)
                 {
-                    color = NormalizeRadiance(color, _radiance.Value);
+                    color = BodyColors.NormalizeRadiance(color, _radiance.Value);
                 }
                 var angle01 = (double)bodyJ / numColorsPerWheel;
                 var angleRad = angle01 * 2 * Math.PI;
@@ -108,38 +108,5 @@ public class zColorWheel : Arrangement
             ColorMapping.HashedPseudorandom => BodyColors.GetHashedPseudorandomColor,
             _ => throw Utils.OutOfRange(nameof(colorMapping), colorMapping)
         };
-    }
-
-    /// <summary>
-    /// "Radiance" is defined here: <see cref="BodyColor.ComputeRadiance"/>.
-    /// Due to rounding error, the output's radiance might be slightly off from the target radiance.
-    /// </summary>
-    public static BodyColor NormalizeRadiance(BodyColor inputColor, int targetRadiance)
-    {
-        targetRadiance = Math.Max(0, Math.Min(765, targetRadiance));
-        var inputRadiance = inputColor.ComputeRadiance();
-
-        if (inputRadiance == targetRadiance)
-            return inputColor;
-
-        // Select an "adjustment" with which to average the input color
-        // (either black or white).
-        var adjustmentColor = inputRadiance < targetRadiance
-            ? new BodyColor(byte.MaxValue, byte.MaxValue, byte.MaxValue)
-            : new BodyColor(byte.MinValue, byte.MinValue, byte.MinValue);
-        var adjustmentRadiance = adjustmentColor.ComputeRadiance();
-
-        // Compute the weights that will result in the correct output radiance.
-        var inputWeight = ((float)targetRadiance - adjustmentRadiance) / (inputRadiance - adjustmentRadiance);
-        var adjustmentWeight = 1 - inputWeight;
-
-        // Perform the weighted average to obtain the output.
-        var output = new BodyColor(
-            Convert.ToByte(inputWeight * inputColor.R + adjustmentWeight * adjustmentColor.R),
-            Convert.ToByte(inputWeight * inputColor.G + adjustmentWeight * adjustmentColor.G),
-            Convert.ToByte(inputWeight * inputColor.B + adjustmentWeight * adjustmentColor.B)
-        );
-
-        return output;
     }
 }
