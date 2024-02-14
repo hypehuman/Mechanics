@@ -17,6 +17,23 @@ public class BodyVM : INotifyPropertyChanged
     {
         Model = model;
         RenderVM = renderVM;
+
+        SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
+    }
+
+    public void Unhook()
+    {
+        SimulationVM.PropertyChanged -= SimulationVM_PropertyChanged;
+    }
+
+    private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(SimulationVM.TransparentBodies):
+                RefreshColor();
+                break;
+        }
     }
 
     private SimulationVM SimulationVM => RenderVM.SimulationVM;
@@ -146,8 +163,12 @@ public class BodyVM : INotifyPropertyChanged
     private Color ComputeWinMediaColor()
     {
         var bc = Model.Color;
-        // 75% opacity lets us see to the next object behind
-        return Color.FromArgb(192, bc.R, bc.G, bc.B);
+
+        return RenderVM.SimulationVM.TransparentBodies
+            // 75% opacity lets us see to the next object behind
+            ? Color.FromArgb(192, bc.R, bc.G, bc.B)
+            // 100% opacity gives us better contrast.
+            : Color.FromRgb(bc.R, bc.G, bc.B);
     }
 
     public void Refresh_1_of_2()

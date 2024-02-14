@@ -23,6 +23,18 @@ public class SimulationVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
 
+    private static readonly PropertyChangedEventArgs sTransparentBodiesChangedEventArgs = new(nameof(TransparentBodies));
+    private bool _transparentBodies = true;
+    public bool TransparentBodies
+    {
+        get => _transparentBodies;
+        set
+        {
+            _transparentBodies = value;
+            PropertyChanged?.Invoke(this, sTransparentBodiesChangedEventArgs);
+        }
+    }
+
     private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
     private double _minGlowRadiusFractionOfFrame = 0.002;
     public double MinGlowRadiusFractionOfFrame

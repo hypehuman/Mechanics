@@ -47,6 +47,8 @@ public class RenderVM : INotifyPropertyChanged
     public void Unhook()
     {
         SimulationVM.PropertyChanged -= SimulationVM_PropertyChanged;
+        foreach (var bodyVM in BodyVMs)
+            bodyVM.Unhook();
     }
 
     private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -86,6 +88,7 @@ public class RenderVM : INotifyPropertyChanged
             {
                 BodyVMs.RemoveAt(i);
                 _bodyVMsByModel.Remove(bodyVM.Model);
+                bodyVM.Unhook();
             }
         }
         foreach (var bodyVM in BodyVMs)

@@ -21,6 +21,7 @@
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Controls">
                     <StackPanel Margin="5">
+                        <CheckBox IsChecked="{Binding TransparentBodies}">Transparent bodies</CheckBox>
                         <StackPanel Margin="5">
                             <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowRatioTooltip}">
                                 <StackPanel Orientation="Horizontal">
