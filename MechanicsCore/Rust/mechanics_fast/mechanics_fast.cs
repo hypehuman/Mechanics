@@ -1,4 +1,5 @@
-﻿using MathNet.Spatial.Euclidean;
+﻿#if !DISABLE_RUST
+using MathNet.Spatial.Euclidean;
 using System.Runtime.InteropServices;
 
 namespace MechanicsCore.Rust.mechanics_fast;
@@ -53,3 +54,4 @@ public static class mechanics_fast
         }
     }
 }
+#endif

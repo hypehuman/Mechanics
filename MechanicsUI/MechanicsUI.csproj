@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
+    <Configurations>Debug;Release;Debug_DISABLE_RUST;Release_DISABLE_RUST</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +21,7 @@
     <ProjectReference Include="..\MechanicsCore\MechanicsCore.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Condition="!$(Configuration.ToUpperInvariant().Contains('DISABLE_RUST'))" Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="copy /Y &quot;$(SolutionDir)Rust\mechanics_fast\target\release\mechanics_fast.dll&quot; &quot;$(TargetDir)mechanics_fast.dll&quot;" />
   </Target>
 

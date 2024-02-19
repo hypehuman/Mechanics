@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;Debug_DISABLE_RUST;Release_DISABLE_RUST</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +17,11 @@
     <ProjectReference Include="..\GuiByReflection.Models\GuiByReflection.Models.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <PropertyGroup Condition="$(Configuration.ToUpperInvariant().Contains('DISABLE_RUST'))">
+    <DefineConstants>DISABLE_RUST</DefineConstants>
+  </PropertyGroup>
+
+  <Target Condition="!$(Configuration.ToUpperInvariant().Contains('DISABLE_RUST'))" Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="cd &quot;$(SolutionDir)\Rust\mechanics_fast&quot;&#xD;&#xA;cargo build --release" />
   </Target>
 
