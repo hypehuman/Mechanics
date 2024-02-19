@@ -3,7 +3,6 @@ using GuiByReflection.ViewModels;
 using MechanicsCore;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -111,7 +110,7 @@ partial class SimulationLauncherView
             if (simVM.Model.NumStepsPerformed >= 100000)
             {
                 simVM.IsAutoLeaping = false;
-                File.WriteAllText("performance test results.txt", sw.ElapsedMilliseconds.ToString());
+                Utils.WritePerformanceResults(sw);
                 Dispatcher.BeginInvokeShutdown(DispatcherPriority.Send);
             }
         };
