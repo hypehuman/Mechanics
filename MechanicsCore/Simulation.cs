@@ -125,6 +125,7 @@ public class Simulation
                 a[i] = body.ComputeAcceleration(Bodies, PhysicsConfig);
             });
         }
+
         Parallel.For(0, n, i =>
         {
             var body = Bodies[i];
@@ -132,7 +133,7 @@ public class Simulation
         });
     }
 
-    private void ApplyStep()
+    private void ApplyPositionsAndVelocities()
     {
         // Now we've started editing the bodies, so there's no way to recover from an exception.
 
@@ -142,6 +143,13 @@ public class Simulation
             var body = Bodies[i];
             body.Step(p[i], v[i]);
         });
+    }
+
+    private void ApplyStep()
+    {
+        // Now we've started editing the bodies, so there's no way to recover from an exception.
+
+        ApplyPositionsAndVelocities();
 
         if (PhysicsConfig.CollisionConfig == CollisionType.Combine)
         {
@@ -298,9 +306,33 @@ public class Simulation
         }
     }
 
-    public bool TryLeap(int numSteps)
+    public bool TryLeap(int requestedNumSteps)
     {
-        for (int i = 0; i < numSteps; i++)
+#if !DISABLE_RUST
+        var numBodies = Bodies.Count;
+        for (var i = 0; i < Bodies.Count; i++)
+        {
+            var body = Bodies[i];
+            m[i] = body.Mass;
+            p[i] = body.Position;
+            v[i] = body.Velocity;
+        };
+        if (PhysicsConfig.CanLeapWithRust())
+        {
+            var actualNumSteps = mechanics_fast.TryLeap(requestedNumSteps, PhysicsConfig.StepTime, m, p, v, numBodies);
+            if (actualNumSteps != requestedNumSteps)
+            {
+                SetError($"mechanics_fast.TryLeap only completed {actualNumSteps} of {requestedNumSteps} steps.");
+                return false;
+            }
+
+            ApplyPositionsAndVelocities();
+            NumStepsPerformed += requestedNumSteps;
+            return true;
+        }
+#endif
+
+        for (int i = 0; i < requestedNumSteps; i++)
         {
             if (!TryComputeStep())
             {

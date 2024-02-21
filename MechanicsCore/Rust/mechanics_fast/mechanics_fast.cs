@@ -18,6 +18,9 @@ public static class mechanics_fast
     [DllImport("mechanics_fast.dll")]
     private static unsafe extern IntPtr pub_compute_gravitational_acceleration_many_on_many(double* masses, Vector3D* positions, UIntPtr num_bodies, Vector3D* accelerationsOut);
 
+    [DllImport("mechanics_fast.dll")]
+    private static unsafe extern UIntPtr pub_try_leap(UIntPtr requested_num_steps, double stepDuration, double* masses, Vector3D* positions, Vector3D* velocities, UIntPtr num_bodies);
+
     public static Vector3D ComputeGravitationalAcceleration(Vector3D displacement, double m2)
     {
         return pub_compute_gravitational_acceleration_one_on_one(displacement, m2);
@@ -48,6 +51,25 @@ public static class mechanics_fast
                     fixed (Vector3D* accelerationsPtr = accelerationsOut)
                     {
                         pub_compute_gravitational_acceleration_many_on_many(massesPtr, positionsPtr, (UIntPtr)numBodies, accelerationsPtr);
+                    }
+                }
+            }
+        }
+    }
+
+    public static int TryLeap(int requestedNumSteps, double stepDuration, double[] masses, Vector3D[] positions, Vector3D[] velocities, int numBodies)
+    {
+        // TODO: When it fails, return a message like we do with StepFailedException.
+        unsafe
+        {
+            fixed (double* massesPtr = masses)
+            {
+                fixed (Vector3D* positionsPtr = positions)
+                {
+                    fixed (Vector3D* velocitiesPtr = velocities)
+                    {
+                        var actualNumSteps = pub_try_leap((UIntPtr)requestedNumSteps, stepDuration, massesPtr, positionsPtr, velocitiesPtr, (UIntPtr)numBodies);
+                        return (int)actualNumSteps;
                     }
                 }
             }
