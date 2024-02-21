@@ -9,12 +9,6 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        //Dump the initial conditions and expected results for the Rust unit test.
-        var sim = new Simulation(ScenarioGallery.SunEarthMoon);
-        sim.DumpState();
-        sim.Leap(5);
-        sim.DumpState();
-
         Console.WriteLine("Running performance tests:");
         var sw = Stopwatch.StartNew();
         var horizonsScenario = ScenarioGallery.ModernSolarSystem; 
