@@ -373,10 +373,17 @@ public class Simulation
         {
             Console.WriteLine(s);
         }
+        Console.WriteLine("Positions:");
         foreach (var b in Bodies)
         {
             Console.WriteLine($"{b.Name} : {VectToString(b.Position)}");
         }
+        Console.WriteLine("Velocities:");
+        foreach (var b in Bodies)
+        {
+            Console.WriteLine($"{b.Name} : {VectToString(b.Velocity)}");
+        }
+        Console.WriteLine("Displacements:");
         for (int i = 0; i < Bodies.Count - 1; i++)
         {
             var a = Bodies[i];
