@@ -18,11 +18,24 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_one(
     num_bodies: usize,
     index_of_self: usize,
 ) -> Vector3<f64> {
-    compute_gravitational_acceleration_many_on_one(
-        unsafe { std::slice::from_raw_parts(masses, num_bodies) },
-        unsafe { std::slice::from_raw_parts(positions, num_bodies) },
-        index_of_self,
-    )
+    match num_bodies {
+        3 => compute_gravitational_acceleration_many_on_one::<3>(
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
+            index_of_self,
+        ),
+        60 => compute_gravitational_acceleration_many_on_one::<60>(
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
+            index_of_self,
+        ),
+        2048 => compute_gravitational_acceleration_many_on_one::<2048>(
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
+            index_of_self,
+        ),
+        _ => panic!("Unsupported num_bodies: {}", num_bodies)
+    }
 }
 
 #[no_mangle]
@@ -32,11 +45,36 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_many(
     num_bodies: usize,
     accelerations: *mut Vector3<f64>,
 ) {
-    compute_gravitational_acceleration_many_on_many(
-        unsafe { std::slice::from_raw_parts(masses, num_bodies) },
-        unsafe { std::slice::from_raw_parts(positions, num_bodies) },
-        unsafe { std::slice::from_raw_parts_mut(accelerations, num_bodies) },
-    )
+    match num_bodies {
+        3 => compute_gravitational_acceleration_many_on_many::<3>(
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
+            ptr_to_array_mut(accelerations),
+        ),
+        60 => compute_gravitational_acceleration_many_on_many::<60>(
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
+            ptr_to_array_mut(accelerations),
+        ),
+        2048 => compute_gravitational_acceleration_many_on_many::<2048>(
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
+            ptr_to_array_mut(accelerations),
+        ),
+        _ => panic!("Unsupported num_bodies: {}", num_bodies)
+    }
+}
+
+fn ptr_to_array_const<T, const N: usize>(ptr: *const T) -> &'static [T; N] {
+    let slice = unsafe { std::slice::from_raw_parts(ptr, N) };
+    let array = slice.try_into().expect("invalid size");
+    array
+}
+
+fn ptr_to_array_mut<T, const N: usize>(ptr: *mut T) -> &'static mut [T; N] {
+    let slice = unsafe { std::slice::from_raw_parts_mut(ptr, N) };
+    let array = slice.try_into().expect("invalid size");
+    array
 }
 
 fn compute_gravitational_acceleration_one_on_one(
@@ -51,14 +89,14 @@ fn compute_gravitational_acceleration_one_on_one(
     acceleration
 }
 
-fn compute_gravitational_acceleration_many_on_one(
-    masses: &[f64],
-    positions: &[Vector3<f64>],
+fn compute_gravitational_acceleration_many_on_one<const N: usize>(
+    masses: &[f64; N],
+    positions: &[Vector3<f64>; N],
     index_of_self: usize,
 ) -> Vector3<f64> {
     let mut acceleration = ZERO_VECTOR;
 
-    for i in 0..masses.len() {
+    for i in 0..N {
         if i != index_of_self {
             let displacement = positions[i] - positions[index_of_self];
             let grav_acceleration = compute_gravitational_acceleration_one_on_one(displacement, masses[i]);
@@ -69,10 +107,10 @@ fn compute_gravitational_acceleration_many_on_one(
     acceleration
 }
 
-fn compute_gravitational_acceleration_many_on_many(
-    masses: &[f64],
-    positions: &[Vector3<f64>],
-    accelerations: &mut [Vector3<f64>],
+fn compute_gravitational_acceleration_many_on_many<const N: usize>(
+    masses: &[f64; N],
+    positions: &[Vector3<f64>; N],
+    accelerations: &mut [Vector3<f64>; N],
 ) {
     accelerations.par_iter_mut().enumerate().for_each(|(i, a)| {
         *a = compute_gravitational_acceleration_many_on_one(masses, positions, i);
