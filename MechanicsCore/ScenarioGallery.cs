@@ -193,6 +193,7 @@ public static class ScenarioGallery
         // More realistic would be to start with x near 1 (uniformly distributed gas),
         // and to have it drop over time as the clouds combine and contract.
         // In today's solar system, x=2.8e-24 (the sun's volume divided by the region's volume).
+        // With x=0.09, about half the bodies are overlapping in the initial configuration.
         const double x = 0.001;
         var stuffVolume = x * volumeOfSolarSystemRegion;
 
@@ -216,5 +217,19 @@ public static class ScenarioGallery
             },
             10
         );
+
+        // Find relationship between mass m and raidus r.
+        // Specifically, find k and p such that r=km^p.
+        // Take m1 and r1 from the starting bodies.
+        // Take m2 and r2 from the modern sun.
+        // p = log base (m1/m2) of (r1/r2)
+        // k = e^((log(m1) log(r2) - log(m2) log(r1))/(log(m1) - log(m2)))
+
+        // However, I believe that will make combined bodies actually have less volume than the sum of their parents.
+        // Maybe instead we can use thermodynamics. Bodies start with a total "internal energy",
+        // which is their temperature plus the gravitational potential energy of each shell of mass with respect to the center.
+        // Come up with a formula for radius based on internal energy.
+        // Use blackbody radiation to slowly decay their energy and therefore their size.
+        // When bodies combine, the new body gets the parents' internal energies, plus their relative kinetic energy just before the collision.
     }
 }
