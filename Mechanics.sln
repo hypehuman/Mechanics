@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HorizonsToMechanics", "Hori
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HorizonsToMechanicsConsole", "HorizonsToMechanicsConsole\HorizonsToMechanicsConsole.csproj", "{D70C631A-D026-4687-84B9-0E707A604847}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestIsMouseOver", "TestIsMouseOver\TestIsMouseOver.csproj", "{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_DISABLE_RUST|Any CPU = Debug_DISABLE_RUST|Any CPU
@@ -91,6 +93,14 @@ Global
 		{D70C631A-D026-4687-84B9-0E707A604847}.Release_DISABLE_RUST|Any CPU.Build.0 = Release|Any CPU
 		{D70C631A-D026-4687-84B9-0E707A604847}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D70C631A-D026-4687-84B9-0E707A604847}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Debug_DISABLE_RUST|Any CPU.ActiveCfg = Debug|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Debug_DISABLE_RUST|Any CPU.Build.0 = Debug|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Release_DISABLE_RUST|Any CPU.ActiveCfg = Release|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Release_DISABLE_RUST|Any CPU.Build.0 = Release|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66DF08F5-614C-4D6A-9BC8-1366C511D4F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
