@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using MathNet.Spatial.Euclidean;
+using System.Reflection;
 
 namespace MechanicsCore;
 
@@ -17,5 +18,17 @@ public static class Utils
             .Where(baseType.IsAssignableFrom)
             .Where(t => !t.IsAbstract)
             ?? Type.EmptyTypes;
+    }
+
+    /// <summary>
+    /// Returns false if any component is NaN, negative infinity, or positive infinity.
+    /// Otherwise, returns true.
+    /// </summary>
+    public static bool IsFinite(this Vector3D v)
+    {
+        return
+            double.IsFinite(v.X) &&
+            double.IsFinite(v.Y) &&
+            double.IsFinite(v.Z);
     }
 }

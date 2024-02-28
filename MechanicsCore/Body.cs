@@ -63,23 +63,17 @@ public class Body
 
     public void ComputeStep(double dt, Vector3D a, out Vector3D p, out Vector3D v)
     {
-        AssertIsReal(a);
+        AssertIsFinite(a);
         v = Velocity + dt * a;
-        AssertIsReal(v);
+        AssertIsFinite(v);
         p = Position + dt * v;
-        AssertIsReal(p);
+        AssertIsFinite(p);
     }
 
-    private static void AssertIsReal(Vector3D vector)
+    private static void AssertIsFinite(Vector3D vector)
     {
-        if (
-            !double.IsRealNumber(vector.X) ||
-            !double.IsRealNumber(vector.Y) ||
-            !double.IsRealNumber(vector.Z)
-        )
-        {
-            throw new StepFailedException("Non-real vector");
-        }
+        if (!vector.IsFinite())
+            throw new StepFailedException("Non-finite vector");
     }
 
     public void Step(Vector3D p, Vector3D v)
