@@ -18,24 +18,11 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_one(
     num_bodies: usize,
     index_of_self: usize,
 ) -> Vector3<f64> {
-    match num_bodies {
-        3 => compute_gravitational_acceleration_many_on_one::<3>(
-            ptr_to_array_const(masses),
-            ptr_to_array_const(positions),
-            index_of_self,
-        ),
-        60 => compute_gravitational_acceleration_many_on_one::<60>(
-            ptr_to_array_const(masses),
-            ptr_to_array_const(positions),
-            index_of_self,
-        ),
-        2048 => compute_gravitational_acceleration_many_on_one::<2048>(
-            ptr_to_array_const(masses),
-            ptr_to_array_const(positions),
-            index_of_self,
-        ),
-        _ => panic!("Unsupported num_bodies: {}", num_bodies)
-    }
+    compute_gravitational_acceleration_many_on_one(
+        unsafe { std::slice::from_raw_parts(masses, num_bodies) },
+        unsafe { std::slice::from_raw_parts(positions, num_bodies) },
+        index_of_self,
+    )
 }
 
 #[no_mangle]
@@ -45,24 +32,11 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_many(
     num_bodies: usize,
     accelerations: *mut Vector3<f64>,
 ) {
-    match num_bodies {
-        3 => compute_gravitational_acceleration_many_on_many::<3>(
-            ptr_to_array_const(masses),
-            ptr_to_array_const(positions),
-            ptr_to_array_mut(accelerations),
-        ),
-        60 => compute_gravitational_acceleration_many_on_many::<60>(
-            ptr_to_array_const(masses),
-            ptr_to_array_const(positions),
-            ptr_to_array_mut(accelerations),
-        ),
-        2048 => compute_gravitational_acceleration_many_on_many::<2048>(
-            ptr_to_array_const(masses),
-            ptr_to_array_const(positions),
-            ptr_to_array_mut(accelerations),
-        ),
-        _ => panic!("Unsupported num_bodies: {}", num_bodies)
-    }
+    compute_gravitational_acceleration_many_on_many(
+        unsafe { std::slice::from_raw_parts(masses, num_bodies) },
+        unsafe { std::slice::from_raw_parts(positions, num_bodies) },
+        unsafe { std::slice::from_raw_parts_mut(accelerations, num_bodies) },
+    )
 }
 
 #[no_mangle]
@@ -74,43 +48,14 @@ pub extern "C" fn pub_try_leap(
     velocities: *mut Vector3<f64>,
     num_bodies: usize,
 ) -> usize {
-    let actual_num_steps = match num_bodies {
-        3 => try_leap::<3>(
-            requested_num_steps,
-            step_duration,
-            ptr_to_array_const(masses),
-            ptr_to_array_mut(positions),
-            ptr_to_array_mut(velocities),
-        ),
-        60 => try_leap::<60>(
-            requested_num_steps,
-            step_duration,
-            ptr_to_array_const(masses),
-            ptr_to_array_mut(positions),
-            ptr_to_array_mut(velocities),
-        ),
-        2048 => try_leap::<2048>(
-            requested_num_steps,
-            step_duration,
-            ptr_to_array_const(masses),
-            ptr_to_array_mut(positions),
-            ptr_to_array_mut(velocities),
-        ),
-        _ => 0 // TODO: Return error message: format!("Unsupported num_bodies: {}", num_bodies)
-    };
+    let actual_num_steps = try_leap(
+        requested_num_steps,
+        step_duration,
+        unsafe { std::slice::from_raw_parts(masses, num_bodies) },
+        unsafe { std::slice::from_raw_parts_mut(positions, num_bodies) },
+        unsafe { std::slice::from_raw_parts_mut(velocities, num_bodies) },
+    );
     actual_num_steps
-}
-
-fn ptr_to_array_const<T, const N: usize>(ptr: *const T) -> &'static [T; N] {
-    let slice = unsafe { std::slice::from_raw_parts(ptr, N) };
-    let array = slice.try_into().expect("invalid size");
-    array
-}
-
-fn ptr_to_array_mut<T, const N: usize>(ptr: *mut T) -> &'static mut [T; N] {
-    let slice = unsafe { std::slice::from_raw_parts_mut(ptr, N) };
-    let array = slice.try_into().expect("invalid size");
-    array
 }
 
 fn compute_gravitational_acceleration_one_on_one(
@@ -125,14 +70,15 @@ fn compute_gravitational_acceleration_one_on_one(
     acceleration
 }
 
-fn compute_gravitational_acceleration_many_on_one<const N: usize>(
-    masses: &[f64; N],
-    positions: &[Vector3<f64>; N],
+fn compute_gravitational_acceleration_many_on_one(
+    masses: &[f64],
+    positions: &[Vector3<f64>],
     index_of_self: usize,
 ) -> Vector3<f64> {
+    let num_bodies = masses.len();
     let mut acceleration = ZERO_VECTOR;
 
-    for i in 0..N {
+    for i in 0..num_bodies {
         if i != index_of_self {
             let displacement = positions[i] - positions[index_of_self];
             let grav_acceleration = compute_gravitational_acceleration_one_on_one(displacement, masses[i]);
@@ -143,28 +89,29 @@ fn compute_gravitational_acceleration_many_on_one<const N: usize>(
     acceleration
 }
 
-fn compute_gravitational_acceleration_many_on_many<const N: usize>(
-    masses: &[f64; N],
-    positions: &[Vector3<f64>; N],
-    accelerations: &mut [Vector3<f64>; N],
+fn compute_gravitational_acceleration_many_on_many(
+    masses: &[f64],
+    positions: &[Vector3<f64>],
+    accelerations: &mut [Vector3<f64>],
 ) {
     accelerations.par_iter_mut().enumerate().for_each(|(i, a)| {
         *a = compute_gravitational_acceleration_many_on_one(masses, positions, i);
     });
 }
 
-fn try_compute_step<const N: usize>(
+fn try_compute_step(
     step_duration: f64,
-    masses: &[f64; N],
-    positions_curr: &[Vector3<f64>; N],
-    velocities_curr: &[Vector3<f64>; N],
-    positions_next: &mut [Vector3<f64>; N],
-    velocities_next: &mut [Vector3<f64>; N],
-    accelerations: &mut [Vector3<f64>; N],
+    masses: &[f64],
+    positions_curr: &[Vector3<f64>],
+    velocities_curr: &[Vector3<f64>],
+    positions_next: &mut [Vector3<f64>],
+    velocities_next: &mut [Vector3<f64>],
+    accelerations: &mut [Vector3<f64>],
 ) -> bool {
+    let num_bodies = masses.len();
     compute_gravitational_acceleration_many_on_many(masses, positions_curr, accelerations);
     // C# code parallelizes this loop, but I don't know how to do that in Rust while mutating two arrays.
-    for i in 0..N {
+    for i in 0..num_bodies {
         let a = accelerations[i];
         let v = velocities_curr[i] + step_duration * a;
         let p = positions_curr[i] + step_duration * v;
@@ -177,22 +124,24 @@ fn try_compute_step<const N: usize>(
     true
 }
 
-fn try_leap<const N: usize>(
+fn try_leap(
     requested_num_steps: usize,
     step_duration: f64,
-    masses: &[f64; N],
-    positions: &mut [Vector3<f64>; N],
-    velocities: &mut [Vector3<f64>; N],
+    masses: &[f64],
+    positions: &mut [Vector3<f64>],
+    velocities: &mut [Vector3<f64>],
 ) -> usize {
+    let num_bodies = masses.len();
+
     // Alternate between using one set as the "read" arrays and the other set as the "write" arrays.
     // Technially one of these could be local to try_compute_step.
-    let positions_b = &mut [ZERO_VECTOR; N];
-    let velocities_b = &mut [ZERO_VECTOR; N];
+    let positions_b = &mut vec![ZERO_VECTOR; num_bodies];
+    let velocities_b = &mut vec![ZERO_VECTOR; num_bodies];
 
     // Alternatively, we could initialize one of these in each try_compute_step.
     // I'm betting that declaring it here and reusing it in each step will give better performance,
     // but let's see about that.
-    let accelerations = &mut [ZERO_VECTOR; N];
+    let accelerations = &mut vec![ZERO_VECTOR; num_bodies];
 
     let mut actual_num_steps = requested_num_steps;
     for step_i in 0..requested_num_steps {
@@ -211,7 +160,7 @@ fn try_leap<const N: usize>(
 
     // If there was an odd number of steps, we need to copy the "b" values back to the original arrays.
     if actual_num_steps % 2 == 1 {
-        for body_i in 0..N {
+        for body_i in 0..num_bodies {
             positions[body_i] = positions_b[body_i];
             velocities[body_i] = velocities_b[body_i];
         }
