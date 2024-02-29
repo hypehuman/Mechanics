@@ -6,20 +6,20 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace MechanicsUI;
 
 public class SimulationLauncherVM : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
     private static readonly IReadOnlyList<PropertyInfo> sScenarioGalleryProperties =
         typeof(ScenarioGallery)
         .GetProperties();
 
     private static readonly IReadOnlyList<Type> sArrangementTypes =
         Utils.GetInstantiableTypes(typeof(Arrangement)).ToList();
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     public IValidationTextBoxViewModel<int> StepsPerLeapUponLaunchVM { get; } = new StepsPerLeapTextBoxViewModel();
     public bool IsAutoLeapingUponLaunch { get; set; }
@@ -29,26 +29,31 @@ public class SimulationLauncherVM : INotifyPropertyChanged
     public IReadOnlyList<ITypeVM> ArrangerVMs { get; }
 
     private ITypeVM _selectedArranger;
+    private IMethodVM _arrangementConstructorVM;
+
+    private static readonly PropertyChangedEventArgs sSelectedArrangerChangedArgs = new(nameof(SelectedArranger));
     public ITypeVM SelectedArranger
     {
         get => _selectedArranger;
         set
         {
+            if (_selectedArranger == value) return;
             _selectedArranger = value;
-            OnPropertyChanged();
+            OnPropertyChanged(sSelectedArrangerChangedArgs);
 
             ArrangementConstructorVM = new ConstructorVM(ConstructorVM.GetLongestPublicConstructor(value.Model));
         }
     }
 
-    private IMethodVM _arrangementConstructorVM;
+    private static readonly PropertyChangedEventArgs sArrangementConstructorVMChangedArgs = new(nameof(ArrangementConstructorVM));
     public IMethodVM ArrangementConstructorVM
     {
         get => _arrangementConstructorVM;
         set
         {
+            if (_arrangementConstructorVM == value) return;
             _arrangementConstructorVM = value;
-            OnPropertyChanged();
+            OnPropertyChanged(sArrangementConstructorVMChangedArgs);
         }
     }
 
@@ -99,10 +104,5 @@ public class SimulationLauncherVM : INotifyPropertyChanged
         };
         simVM.StepsPerLeapVM.CurrentValue = StepsPerLeapUponLaunchVM.CurrentValue;
         return simVM;
-    }
-
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

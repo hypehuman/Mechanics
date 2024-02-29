@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace MechanicsUI;
 
@@ -18,6 +17,9 @@ public interface IValidationTextBoxViewModel<T> : IValidationTextBoxViewModel
 
 public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
     public delegate bool TryParseDelegate(string s, out T parsed, out string message);
 
     private readonly ValidationTextBoxViewModel<T>.TryParseDelegate _tryParse;
@@ -26,7 +28,6 @@ public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
     private string? _tooltipText;
     private T _currentValue;
     private string _textboxText;
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     public ValidationTextBoxViewModel(TryParseDelegate tryParse, Func<T, string>? valueToString = null, T initialValue = default)
     {
@@ -36,38 +37,38 @@ public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
         _textboxText = _valueToString(initialValue);
     }
 
+    private static readonly PropertyChangedEventArgs sHasErrorChangedArgs = new(nameof(HasError));
     public bool HasError
     {
         get => _hasError;
         private set
         {
-            if (value == _hasError)
-                return;
-
+            if (_hasError == value) return;
             _hasError = value;
-            OnPropertyChanged();
+            OnPropertyChanged(sHasErrorChangedArgs);
         }
     }
 
+    private static readonly PropertyChangedEventArgs sTooltipTextChangedArgs = new(nameof(TooltipText));
     public string? TooltipText
     {
         get => _tooltipText;
         private set
         {
-            if (value == _tooltipText)
-                return;
-
+            if (_tooltipText == value) return;
             _tooltipText = value;
-            OnPropertyChanged();
+            OnPropertyChanged(sTooltipTextChangedArgs);
         }
     }
 
+    private static readonly PropertyChangedEventArgs sCurrentValueChangedArgs = new(nameof(CurrentValue));
     public T CurrentValue
     {
         get => _currentValue;
         set => SetCurrentValue(value);
     }
 
+    private static readonly PropertyChangedEventArgs sTextboxTextChangedArgs = new(nameof(TextboxText));
     public string TextboxText
     {
         get => _textboxText;
@@ -86,7 +87,7 @@ public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
         // but other ViewModels might want to know when it changes.
 
         if (!newEqualsOld)
-            OnPropertyChanged(nameof(CurrentValue));
+            OnPropertyChanged(sCurrentValueChangedArgs);
 
         if (!requiresUserEntryUpdate)
             return;
@@ -102,7 +103,7 @@ public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
             return;
 
         _textboxText = input;
-        OnPropertyChanged(nameof(TextboxText));
+        OnPropertyChanged(sTextboxTextChangedArgs);
 
         if (!requiresValidation)
             return;
@@ -124,17 +125,13 @@ public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
                 ) + $"Current value remains '{_valueToString(CurrentValue)}'";
         }
     }
-
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
 }
 
 public class DesignValidationTextBoxViewModel : IValidationTextBoxViewModel
 {
+    public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
+
     public bool HasError => true;
     public string? TooltipText => "Design tooltip text";
     public string TextboxText { get; set; } = "Design textbox text";
-    public event PropertyChangedEventHandler? PropertyChanged;
 }

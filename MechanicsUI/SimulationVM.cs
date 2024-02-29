@@ -12,6 +12,8 @@ namespace MechanicsUI;
 public class SimulationVM : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
     public Simulation Model { get; }
     public RenderOrNotVM AboveRenderVM { get; }
     public RenderOrNotVM FrontRenderVM { get; }
@@ -19,32 +21,56 @@ public class SimulationVM : INotifyPropertyChanged
     public string Title => GetTitleOrSetup(", ");
     public string Setup => GetTitleOrSetup(Environment.NewLine);
     public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
+    public event EventHandler? DoingAutoLeap;
+    private bool _transparentBodies = true;
+    private double _minGlowRadiusFractionOfFrame = 0.002;
+    private bool _glowPush;
+    private bool _isAutoLeaping;
+
+    public SimulationVM(Simulation model)
+    {
+        Model = model;
+        AboveRenderVM = new(this, Perspective.Orthogonal_FromAbove) { ShouldRender = true };
+        FrontRenderVM = new(this, Perspective.Orthogonal_FromFront);
+        RightRenderVM = new(this, Perspective.Orthogonal_FromRight);
+
+        // No need to unhook because this and StepsPerLeapVM have the same lifespan.
+        StepsPerLeapVM.PropertyChanged += (_, e) =>
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(StepsPerLeapVM.CurrentValue):
+                    OnPropertyChanged(sLeapTimeTextChangedArgs);
+                    break;
+            }
+        };
+    }
 
     private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
 
     private static readonly PropertyChangedEventArgs sTransparentBodiesChangedEventArgs = new(nameof(TransparentBodies));
-    private bool _transparentBodies = true;
     public bool TransparentBodies
     {
         get => _transparentBodies;
         set
         {
+            if (_transparentBodies == value) return;
             _transparentBodies = value;
-            PropertyChanged?.Invoke(this, sTransparentBodiesChangedEventArgs);
+            OnPropertyChanged(sTransparentBodiesChangedEventArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
-    private double _minGlowRadiusFractionOfFrame = 0.002;
     public double MinGlowRadiusFractionOfFrame
     {
         get => _minGlowRadiusFractionOfFrame;
         set
         {
+            if (_minGlowRadiusFractionOfFrame == value) return;
             _minGlowRadiusFractionOfFrame = value;
-            PropertyChanged?.Invoke(this, sMinGlowRadiusFractionOfFrameChangedArgs);
-            PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
+            OnPropertyChanged(sMinGlowRadiusFractionOfFrameChangedArgs);
+            OnPropertyChanged(sMinGlowRadiusChangedArgs);
         }
     }
 
@@ -61,17 +87,14 @@ public class SimulationVM : INotifyPropertyChanged
     }
 
     private static readonly PropertyChangedEventArgs sGlowPushChangedArgs = new(nameof(GlowPush));
-    private bool _glowPush;
     public bool GlowPush
     {
         get => _glowPush;
         set
         {
-            if (_glowPush == value)
-                return;
-
+            if (_glowPush == value) return;
             _glowPush = value;
-            PropertyChanged?.Invoke(this, sGlowPushChangedArgs);
+            OnPropertyChanged(sGlowPushChangedArgs);
         }
     }
 
@@ -83,35 +106,21 @@ public class SimulationVM : INotifyPropertyChanged
         "When bodies' glows overlap, push them apart visually." + Environment.NewLine +
         "Can severely degrade performance.";
 
+    public static readonly PropertyChangedEventArgs sLeapTimeTextChangedArgs = new(nameof(LeapTimeText));
     public string LeapTimeText =>
         "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
 
     private static readonly PropertyChangedEventArgs sIsAutoLeapingChangedArgs = new(nameof(IsAutoLeaping));
-    private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
         get => _isAutoLeaping;
         set
         {
+            if (_isAutoLeaping == value) return;
             _isAutoLeaping = value;
-            PropertyChanged?.Invoke(this, sIsAutoLeapingChangedArgs);
+            OnPropertyChanged(sIsAutoLeapingChangedArgs);
             DoAutoLeap(Dispatcher.CurrentDispatcher);
         }
-    }
-
-    public event EventHandler? DoingAutoLeap;
-
-    public SimulationVM(Simulation model)
-    {
-        Model = model;
-        AboveRenderVM = new(this, Perspective.Orthogonal_FromAbove) { ShouldRender = true };
-        FrontRenderVM = new(this, Perspective.Orthogonal_FromFront);
-        RightRenderVM = new(this, Perspective.Orthogonal_FromRight);
-        StepsPerLeapVM.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
-                PropertyChanged?.Invoke(this, new(nameof(LeapTimeText)));
-        };
     }
 
     public IEnumerable<RenderOrNotVM> RenderVMs
@@ -160,7 +169,7 @@ public class SimulationVM : INotifyPropertyChanged
 
     private void RefreshSim()
     {
-        PropertyChanged?.Invoke(this, sStateSummaryChangedArgs);
+        OnPropertyChanged(sStateSummaryChangedArgs);
 
         foreach (var rvm in RenderVMs)
         {

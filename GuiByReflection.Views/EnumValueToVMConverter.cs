@@ -25,6 +25,13 @@ public class EnumValueToVMConverter : IValueConverter
 
     private class FallbackEnumValueVM : IEnumValueVM
     {
+        /// <summary>
+        /// Never needs to be raised, as bound properties never change.
+        /// Interface is implemented to prevent WPF from trying to track changes on these properties,
+        /// which could impact performance and cause memory leaks.
+        /// </summary>
+        public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
+
         public object? ActualValue { get; }
 
         public FallbackEnumValueVM(object? actualValue)
@@ -48,7 +55,5 @@ public class EnumValueToVMConverter : IValueConverter
         }
 
         public string? ActualGuiHelp => null;
-
-        public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
     }
 }

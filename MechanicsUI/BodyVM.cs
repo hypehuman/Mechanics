@@ -9,9 +9,17 @@ namespace MechanicsUI;
 
 public class BodyVM : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
     public Body Model { get; }
     public RenderVM RenderVM { get; }
-    public event PropertyChangedEventHandler? PropertyChanged;
+    private Point _panelCenterXY;
+    private int _panelZIndex;
+    private string _labelText;
+    private Color _winMediaColor;
+    private double _glowRadius;
+    private double _trueRadiusOverGlowRadius;
 
     public BodyVM(Body model, RenderVM renderVM)
     {
@@ -39,86 +47,74 @@ public class BodyVM : INotifyPropertyChanged
     private SimulationVM SimulationVM => RenderVM.SimulationVM;
 
     private static readonly PropertyChangedEventArgs sPanelCenterXYChangedArgs = new(nameof(PanelCenterXY));
-    private Point _panelCenterXY;
     public Point PanelCenterXY
     {
         get => _panelCenterXY;
         private set
         {
-            if (_panelCenterXY == value)
-                return;
+            if (_panelCenterXY == value) return;
             _panelCenterXY = value;
-            PropertyChanged?.Invoke(this, sPanelCenterXYChangedArgs);
+            OnPropertyChanged(sPanelCenterXYChangedArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sPanelZIndexChangedArgs = new(nameof(PanelZIndex));
-    private int _panelZIndex;
     public int PanelZIndex
     {
         get => _panelZIndex;
         private set
         {
-            if (_panelZIndex == value)
-                return;
+            if (_panelZIndex == value) return;
             _panelZIndex = value;
-            PropertyChanged?.Invoke(this, sPanelZIndexChangedArgs);
+            OnPropertyChanged(sPanelZIndexChangedArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sLabelTextChangedArgs = new(nameof(LabelText));
-    private string _labelText;
     public string LabelText
     {
         get => _labelText;
         private set
         {
-            if (value == _labelText)
-                return;
+            if (_labelText == value) return;
             _labelText = value;
-            PropertyChanged?.Invoke(this, sLabelTextChangedArgs);
+            OnPropertyChanged(sLabelTextChangedArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sWinMediaColorChangedArgs = new(nameof(WinMediaColor));
-    private Color _winMediaColor;
     public Color WinMediaColor
     {
         get => _winMediaColor;
         private set
         {
-            if (_winMediaColor == value)
-                return;
+            if (_winMediaColor == value) return;
             _winMediaColor = value;
-            PropertyChanged?.Invoke(this, sWinMediaColorChangedArgs);
+            OnPropertyChanged(sWinMediaColorChangedArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sGlowRadiusChangedArgs = new(nameof(GlowRadius));
-    private double _glowRadius;
     public double GlowRadius
     {
         get => _glowRadius;
         private set
         {
-            if (_glowRadius == value)
-                return;
+            if (_glowRadius == value) return;
             _glowRadius = value;
-            PropertyChanged?.Invoke(this, sGlowRadiusChangedArgs);
+            OnPropertyChanged(sGlowRadiusChangedArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sTrueRadiusOverGlowRadiusChangedArgs = new(nameof(TrueRadiusOverGlowRadius));
-    private double _trueRadiusOverGlowRadius;
     public double TrueRadiusOverGlowRadius
     {
         get => _trueRadiusOverGlowRadius;
         private set
         {
-            if (value == _trueRadiusOverGlowRadius)
-                return;
+            if (_trueRadiusOverGlowRadius == value) return;
             _trueRadiusOverGlowRadius = value;
-            PropertyChanged?.Invoke(this, sTrueRadiusOverGlowRadiusChangedArgs);
+            OnPropertyChanged(sTrueRadiusOverGlowRadiusChangedArgs);
         }
     }
 

@@ -1,12 +1,14 @@
 ﻿using GuiByReflection.Models;
 using System.ComponentModel;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace GuiByReflection.ViewModels;
 
 public class ParameterVM : IParameterVM
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
     private readonly ParameterInfo _parameterInfo;
     private readonly IUserEntryHandler _userEntryHandler;
     private object? _userEntry;
@@ -14,7 +16,6 @@ public class ParameterVM : IParameterVM
     private bool _hasMessage;
     private string? _message;
 
-    public event PropertyChangedEventHandler? PropertyChanged;
     public Type ParameterType { get; }
     public string ActualGuiName { get; }
     public string? ActualGuiHelp { get; }
@@ -31,6 +32,7 @@ public class ParameterVM : IParameterVM
         SetActualValue(GetDefaultParameterValue(), updateUserEnteredValue: true);
     }
 
+    private static readonly PropertyChangedEventArgs sUserEntryChangedArgs = new(nameof(UserEntry));
     public object? UserEntry
     {
         get => _userEntry;
@@ -39,10 +41,9 @@ public class ParameterVM : IParameterVM
 
     private void SetUserEntry(object? userEntry, bool updateActualValue)
     {
-        if (_userEntry == userEntry)
-            return;
+        if (_userEntry == userEntry) return;
         _userEntry = userEntry;
-        OnPropertyChanged(nameof(UserEntry));
+        OnPropertyChanged(sUserEntryChangedArgs);
 
         if (updateActualValue)
         {
@@ -52,6 +53,7 @@ public class ParameterVM : IParameterVM
         }
     }
 
+    private static readonly PropertyChangedEventArgs sActualValueChangedArgs = new(nameof(ActualValue));
     public object? ActualValue => _actualValue;
 
     /// <summary>
@@ -63,7 +65,7 @@ public class ParameterVM : IParameterVM
         if (_actualValue == actualValue)
             return;
         _actualValue = actualValue;
-        OnPropertyChanged(nameof(ActualValue));
+        OnPropertyChanged(sActualValueChangedArgs);
 
         if (updateUserEnteredValue)
         {
@@ -72,27 +74,27 @@ public class ParameterVM : IParameterVM
         }
     }
 
+    private static readonly PropertyChangedEventArgs sHasMessageChangedArgs = new(nameof(HasMessage));
     public bool HasMessage
     {
         get => _hasMessage;
         private set
         {
-            if (_hasMessage == value)
-                return;
+            if (_hasMessage == value) return;
             _hasMessage = value;
-            OnPropertyChanged();
+            OnPropertyChanged(sHasMessageChangedArgs);
         }
     }
 
+    private static readonly PropertyChangedEventArgs sMessageChangedArgs = new(nameof(Message));
     public string? Message
     {
         get => _message;
         private set
         {
-            if (_message == value)
-                return;
+            if (_message == value) return;
             _message = value;
-            OnPropertyChanged();
+            OnPropertyChanged(sMessageChangedArgs);
             HasMessage = !string.IsNullOrWhiteSpace(value);
         }
     }
@@ -122,10 +124,5 @@ public class ParameterVM : IParameterVM
                 !targetType.IsValueType || Nullable.GetUnderlyingType(targetType) != null :
                 // If the value is not null, use IsAssignableFrom
                 targetType.IsAssignableFrom(value.GetType());
-    }
-
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

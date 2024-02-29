@@ -1,16 +1,17 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace GuiByReflection.ViewModels;
 
 public class MethodVM : IMethodVM
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
     private readonly object? _object;
     private readonly MethodBase _methodInfo;
     private IExceptionButtonVM? _latestExceptionVM;
 
-    public event PropertyChangedEventHandler? PropertyChanged;
     public IReadOnlyList<IParameterVM> ParameterVMs { get; }
 
     /// <param name="obj">The object on which to call the method; null if the method is static.</param>
@@ -31,13 +32,14 @@ public class MethodVM : IMethodVM
         ParameterVMs = parameterInfoVMs;
     }
 
+    private static readonly PropertyChangedEventArgs sLatestExceptionVMChangedArgs = new(nameof(LatestExceptionVM));
     public IExceptionButtonVM? LatestExceptionVM
     {
         get => _latestExceptionVM;
         private set
         {
             _latestExceptionVM = value;
-            OnPropertyChanged();
+            OnPropertyChanged(sLatestExceptionVMChangedArgs);
         }
     }
 
@@ -109,10 +111,5 @@ public class MethodVM : IMethodVM
     protected virtual object? InvokeMethod(object?[]? parameterValues)
     {
         return _methodInfo.Invoke(_object, parameterValues);
-    }
-
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

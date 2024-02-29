@@ -11,10 +11,16 @@ public interface IPropertyVM : IHasGuiName, IHasGuiHelp
 
 public class PropertyVM : IPropertyVM
 {
+    /// <summary>
+    /// Never needs to be raised, as <see cref="ActualGuiName"/> <see cref="ActualGuiHelp"/> never change.
+    /// Interface is implemented to prevent WPF from trying to track changes on these properties,
+    /// which could impact performance and cause memory leaks.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged { add { } remove { } }
+
     private readonly object? _object;
     private readonly PropertyInfo _propertyInfo;
 
-    public event PropertyChangedEventHandler? PropertyChanged;
     public string ActualGuiName { get; }
     public string? ActualGuiHelp { get; }
 

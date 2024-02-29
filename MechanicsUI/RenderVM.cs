@@ -12,26 +12,25 @@ namespace MechanicsUI;
 public class RenderVM : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
     public SimulationVM SimulationVM { get; }
     public Perspective Perspective { get; }
     public ObservableCollection<BodyVM> BodyVMs { get; }
     private Dictionary<Body, BodyVM> _bodyVMsByModel { get; }
     public ObservableCollection<BodyVM> BodyVMsByDistance { get; set; } = new ObservableCollection<BodyVM>();
+
+    private static readonly PropertyChangedEventArgs sCanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
     public double CanvasTranslateX { get; private set; }
+
+    private static readonly PropertyChangedEventArgs sCanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
     public double CanvasTranslateY { get; private set; }
+
+    private static readonly PropertyChangedEventArgs sCanvasScaleChangedArgs = new(nameof(CanvasScale));
     public double CanvasScale { get; private set; } = 1;
 
     private Point? _mousePosition;
-
     private Size _availableSizePix;
-    public Size AvailableSizePix
-    {
-        set
-        {
-            _availableSizePix = value;
-            RefreshBounds();
-        }
-    }
 
     public RenderVM(SimulationVM simulationVM, Perspective perspective)
     {
@@ -71,9 +70,15 @@ public class RenderVM : INotifyPropertyChanged
     public double GridWidth => Math.Abs(PanelDisplayBound1.X - PanelDisplayBound0.X);
     public double GridHeight => Math.Abs(PanelDisplayBound1.Y - PanelDisplayBound0.Y);
 
-    private static readonly PropertyChangedEventArgs sCanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
-    private static readonly PropertyChangedEventArgs sCanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
-    private static readonly PropertyChangedEventArgs sCanvasScaleChangedArgs = new(nameof(CanvasScale));
+    public Size AvailableSizePix
+    {
+        set
+        {
+            if (_availableSizePix == value) return;
+            _availableSizePix = value;
+            RefreshBounds();
+        }
+    }
 
     internal void RefreshSim()
     {
@@ -129,9 +134,9 @@ public class RenderVM : INotifyPropertyChanged
         CanvasScale = Math.Min(xScale, yScale);
         CanvasTranslateX = -(xMin + xMax) / 2 * xScale;
         CanvasTranslateY = -(yMin + yMax) / 2 * yScale;
-        PropertyChanged?.Invoke(this, sCanvasTranslateXChangedArgs);
-        PropertyChanged?.Invoke(this, sCanvasTranslateYChangedArgs);
-        PropertyChanged?.Invoke(this, sCanvasScaleChangedArgs);
+        OnPropertyChanged(sCanvasTranslateXChangedArgs);
+        OnPropertyChanged(sCanvasTranslateYChangedArgs);
+        OnPropertyChanged(sCanvasScaleChangedArgs);
     }
 
     public static void Sort(double a, double b, out double min, out double max)
