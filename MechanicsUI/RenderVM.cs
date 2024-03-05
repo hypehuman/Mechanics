@@ -17,8 +17,8 @@ public class RenderVM : INotifyPropertyChanged
     public SimulationVM SimulationVM { get; }
     public Perspective Perspective { get; }
     public ObservableCollection<BodyVM> BodyVMs { get; }
-    private Dictionary<Body, BodyVM> _bodyVMsByModel { get; }
-    public ObservableCollection<BodyVM> BodyVMsByDistance { get; set; } = new ObservableCollection<BodyVM>();
+    private readonly Dictionary<Body, BodyVM> _bodyVMsByModel;
+    public ObservableCollectionPlus<BodyVM> BodyVMsByDistance { get; set; } = new();
 
     private static readonly PropertyChangedEventArgs sCanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
     public double CanvasTranslateX { get; private set; }
@@ -108,7 +108,6 @@ public class RenderVM : INotifyPropertyChanged
         _mousePosition = mousePosition;
         if (mousePosition == null)
             return;
-        BodyVMsByDistance.Clear();
         var byDistance = BodyVMs
             .OrderBy(b =>
             {
@@ -116,9 +115,10 @@ public class RenderVM : INotifyPropertyChanged
                 var dy = b.PanelCenterXY.Y - mousePosition.Value.Y;
                 return Math.Sqrt(dx * dx + dy * dy);
             })
-            .Take(10);
-        foreach (var b in byDistance)
-            BodyVMsByDistance.Add(b);
+            .Take(10)
+            .ToList();
+        if (!BodyVMsByDistance.SequenceEqual(byDistance))
+            BodyVMsByDistance.Reset(byDistance);
     }
 
     private void RefreshBounds()
