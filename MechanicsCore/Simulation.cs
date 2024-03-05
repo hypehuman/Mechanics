@@ -53,12 +53,25 @@ public class Simulation
             ComputeStep();
             return true;
         }
-        catch (StepFailedException caughtEx)
+        catch (StepFailedException sfEx)
         {
-            HasError = true;
-            LatestErrorMessage = caughtEx.Message;
+            SetError(sfEx.Message);
             return false;
         }
+        // Parallel.For wraps all exceptions in an AggregateException,
+        // so look inside those for a StepFailedException as well.
+        catch (AggregateException agEx)
+            when (agEx.InnerExceptions.Count >= 1 && agEx.InnerExceptions.All(ex => ex is StepFailedException))
+        {
+            SetError(string.Join(Environment.NewLine, agEx.InnerExceptions.Select(sfEx => sfEx.Message)));
+            return false;
+        }
+    }
+
+    private void SetError(string message)
+    {
+        HasError = true;
+        LatestErrorMessage = message;
     }
 
     /// <summary>
