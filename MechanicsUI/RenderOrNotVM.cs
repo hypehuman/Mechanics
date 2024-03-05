@@ -57,3 +57,12 @@ public class RenderOrNotVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs sGridHeightChangedArgs = new(nameof(GridHeight));
     public double GridHeight => NullableRenderVM?.GridHeight ?? default;
 }
+
+public class DesignRenderOrNotVM : RenderOrNotVM
+{
+    public DesignRenderOrNotVM()
+        : base(new DefaultSimulationVM(), Perspective.Orthogonal_FromAbove)
+    {
+        ShouldRender = true;
+    }
+}
