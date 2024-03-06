@@ -29,12 +29,14 @@ public class BottomPartViewModel
 {
     public ObservableCollection<object> Items { get; } = new ObservableCollection<object>
     {
-        "Initial Item",
+        "Initial Item 1",
+        "Initial Item 2",
+        "Initial Item 3",
     };
 
     internal void AddItem(object item)
     {
-        Items.RemoveAt(Items.Count - 1);
-        Items.Insert(0, item);
+        Items.RemoveAt(0);
+        Items.Add(item);
     }
 }
