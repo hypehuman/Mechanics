@@ -16,13 +16,6 @@ partial class BottomPart
 
         (DataContext as BottomPartViewModel)?.AddItem("OnMouseMove: " + e.GetPosition(this));
     }
-
-    protected override void OnMouseLeave(MouseEventArgs e)
-    {
-        base.OnMouseLeave(e);
-
-        (DataContext as BottomPartViewModel)?.AddItem("OnMouseLeave");
-    }
 }
 
 public class BottomPartViewModel
