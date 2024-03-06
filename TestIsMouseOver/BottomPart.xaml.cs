@@ -29,9 +29,7 @@ public class BottomPartViewModel
 {
     public ObservableCollection<object> Items { get; } = new ObservableCollection<object>
     {
-        "Initial Item 1",
-        "Initial Item 2",
-        "Initial Item 3",
+        "Initial Item",
     };
 
     internal void AddItem(object item)
