@@ -20,18 +20,18 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_one(
 ) -> Vector3<f64> {
     match num_bodies {
         3 => compute_gravitational_acceleration_many_on_one::<3>(
-            *ptr_to_array_const(masses),
-            *ptr_to_array_const(positions),
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
             index_of_self,
         ),
         60 => compute_gravitational_acceleration_many_on_one::<60>(
-            *ptr_to_array_const(masses),
-            *ptr_to_array_const(positions),
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
             index_of_self,
         ),
         2048 => compute_gravitational_acceleration_many_on_one::<2048>(
-            *ptr_to_array_const(masses),
-            *ptr_to_array_const(positions),
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
             index_of_self,
         ),
         _ => panic!("Unsupported num_bodies: {}", num_bodies)
@@ -47,18 +47,18 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_many(
 ) {
     match num_bodies {
         3 => compute_gravitational_acceleration_many_on_many::<3>(
-            *ptr_to_array_const(masses),
-            *ptr_to_array_const(positions),
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
             ptr_to_array_mut(accelerations),
         ),
         60 => compute_gravitational_acceleration_many_on_many::<60>(
-            *ptr_to_array_const(masses),
-            *ptr_to_array_const(positions),
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
             ptr_to_array_mut(accelerations),
         ),
         2048 => compute_gravitational_acceleration_many_on_many::<2048>(
-            *ptr_to_array_const(masses),
-            *ptr_to_array_const(positions),
+            ptr_to_array_const(masses),
+            ptr_to_array_const(positions),
             ptr_to_array_mut(accelerations),
         ),
         _ => panic!("Unsupported num_bodies: {}", num_bodies)
@@ -78,21 +78,21 @@ pub extern "C" fn pub_try_leap(
         3 => try_leap::<3>(
             requested_num_steps,
             step_duration,
-            *ptr_to_array_const(masses),
+            ptr_to_array_const(masses),
             ptr_to_array_mut(positions),
             ptr_to_array_mut(velocities),
         ),
         60 => try_leap::<60>(
             requested_num_steps,
             step_duration,
-            *ptr_to_array_const(masses),
+            ptr_to_array_const(masses),
             ptr_to_array_mut(positions),
             ptr_to_array_mut(velocities),
         ),
         2048 => try_leap::<2048>(
             requested_num_steps,
             step_duration,
-            *ptr_to_array_const(masses),
+            ptr_to_array_const(masses),
             ptr_to_array_mut(positions),
             ptr_to_array_mut(velocities),
         ),
@@ -126,8 +126,8 @@ fn compute_gravitational_acceleration_one_on_one(
 }
 
 fn compute_gravitational_acceleration_many_on_one<const N: usize>(
-    masses: [f64; N],
-    positions: [Vector3<f64>; N],
+    masses: &[f64; N],
+    positions: &[Vector3<f64>; N],
     index_of_self: usize,
 ) -> Vector3<f64> {
     let mut acceleration = ZERO_VECTOR;
@@ -144,8 +144,8 @@ fn compute_gravitational_acceleration_many_on_one<const N: usize>(
 }
 
 fn compute_gravitational_acceleration_many_on_many<const N: usize>(
-    masses: [f64; N],
-    positions: [Vector3<f64>; N],
+    masses: &[f64; N],
+    positions: &[Vector3<f64>; N],
     accelerations: &mut [Vector3<f64>; N],
 ) {
     accelerations.par_iter_mut().enumerate().for_each(|(i, a)| {
@@ -155,9 +155,9 @@ fn compute_gravitational_acceleration_many_on_many<const N: usize>(
 
 fn try_compute_step<const N: usize>(
     step_duration: f64,
-    masses: [f64; N],
-    positions_curr: [Vector3<f64>; N],
-    velocities_curr: [Vector3<f64>; N],
+    masses: &[f64; N],
+    positions_curr: &[Vector3<f64>; N],
+    velocities_curr: &[Vector3<f64>; N],
     positions_next: &mut [Vector3<f64>; N],
     velocities_next: &mut [Vector3<f64>; N],
     accelerations: &mut [Vector3<f64>; N],
@@ -180,7 +180,7 @@ fn try_compute_step<const N: usize>(
 fn try_leap<const N: usize>(
     requested_num_steps: usize,
     step_duration: f64,
-    masses: [f64; N],
+    masses: &[f64; N],
     positions: &mut [Vector3<f64>; N],
     velocities: &mut [Vector3<f64>; N],
 ) -> usize {
@@ -198,10 +198,10 @@ fn try_leap<const N: usize>(
     for step_i in 0..requested_num_steps {
         let success: bool;
         if step_i % 2 == 0 {
-            success = try_compute_step(step_duration, masses, *positions, *velocities, positions_b, velocities_b, accelerations);
+            success = try_compute_step(step_duration, masses, positions, velocities, positions_b, velocities_b, accelerations);
         }
         else {
-            success = try_compute_step(step_duration, masses, *positions_b, *velocities_b, positions, velocities, accelerations);
+            success = try_compute_step(step_duration, masses, positions_b, velocities_b, positions, velocities, accelerations);
         };
         if !success {
             actual_num_steps = step_i;
@@ -257,7 +257,7 @@ mod tests {
     fn test_compute_gravitational_acceleration_many_on_one() {
         // acceleration of earth due to both sun's and moon's gravity
         let expected = Vector3::new(-5.9301e-03, 3.3188e-05, 0.0000e00);
-        let actual = compute_gravitational_acceleration_many_on_one(THREE_MASSES, THREE_POSITIONS, 1);
+        let actual = compute_gravitational_acceleration_many_on_one(&THREE_MASSES, &THREE_POSITIONS, 1);
         assert_relative_eq!(expected, actual, max_relative = 0.001);
     }
 
@@ -272,7 +272,7 @@ mod tests {
         ];
 
         let mut actual = [ZERO_VECTOR; N];
-        compute_gravitational_acceleration_many_on_many(THREE_MASSES, THREE_POSITIONS, &mut actual);
+        compute_gravitational_acceleration_many_on_many(&THREE_MASSES, &THREE_POSITIONS, &mut actual);
 
         for i in 0..N {
             assert_relative_eq!(expected[i], actual[i], max_relative = 0.001);
@@ -298,7 +298,7 @@ mod tests {
         let step_duration = 16.0;
         let mut positions = THREE_POSITIONS;
         let mut velocities = THREE_VELOCITIES;
-        let actual_num_steps = try_leap(requested_num_steps, step_duration, THREE_MASSES, &mut positions, &mut velocities);
+        let actual_num_steps = try_leap(requested_num_steps, step_duration, &THREE_MASSES, &mut positions, &mut velocities);
 
         assert_eq!(requested_num_steps, actual_num_steps);
         for i in 0..N {
@@ -316,7 +316,7 @@ mod tests {
         let masses = [1.0; N];
         let mut positions = [ZERO_VECTOR; N];
         let mut velocities = [ZERO_VECTOR; N];
-        let actual_num_steps = try_leap(requested_num_steps, 1.0, masses, &mut positions, &mut velocities);
+        let actual_num_steps = try_leap(requested_num_steps, 1.0, &masses, &mut positions, &mut velocities);
 
         assert_eq!(0, actual_num_steps);
         for i in 0..N {
