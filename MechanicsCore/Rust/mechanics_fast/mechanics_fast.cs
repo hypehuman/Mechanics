@@ -34,7 +34,14 @@ public static class mechanics_fast
             {
                 fixed (Vector3D* positionsPtr = positions)
                 {
-                    return pub_compute_gravitational_acceleration_many_on_one(massesPtr, positionsPtr, (UIntPtr)numBodies, (UIntPtr)index_of_self);
+                    try
+                    {
+                        return pub_compute_gravitational_acceleration_many_on_one(massesPtr, positionsPtr, (UIntPtr)numBodies, (UIntPtr)index_of_self);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new StepFailedException(ex.ToString());
+                    }
                 }
             }
         }
@@ -50,7 +57,14 @@ public static class mechanics_fast
                 {
                     fixed (Vector3D* accelerationsPtr = accelerationsOut)
                     {
-                        pub_compute_gravitational_acceleration_many_on_many(massesPtr, positionsPtr, (UIntPtr)numBodies, accelerationsPtr);
+                        try
+                        {
+                            pub_compute_gravitational_acceleration_many_on_many(massesPtr, positionsPtr, (UIntPtr)numBodies, accelerationsPtr);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new StepFailedException(ex.ToString());
+                        }
                     }
                 }
             }
