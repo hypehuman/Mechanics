@@ -123,6 +123,7 @@ public class SimulationVM : INotifyPropertyChanged
             return;
         }
 
+        // TODO: Propagate exceptions! Currently it looks like the exception is being thrown away.
         LeapAndRefresh();
         dispatcher.InvokeAsync(() => DoAutoLeap(dispatcher), DispatcherPriority.Background);
     }
