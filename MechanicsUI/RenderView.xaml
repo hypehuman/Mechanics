@@ -63,6 +63,7 @@
                 </ItemsControl.ItemContainerStyle>
             </ItemsControl>
             <ItemsControl
+                x:Name="BodiesByDistanceView"
                 Visibility="{Binding ElementName=TheBorder, Path=IsMouseOver, Converter={StaticResource bvc}}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"

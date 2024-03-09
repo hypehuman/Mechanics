@@ -2,8 +2,11 @@
 using GuiByReflection.ViewModels;
 using MechanicsCore;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace MechanicsUI;
@@ -98,16 +101,41 @@ partial class SimulationLauncherView
 
     private void OnFirstLoaded()
     {
-        return;
-        // Run performance test
+        // Wait for the picker window to become active before opening the simulation window.
+        // Otherwise the picker window will cover the simulation window.
+        var timer = new DispatcherTimer();
+        timer.Tick += delegate
+        {
+            timer.Stop();
+            RunPerformanceTest();
+        };
+        timer.Start();
+    }
+
+    private void RunPerformanceTest()
+    {
         var launcherVM = ViewModel;
         var scenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
         launcherVM.LoadScenarioConfig(scenario);
         var simVM = LaunchButton_Click();
+        foreach (var ronVM in simVM.RenderVMs)
+        {
+            // Simulates moving the mouse into the frame so that the list of bodies by distance appears.
+            ronVM.NullableRenderVM?.RefreshByDistance(new Point(0, 0));
+        }
+        var simView = Application.Current.Windows.Cast<Window>().Select(w => w.Content).OfType<SimulationView>().Single();
+        foreach (var ronView in GetDescendants(simView, 6).OfType<RenderOrNotView>())
+        {
+            foreach (var renderView in GetDescendants(ronView, 4).OfType<RenderView>())
+            {
+                renderView.BodiesByDistanceView.Visibility = Visibility.Visible;
+            }
+        }
+
         var sw = new Stopwatch();
         simVM.DoingAutoLeap += (sender, e) =>
         {
-            if (simVM.Model.NumStepsPerformed >= 100000)
+            if (simVM.Model.NumStepsPerformed >= 20000)
             {
                 simVM.IsAutoLeaping = false;
                 Utils.WritePerformanceResults(sw);
@@ -116,5 +144,20 @@ partial class SimulationLauncherView
         };
         sw.Start();
         simVM.IsAutoLeaping = true;
+    }
+
+    private static IEnumerable<DependencyObject> GetDescendants(object obj, int maxDepth)
+    {
+        if (maxDepth == 0 || obj is not DependencyObject depObj)
+            yield break;
+
+        yield return depObj;
+
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+        {
+            var child = VisualTreeHelper.GetChild(depObj, i);
+            foreach (var furtherDescendant in GetDescendants(child, maxDepth - 1))
+                yield return furtherDescendant;
+        }
     }
 }

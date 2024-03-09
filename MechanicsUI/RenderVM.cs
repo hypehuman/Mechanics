@@ -72,17 +72,22 @@ public class RenderVM : INotifyPropertyChanged
         RefreshByDistance(_mousePosition);
     }
 
-    public void RefreshByDistance(Point? mousePosition)
+    public void SilentlySetMousePosition(Point? value)
     {
-        _mousePosition = mousePosition;
-        if (mousePosition == null)
+        _mousePosition = value;
+    }
+
+    public void RefreshByDistance(Point? value)
+    {
+        SilentlySetMousePosition(value);
+        if (_mousePosition == null)
             return;
         BodyVMsByDistance.Clear();
         var byDistance = BodyVMs
             .OrderBy(b =>
             {
-                var dx = b.PanelCenterXY.X - mousePosition.Value.X;
-                var dy = b.PanelCenterXY.Y - mousePosition.Value.Y;
+                var dx = b.PanelCenterXY.X - _mousePosition.Value.X;
+                var dy = b.PanelCenterXY.Y - _mousePosition.Value.Y;
                 return Math.Sqrt(dx * dx + dy * dy);
             })
             .Take(10);
