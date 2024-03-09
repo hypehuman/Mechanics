@@ -11,9 +11,9 @@ internal class Program
     {
         Console.WriteLine("Running performance tests:");
         var sw = Stopwatch.StartNew();
-        var wpfScenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
-        SeeHowLongItTakes(wpfScenario, 1, 100000);
-        File.WriteAllText("performance test results.txt", sw.ElapsedMilliseconds.ToString());
+        var horizonsScenario = ScenarioGallery.ModernSolarSystem; 
+        SeeHowLongItTakes(horizonsScenario, 3, 200_000);
+        Utils.WritePerformanceResults(sw);
         return;
 
         var ballHuge = new Scenario(

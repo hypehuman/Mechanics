@@ -1,5 +1,7 @@
 ﻿using MathNet.Spatial.Euclidean;
+using System.Diagnostics;
 using System.Reflection;
+using System.Xml;
 
 namespace MechanicsCore;
 
@@ -30,5 +32,16 @@ public static class Utils
             double.IsFinite(v.X) &&
             double.IsFinite(v.Y) &&
             double.IsFinite(v.Z);
+    }
+
+    public static void WritePerformanceResults(Stopwatch sw)
+    {
+        var timestamp = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.RoundtripKind);
+        WritePerformanceLine($"{timestamp}\t{sw.ElapsedMilliseconds}\tms");
+    }
+
+    public static void WritePerformanceLine(string line)
+    {
+        File.AppendAllLines("performance test results.txt", new[] { line });
     }
 }
