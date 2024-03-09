@@ -69,4 +69,8 @@ public class PhysicsConfiguration : IGetConstructorParameters
     public bool CanTakeSimpleShortcut() =>
         GravityConfig == GravityType.Newton_Pointlike &&
         CollisionConfig != CollisionType.Drag;
+
+    public bool CanLeapWithRust() =>
+        CanTakeSimpleShortcut() &&
+        CollisionConfig == CollisionType.None;
 }

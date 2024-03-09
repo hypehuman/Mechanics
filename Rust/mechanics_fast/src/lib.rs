@@ -1,4 +1,4 @@
-use cgmath::{InnerSpace, Vector3};
+use cgmath::{Array, InnerSpace, Vector3};
 use rayon::prelude::*;
 
 const ZERO_VECTOR: Vector3<f64> = Vector3::new(0.0, 0.0, 0.0);
@@ -39,6 +39,25 @@ pub extern "C" fn pub_compute_gravitational_acceleration_many_on_many(
     )
 }
 
+#[no_mangle]
+pub extern "C" fn pub_try_leap(
+    requested_num_steps: usize,
+    step_duration: f64,
+    masses: *const f64,
+    positions: *mut Vector3<f64>,
+    velocities: *mut Vector3<f64>,
+    num_bodies: usize,
+) -> usize {
+    let actual_num_steps = try_leap(
+        requested_num_steps,
+        step_duration,
+        unsafe { std::slice::from_raw_parts(masses, num_bodies) },
+        unsafe { std::slice::from_raw_parts_mut(positions, num_bodies) },
+        unsafe { std::slice::from_raw_parts_mut(velocities, num_bodies) },
+    );
+    actual_num_steps
+}
+
 fn compute_gravitational_acceleration_one_on_one(
     displacement: Vector3<f64>,
     m2: f64,
@@ -56,9 +75,10 @@ fn compute_gravitational_acceleration_many_on_one(
     positions: &[Vector3<f64>],
     index_of_self: usize,
 ) -> Vector3<f64> {
+    let num_bodies = masses.len();
     let mut acceleration = ZERO_VECTOR;
 
-    for i in 0..masses.len() {
+    for i in 0..num_bodies {
         if i != index_of_self {
             let displacement = positions[i] - positions[index_of_self];
             let grav_acceleration = compute_gravitational_acceleration_one_on_one(displacement, masses[i]);
@@ -79,6 +99,76 @@ fn compute_gravitational_acceleration_many_on_many(
     });
 }
 
+fn try_compute_step(
+    step_duration: f64,
+    masses: &[f64],
+    positions_curr: &[Vector3<f64>],
+    velocities_curr: &[Vector3<f64>],
+    positions_next: &mut [Vector3<f64>],
+    velocities_next: &mut [Vector3<f64>],
+    accelerations: &mut [Vector3<f64>],
+) -> bool {
+    let num_bodies = masses.len();
+    compute_gravitational_acceleration_many_on_many(masses, positions_curr, accelerations);
+    // C# code parallelizes this loop, but I don't know how to do that in Rust while mutating two arrays.
+    for i in 0..num_bodies {
+        let a = accelerations[i];
+        let v = velocities_curr[i] + step_duration * a;
+        let p = positions_curr[i] + step_duration * v;
+        if !a.is_finite() || !v.is_finite() || !p.is_finite() {
+            return false;
+        }
+        positions_next[i] = p;
+        velocities_next[i] = v;
+    }
+    true
+}
+
+fn try_leap(
+    requested_num_steps: usize,
+    step_duration: f64,
+    masses: &[f64],
+    positions: &mut [Vector3<f64>],
+    velocities: &mut [Vector3<f64>],
+) -> usize {
+    let num_bodies = masses.len();
+
+    // Alternate between using one set as the "read" arrays and the other set as the "write" arrays.
+    // Technially one of these could be local to try_compute_step.
+    let positions_b = &mut vec![ZERO_VECTOR; num_bodies];
+    let velocities_b = &mut vec![ZERO_VECTOR; num_bodies];
+
+    // Alternatively, we could initialize one of these in each try_compute_step.
+    // I'm betting that declaring it here and reusing it in each step will give better performance,
+    // but let's see about that.
+    let accelerations = &mut vec![ZERO_VECTOR; num_bodies];
+
+    let mut actual_num_steps = requested_num_steps;
+    for step_i in 0..requested_num_steps {
+        let success: bool;
+        if step_i % 2 == 0 {
+            success = try_compute_step(step_duration, masses, positions, velocities, positions_b, velocities_b, accelerations);
+        }
+        else {
+            success = try_compute_step(step_duration, masses, positions_b, velocities_b, positions, velocities, accelerations);
+        };
+        if !success {
+            actual_num_steps = step_i;
+            break
+        }
+    }
+
+    // If there was an odd number of steps, we need to copy the "b" values back to the original arrays.
+    if actual_num_steps % 2 == 1 {
+        for body_i in 0..num_bodies {
+            positions[body_i] = positions_b[body_i];
+            velocities[body_i] = velocities_b[body_i];
+        }
+    }
+
+    actual_num_steps
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,6 +186,13 @@ mod tests {
     const EARTH_POSITION: Vector3<f64> = Vector3::new(SUN_EARTH_DISTANCE, 0.0, 0.0); // place earth in direction +x from sun
     const MOON_POSITION: Vector3<f64> = Vector3::new(SUN_EARTH_DISTANCE, EARTH_MOON_DISTANCE, 0.0); // place moon in direction +y from earth
     const THREE_POSITIONS: [Vector3<f64>; 3] = [SUN_POSITION, EARTH_POSITION, MOON_POSITION];
+
+    const EARTH_ORBIT_SUN_SPEED: f64 = 2.978e4;
+    const MOON_ORBIT_EARTH_SPEED: f64 = 1.022e3;
+    const SUN_VELOCITY: Vector3<f64> = ZERO_VECTOR;
+    const EARTH_VELOCITY: Vector3<f64> = Vector3::new(0.0, EARTH_ORBIT_SUN_SPEED, 0.0);
+    const MOON_VELOCITY: Vector3<f64> = Vector3::new(-MOON_ORBIT_EARTH_SPEED, EARTH_ORBIT_SUN_SPEED, 0.0);
+    const THREE_VELOCITIES: [Vector3<f64>; 3] = [SUN_VELOCITY, EARTH_VELOCITY, MOON_VELOCITY];
 
     #[test]
     fn test_compute_gravitational_acceleration_one_on_one() {
@@ -128,6 +225,52 @@ mod tests {
 
         for i in 0..N {
             assert_relative_eq!(expected[i], actual[i], max_relative = 0.001);
+        }
+    }
+
+    #[test]
+    fn test_try_leap_success() {
+        // movement over time of the sun, earth, and moon under the influence of one another's gravity
+        const N: usize = 3; // number of bodies
+        let expected_positions = [
+            Vector3::new(6.924e-05, 2.456e-09, 0.000e00),
+            Vector3::new(1.496e11, 2.382e06, 0.000e00),
+            Vector3::new(1.496e11, 3.868e08, 0.000e00),
+        ];
+        let expected_velocities = [
+            Vector3::new(1.442e-06, 5.423e-11, 0.000e00),
+            Vector3::new(-4.744e-01, 2.978e04, 0.000e00),
+            Vector3::new(-1.022e03, 2.978e04, 0.000e00),
+        ];
+
+        let requested_num_steps = 5;
+        let step_duration = 16.0;
+        let mut positions = THREE_POSITIONS;
+        let mut velocities = THREE_VELOCITIES;
+        let actual_num_steps = try_leap(requested_num_steps, step_duration, &THREE_MASSES, &mut positions, &mut velocities);
+
+        assert_eq!(requested_num_steps, actual_num_steps);
+        for i in 0..N {
+            assert_relative_eq!(expected_positions[i], positions[i], max_relative = 0.001);
+            assert_relative_eq!(expected_velocities[i], velocities[i], max_relative = 0.001);
+        }
+    }
+
+    #[test]
+    fn test_try_leap_error() {
+        // Make sure that non-real results cause the step to fail.
+        const N: usize = 2; // number of bodies
+
+        let requested_num_steps = 3;
+        let masses = [1.0; N];
+        let mut positions = [ZERO_VECTOR; N];
+        let mut velocities = [ZERO_VECTOR; N];
+        let actual_num_steps = try_leap(requested_num_steps, 1.0, &masses, &mut positions, &mut velocities);
+
+        assert_eq!(0, actual_num_steps);
+        for i in 0..N {
+            assert_eq!(ZERO_VECTOR, positions[i]);
+            assert_eq!(ZERO_VECTOR, velocities[i]);
         }
     }
 }
