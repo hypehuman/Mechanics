@@ -11,22 +11,25 @@ public partial class RenderView : UserControl
         InitializeComponent();
     }
 
+    private RenderVM? ViewModel => DataContext as RenderVM;
+
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
 
-        if (DataContext is not RenderVM vm)
+        var vm = ViewModel;
+        if (vm == null)
             return;
 
         var mousePosition = GetCanvasMousePosition(vm, e);
-        vm.RefreshByDistance(mousePosition);
+        vm.SetMousePosition(mousePosition);
     }
 
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
 
-        (DataContext as RenderVM)?.RefreshByDistance(null);
+        ViewModel?.SetMousePosition(null);
     }
 
     private Point? GetCanvasMousePosition(RenderVM vm, MouseEventArgs e)

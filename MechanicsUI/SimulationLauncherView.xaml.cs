@@ -2,11 +2,8 @@
 using GuiByReflection.ViewModels;
 using MechanicsCore;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace MechanicsUI;
@@ -121,15 +118,7 @@ partial class SimulationLauncherView
         foreach (var ronVM in simVM.RenderVMs)
         {
             // Simulates moving the mouse into the frame so that the list of bodies by distance appears.
-            ronVM.NullableRenderVM?.RefreshByDistance(new Point(0, 0));
-        }
-        var simView = Application.Current.Windows.Cast<Window>().Select(w => w.Content).OfType<SimulationView>().Single();
-        foreach (var ronView in GetDescendants(simView, 6).OfType<RenderOrNotView>())
-        {
-            foreach (var renderView in GetDescendants(ronView, 4).OfType<RenderView>())
-            {
-                renderView.BodiesByDistanceView.Visibility = Visibility.Visible;
-            }
+            ronVM.NullableRenderVM?.SetMousePosition(new Point());
         }
 
         var sw = new Stopwatch();
@@ -144,20 +133,5 @@ partial class SimulationLauncherView
         };
         sw.Start();
         simVM.IsAutoLeaping = true;
-    }
-
-    private static IEnumerable<DependencyObject> GetDescendants(object obj, int maxDepth)
-    {
-        if (maxDepth == 0 || obj is not DependencyObject depObj)
-            yield break;
-
-        yield return depObj;
-
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
-        {
-            var child = VisualTreeHelper.GetChild(depObj, i);
-            foreach (var furtherDescendant in GetDescendants(child, maxDepth - 1))
-                yield return furtherDescendant;
-        }
     }
 }

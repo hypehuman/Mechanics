@@ -1,6 +1,7 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -14,7 +15,7 @@ public class RenderVM : INotifyPropertyChanged
     public SimulationVM SimulationVM { get; }
     public Perspective Perspective { get; }
     public ObservableCollection<BodyVM> BodyVMs { get; }
-    public ObservableCollection<BodyVM> BodyVMsByDistance { get; set; } = new ObservableCollection<BodyVM>();
+    public ObservableCollectionPlus<BodyVM> BodyVMsByDistance { get; set; } = new();
     public double CanvasTranslateX { get; private set; }
     public double CanvasTranslateY { get; private set; }
     public double CanvasScale { get; private set; } = 1;
@@ -54,6 +55,12 @@ public class RenderVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs sCanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
     private static readonly PropertyChangedEventArgs sCanvasScaleChangedArgs = new(nameof(CanvasScale));
 
+    public void SetMousePosition(Point? value)
+    {
+        _mousePosition = value;
+        RefreshByDistance();
+    }
+
     internal void RefreshSim()
     {
         for (var i = BodyVMs.Count - 1; i >= 0; i--)
@@ -69,30 +76,35 @@ public class RenderVM : INotifyPropertyChanged
                 bodyVM.Unhook();
             }
         }
-        RefreshByDistance(_mousePosition);
+        RefreshByDistance();
     }
 
-    public void SilentlySetMousePosition(Point? value)
+    private void RefreshByDistance()
     {
-        _mousePosition = value;
-    }
-
-    public void RefreshByDistance(Point? value)
-    {
-        SilentlySetMousePosition(value);
         if (_mousePosition == null)
+        {
+            if (BodyVMsByDistance.Count != 0)
+            {
+                BodyVMsByDistance.Clear();
+            }
             return;
-        BodyVMsByDistance.Clear();
-        var byDistance = BodyVMs
+        }
+
+        var byDistance = ComputeByDistance();
+        BodyVMsByDistance.Reset(byDistance);
+    }
+
+    private IReadOnlyList<BodyVM> ComputeByDistance()
+    {
+        return BodyVMs
             .OrderBy(b =>
             {
                 var dx = b.PanelCenterXY.X - _mousePosition.Value.X;
                 var dy = b.PanelCenterXY.Y - _mousePosition.Value.Y;
                 return Math.Sqrt(dx * dx + dy * dy);
             })
-            .Take(10);
-        foreach (var b in byDistance)
-            BodyVMsByDistance.Add(b);
+            .Take(10)
+            .ToList();
     }
 
     private void RefreshBounds()

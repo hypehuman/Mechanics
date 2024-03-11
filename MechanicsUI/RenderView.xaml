@@ -9,9 +9,6 @@
     d:DesignHeight="450" d:DesignWidth="800"
     d:DataContext="{d:DesignInstance Type=local:DesignRenderVM, IsDesignTimeCreatable=True}"
 >
-    <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="bvc" />
-    </UserControl.Resources>
     <Border
         x:Name="TheBorder"
         local:SizeObserver.Observe="True"
@@ -63,8 +60,6 @@
                 </ItemsControl.ItemContainerStyle>
             </ItemsControl>
             <ItemsControl
-                x:Name="BodiesByDistanceView"
-                Visibility="{Binding ElementName=TheBorder, Path=IsMouseOver, Converter={StaticResource bvc}}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding BodyVMsByDistance}"
