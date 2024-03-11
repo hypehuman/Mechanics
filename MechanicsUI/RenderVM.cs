@@ -82,21 +82,17 @@ public class RenderVM : INotifyPropertyChanged
 
     private void RefreshByDistance()
     {
-        if (_mousePosition == null)
-        {
-            if (BodyVMsByDistance.Count != 0)
-            {
-                BodyVMsByDistance.Clear();
-            }
-            return;
-        }
-
         var byDistance = ComputeByDistance();
-        BodyVMsByDistance.Reset(byDistance);
+
+        if (!BodyVMsByDistance.SequenceEqual(byDistance))
+            BodyVMsByDistance.Reset(byDistance);
     }
 
     private IReadOnlyList<BodyVM> ComputeByDistance()
     {
+        if (_mousePosition == null)
+            return Array.Empty<BodyVM>();
+
         return BodyVMs
             .OrderBy(b =>
             {
