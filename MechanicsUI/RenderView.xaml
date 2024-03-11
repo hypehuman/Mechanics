@@ -19,7 +19,7 @@
         ClipToBounds="True"
     >
         <Grid>
-            <ItemsControl x:Name="BodiesItemsControl" ItemsSource="{Binding BodyVMs}" Background="Black">
+            <ItemsControl ItemsSource="{Binding BodyVMs}" Background="Black">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Canvas
