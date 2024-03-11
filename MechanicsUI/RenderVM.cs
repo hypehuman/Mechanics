@@ -57,6 +57,7 @@ public class RenderVM : INotifyPropertyChanged
 
     public void SetMousePosition(Point? value)
     {
+        if (_mousePosition == value) return;
         _mousePosition = value;
         RefreshByDistance();
     }
