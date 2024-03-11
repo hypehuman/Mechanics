@@ -104,7 +104,7 @@ partial class SimulationLauncherView
         timer.Tick += delegate
         {
             timer.Stop();
-            //RunPerformanceTest();
+            RunPerformanceTest();
         };
         timer.Start();
     }
