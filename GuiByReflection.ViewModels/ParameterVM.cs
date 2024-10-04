@@ -99,7 +99,7 @@ public class ParameterVM : IParameterVM
 
     public object? GetDefaultParameterValue()
     {
-        return _parameterInfo.HasDefaultValue ? _parameterInfo.RawDefaultValue : GetDefaultValueOfType(ParameterType);
+        return _parameterInfo.HasDefaultValue ? _parameterInfo.DefaultValue : GetDefaultValueOfType(ParameterType);
     }
 
     public static object? GetDefaultValueOfType(Type type)
