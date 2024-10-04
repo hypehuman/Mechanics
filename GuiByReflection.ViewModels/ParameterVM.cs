@@ -106,9 +106,17 @@ public class ParameterVM : IParameterVM
     {
         if (type.IsValueType)
         {
-            return Activator.CreateInstance(type);
+            return typeof(ParameterVM)
+                .GetMethod(nameof(GetDefaultValueOfTypeGeneric))
+                .MakeGenericMethod(type)
+                .Invoke(null, null);
         }
         return null;
+    }
+
+    public static T GetDefaultValueOfTypeGeneric<T>()
+    {
+        return default;
     }
 
     /// <summary>
