@@ -99,7 +99,21 @@ public class ParameterVM : IParameterVM
 
     public object? GetDefaultParameterValue()
     {
-        return _parameterInfo.HasDefaultValue ? _parameterInfo.DefaultValue : GetDefaultValueOfType(ParameterType);
+        if (_parameterInfo.HasDefaultValue)
+        {
+            var defaultValue = _parameterInfo.DefaultValue;
+            if (ParameterType.IsValueType && defaultValue == null)
+            {
+                // Seems to happen for custom structs.
+                // I don't know why this happens; is it a bug in .NET?
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
+        return GetDefaultValueOfType(ParameterType);
     }
 
     public static object? GetDefaultValueOfType(Type type)
