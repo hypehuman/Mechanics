@@ -9,68 +9,71 @@ namespace MechanicsCore.Arrangements;
 )]
 public class zColorWheel : Arrangement
 {
-    private readonly ColorMapping _colorMapping;
-    private readonly bool _normalizeRadiance;
+    private readonly BodyHueOrder _hueOrder;
+    private readonly RingColorSpace _colorSpace;
+    private readonly bool _spiral;
+    private readonly int _numWheels = 3;
+    private readonly int _numColorsPerWheel = 256;
 
     public override IEnumerable<string> GetConfigLines()
     {
         foreach (var b in base.GetConfigLines())
             yield return b;
 
-        yield return $"Color mapping: {_colorMapping}";
-        yield return $"Normalize radiance: {_normalizeRadiance}";
+        yield return $"Hue order: {_hueOrder}";
+        yield return $"Color space: {_colorSpace}";
+        yield return $"Spiral: {_spiral}";
     }
 
     public override object?[] GetConstructorParameters()
     {
-        return new object?[] { _colorMapping, _normalizeRadiance };
+        return new object?[]
+        {
+            _hueOrder,
+            _colorSpace,
+            _spiral,
+        };
     }
 
-    public zColorWheel(ColorMapping colorMapping, bool normalizeRadiance)
+    public zColorWheel(
+        BodyHueOrder hueOrder = BodyHueOrder.GoldenSpaced,
+        RingColorSpace colorSpace = RingColorSpace.RgbSaturated,
+        bool spiral = false,
+        int numWheels = 3,
+        int numColorsPerWheel = 256
+    )
     {
-        // Call this to validate the argument
-        var func = GetColorMappingFunction(colorMapping);
-
-        _colorMapping = colorMapping;
-        _normalizeRadiance = normalizeRadiance;
-    }
-
-    public enum ColorMapping
-    {
-        CloseCyclic,
-        SpacedCyclic,
-        HashedPseudorandom,
+        _hueOrder = hueOrder;
+        _colorSpace = colorSpace;
+        _spiral = spiral;
+        _numWheels = numWheels;
+        _numColorsPerWheel = numColorsPerWheel;
     }
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
-        const int numWheels = 3;
-        const int numColorsPerWheel = 256;
-        const double bodyRadius = Math.PI / numColorsPerWheel;
+        var bodyRadius = Math.PI / _numColorsPerWheel;
 
-        var maxXY = GetWheelRadius(numWheels, bodyRadius);
+        var maxXY = GetDisanceFromCenter(_numWheels, 1, bodyRadius);
         displayBound1 = new(maxXY, maxXY, bodyRadius);
         displayBound0 = -displayBound1;
 
-        var getColor = GetColorMappingFunction(_colorMapping);
+        var getColor = _colorSpace.GetFunc();
 
-        var bodies = new Body[numWheels * numColorsPerWheel];
-        for (var wheelI = 0; wheelI < numWheels; wheelI++)
+        var bodies = new Body[_numWheels * _numColorsPerWheel];
+        for (var wheelI = 0; wheelI < _numWheels; wheelI++)
         {
-            var wheelRadius = GetWheelRadius(wheelI, bodyRadius);
-            for (var bodyJ = 0; bodyJ < numColorsPerWheel; bodyJ++)
+            for (var bodyJ = 0; bodyJ < _numColorsPerWheel; bodyJ++)
             {
-                var colorI = wheelI * numColorsPerWheel + bodyJ;
-                var color = getColor(colorI);
-                if (_normalizeRadiance)
-                {
-                    color = NormalizeRadiance(color);
-                }
-                var angle01 = (double)bodyJ / numColorsPerWheel;
+                var bodyID = NextBodyID;
+                var angle01 = (double)bodyJ / _numColorsPerWheel;
+                var wheelRadius = GetDisanceFromCenter(wheelI, angle01, bodyRadius);
+                var hue_0_1 = _hueOrder == BodyHueOrder.Explicit ? angle01 : _hueOrder.GetBodyHue_0_1(bodyID);
+                var color = getColor(hue_0_1);
                 var angleRad = angle01 * 2 * Math.PI;
                 var cos = Math.Cos(angleRad);
                 var sin = Math.Sin(angleRad);
-                bodies[colorI] = new(NextBodyID,
+                bodies[bodyID] = new(bodyID,
                     color: color,
                     radius: bodyRadius,
                     position: new(wheelRadius * cos, wheelRadius * sin, 0)
@@ -81,51 +84,6 @@ public class zColorWheel : Arrangement
         return bodies;
     }
 
-    private static double GetWheelRadius(int wheelI, double bodyRadius) => 1 + wheelI * 2 * bodyRadius;
-
-    private static Func<int, BodyColor> GetColorMappingFunction(ColorMapping colorMapping)
-    {
-        return colorMapping switch
-        {
-            ColorMapping.CloseCyclic => BodyColors.GetCloseCyclicColor,
-            ColorMapping.SpacedCyclic => BodyColors.GetSpacedCyclicColor,
-            ColorMapping.HashedPseudorandom => BodyColors.GetHashedPseudorandomColor,
-            _ => throw Utils.OutOfRange(nameof(colorMapping), colorMapping)
-        };
-    }
-
-    /// <summary>
-    /// Radiance is "the radiant flux emitted, reflected, transmitted or received by a given surface, per unit solid angle per unit projected area."
-    /// For our purposes, let's define radiance as the sum of the R, G, and B values.
-    /// Pure white would have a radiance of 255+255+255 = 765.
-    /// Fully saturated primary colors (red, green, and blue) have a radiance of 255+0+0 = 255.
-    /// Fully saturated secondary colors (cyan, magenta, and yellow) have a radiance of 255+255+0 = 255.
-    /// Since _getColor returns only fully saturated colors, the minimum possible radiance is 255.
-    /// So any colors that have a radiance over 255, darken them to normalize.
-    /// </summary>
-    private static BodyColor NormalizeRadiance(BodyColor input)
-    {
-        const int targetRadiance = 255;
-        var radiance = input.R + input.G + input.B;
-        if (radiance > targetRadiance)
-        {
-            var factor = (double)targetRadiance / radiance;
-            return new(
-                Convert.ToByte(factor * input.R),
-                Convert.ToByte(factor * input.G),
-                Convert.ToByte(factor * input.B)
-            );
-        }
-        else
-        {
-            if (radiance < targetRadiance)
-            {
-                // TODO: Increase the radiance of darker colors.
-                // This would make them whiter, e.g., red would become pink.
-                // Currently irrelevant because _getColors never returns radiances less than 510.
-            }
-
-            return input;
-        }
-    }
+    private double GetDisanceFromCenter(int wheelI, double angle01, double bodyRadius) =>
+        1 + (wheelI + (_spiral ? angle01 : 0d)) * 2 * bodyRadius;
 }

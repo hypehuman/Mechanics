@@ -56,7 +56,18 @@ public static class Constants
 
     public static double SphereVolumeToRadius(double volume) => Math.Cbrt(volume * ThreeOverFourPi);
 
-    public const double GoldenRatio = 1.61803398874989484820458683436;
+    /// <summary>
+    /// The golden ratio, (1 + Sqrt(5)) / 2.
+    /// The literal representation here is far more precise than a double can represent.
+    /// </summary>
+    public const double Phi = 1.618033988749894848204586834365638117720309179805762862;
+
+    /// <summary>
+    /// The additive inverse of the golden ratio, modulo 1.
+    /// The literal representation here is far more precise than a double can represent.
+    /// The last digit is rounded up; with more precision, it would be 7, not 8.
+    /// </summary>
+    public const double NegPhiMod1 = 0.381966011250105151795413165634361882279690820194237138;
 
     #endregion
 }

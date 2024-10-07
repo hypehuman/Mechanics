@@ -27,7 +27,7 @@ public class Body
     {
         ID = id;
         Name = name ?? ID.ToString();
-        Color = color ?? BodyColors.GetSpacedCyclicColor(ID);
+        Color = color ?? BodyColors.FromID(ID, BodyHueOrder.GoldenSpaced, RingColorSpace.RgbSaturated);
         Mass = mass;
         Radius = radius;
         Position = position;
