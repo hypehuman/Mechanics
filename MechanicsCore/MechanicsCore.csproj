@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="MathNet.Spatial" Version="0.6.0" />
+    <PackageReference Include="Wacton.Unicolour" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>
