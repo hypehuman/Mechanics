@@ -37,7 +37,7 @@ public class zColorWheel : Arrangement
 
     public zColorWheel(
         BodyHueOrder hueOrder = BodyHueOrder.GoldenSpaced,
-        RingColorSpace colorSpace = RingColorSpace.RgbSaturated,
+        RingColorSpace colorSpace = RingColorSpace.Cam16UcsRing,
         bool spiral = false,
         int numWheels = 3,
         int numColorsPerWheel = 256
