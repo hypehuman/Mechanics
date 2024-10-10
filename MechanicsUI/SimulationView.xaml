@@ -56,6 +56,13 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <GroupBox Header="Bounds">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Margin="5" VerticalAlignment="Center" Click="ShrinkOrExpandBoundsToFitBodiesButton_Click">🡒🡐</Button>
+                                <Button Margin="5" VerticalAlignment="Center" Click="ExpandBoundsToFitBodiesButton_Click">🡘</Button>
+                                <Button Margin="5" VerticalAlignment="Center" Click="ResetBoundsButton_Click">⟲</Button>
+                            </StackPanel>
+                        </GroupBox>
                     </StackPanel>
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Status">

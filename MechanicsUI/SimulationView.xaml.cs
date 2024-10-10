@@ -15,4 +15,19 @@ partial class SimulationView
     {
         SimulationVM?.LeapAndRefresh();
     }
+
+    private void ShrinkOrExpandBoundsToFitBodiesButton_Click(object sender, RoutedEventArgs e)
+    {
+        SimulationVM?.ShrinkOrExpandBoundsToFitBodies();
+    }
+
+    private void ExpandBoundsToFitBodiesButton_Click(object sender, RoutedEventArgs e)
+    {
+        SimulationVM?.ExpandBoundsToFitBodies();
+    }
+
+    private void ResetBoundsButton_Click(object sender, RoutedEventArgs e)
+    {
+        SimulationVM?.ResetBounds();
+    }
 }

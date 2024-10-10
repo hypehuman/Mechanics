@@ -1,4 +1,5 @@
-﻿using MechanicsCore;
+﻿using MathNet.Spatial.Euclidean;
+using MechanicsCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -42,7 +43,7 @@ public class SimulationVM : INotifyPropertyChanged
         get
         {
             // Minimum glow radius is a fraction of the longest straight path through the simulation bounds.
-            var diagonalLength = (Model.DisplayBound1 - Model.DisplayBound0).Length;
+            var diagonalLength = (DisplayBounds.bound1 - DisplayBounds.bound0).Length;
             var minGlowRadius = _minGlowRadiusFractionOfFrame * diagonalLength;
             return minGlowRadius;
         }
@@ -51,6 +52,19 @@ public class SimulationVM : INotifyPropertyChanged
     public string GlowRatioTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes.";
+
+    public static readonly PropertyChangedEventArgs sDisplayBoundsChangedArgs = new(nameof(DisplayBounds));
+    private (Vector3D bound0, Vector3D bound1) _displayBounds;
+    public (Vector3D bound0, Vector3D bound1) DisplayBounds
+    {
+        get => _displayBounds;
+        set
+        {
+            _displayBounds = value;
+            PropertyChanged?.Invoke(this, sDisplayBoundsChangedArgs);
+            PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
+        }
+    }
 
     public string LeapTimeText =>
         "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
@@ -73,6 +87,7 @@ public class SimulationVM : INotifyPropertyChanged
     public SimulationVM(Simulation model)
     {
         Model = model;
+        DisplayBounds = (Model.InitialDisplayBound0, Model.InitialDisplayBound1);
         AboveRenderVM = new(this, Perspective.Orthogonal_FromAbove) { ShouldRender = true };
         FrontRenderVM = new(this, Perspective.Orthogonal_FromFront);
         RightRenderVM = new(this, Perspective.Orthogonal_FromRight);
@@ -135,6 +150,42 @@ public class SimulationVM : INotifyPropertyChanged
         {
             rvm.NullableRenderVM?.RefreshSim();
         }
+    }
+
+    internal void ShrinkOrExpandBoundsToFitBodies()
+    {
+        if (!Arrangement.ComputeBoundingBox(Model.Bodies, out var bodiesMin, out var bodiesMax))
+        {
+            return;
+        }
+
+        DisplayBounds = (bodiesMin, bodiesMax);
+    }
+
+    internal void ExpandBoundsToFitBodies()
+    {
+        if (!Arrangement.ComputeBoundingBox(Model.Bodies, out var bodiesMin, out var bodiesMax))
+        {
+            return;
+        }
+
+        var (oldBound0, oldBound1) = DisplayBounds;
+        Vector3D newMin = new(
+            MechanicsMath.Min(oldBound0.X, oldBound1.X, bodiesMin.X),
+            MechanicsMath.Min(oldBound0.Y, oldBound1.Y, bodiesMin.Y),
+            MechanicsMath.Min(oldBound0.Z, oldBound1.X, bodiesMin.Z)
+        );
+        Vector3D newMax = new(
+            MechanicsMath.Max(oldBound0.X, oldBound1.X, bodiesMax.X),
+            MechanicsMath.Max(oldBound0.Y, oldBound1.Y, bodiesMax.Y),
+            MechanicsMath.Max(oldBound0.Z, oldBound1.Z, bodiesMax.Z)
+        );
+        DisplayBounds = (newMin, newMax);
+    }
+
+    internal void ResetBounds()
+    {
+        DisplayBounds = (Model.InitialDisplayBound0, Model.InitialDisplayBound1);
     }
 }
 

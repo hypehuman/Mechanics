@@ -151,16 +151,7 @@ public class SunEarthMoon : Arrangement
             ),
         };
 
-        displayBound0 = new(
-            bodies.Min(b => b.Position.X - b.Radius),
-            bodies.Min(b => b.Position.Y - b.Radius),
-            bodies.Min(b => b.Position.Z - b.Radius)
-        );
-        displayBound1 = new(
-            bodies.Max(b => b.Position.X + b.Radius),
-            bodies.Max(b => b.Position.Y + b.Radius),
-            bodies.Max(b => b.Position.Z + b.Radius)
-        );
+        ComputeBoundingBox(bodies, out displayBound0, out displayBound1);
         var displaySize = displayBound1 - displayBound0;
         const double displayBoundPaddingFactor = 0.05;
         displayBound0 -= displayBoundPaddingFactor * displaySize;
