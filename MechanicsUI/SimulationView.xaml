@@ -21,6 +21,19 @@
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Controls">
                     <StackPanel Margin="5">
+                        <DockPanel Margin="5">
+                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Steps per leap: " />
+                            <local:ValidationTextBox VerticalAlignment="Center" DataContext="{Binding StepsPerLeapVM}" />
+                        </DockPanel>
+                        <TextBlock Margin="5" Text="{Binding LeapTimeText}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Margin="5" VerticalAlignment="Center" Click="LeapButton_Click">Leap</Button>
+                            <CheckBox Margin="5" VerticalAlignment="Center" IsChecked="{Binding IsAutoLeaping}">Auto-leap</CheckBox>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox VerticalAlignment="Top" Margin="5" Header="View">
+                    <StackPanel Margin="5">
                         <StackPanel Margin="5">
                             <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowRatioTooltip}">
                                 <StackPanel Orientation="Horizontal">
@@ -43,15 +56,6 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <DockPanel Margin="5">
-                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Steps per leap: " />
-                            <local:ValidationTextBox VerticalAlignment="Center" DataContext="{Binding StepsPerLeapVM}" />
-                        </DockPanel>
-                        <TextBlock Margin="5" Text="{Binding LeapTimeText}" />
-                        <StackPanel Orientation="Horizontal">
-                            <Button Margin="5" VerticalAlignment="Center" Click="LeapButton_Click">Leap</Button>
-                            <CheckBox Margin="5" VerticalAlignment="Center" IsChecked="{Binding IsAutoLeaping}">Auto-leap</CheckBox>
-                        </StackPanel>
                     </StackPanel>
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Status">
