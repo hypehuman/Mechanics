@@ -56,6 +56,13 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <GroupBox Header="Bounds">
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox Margin="5" VerticalAlignment="Center" IsChecked="{Binding IsShrinkingToFitBodies}">🡒🡐</CheckBox>
+                                <CheckBox Margin="5" VerticalAlignment="Center" IsChecked="{Binding IsExpandingToFitBodies}">🡘</CheckBox>
+                                <Button Margin="5" VerticalAlignment="Center" Click="ResetBoundsButton_Click">⟲</Button>
+                            </StackPanel>
+                        </GroupBox>
                     </StackPanel>
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Status">

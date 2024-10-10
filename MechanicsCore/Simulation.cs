@@ -15,8 +15,8 @@ public class Simulation
 
     public long NumStepsPerformed { get; private set; }
     public double ElapsedTime => NumStepsPerformed * PhysicsConfig.StepTime;
-    public Vector3D DisplayBound0 { get; }
-    public Vector3D DisplayBound1 { get; }
+    public Vector3D InitialDisplayBound0 { get; }
+    public Vector3D InitialDisplayBound1 { get; }
 
     public List<Body> Bodies { get; }
 
@@ -29,8 +29,8 @@ public class Simulation
     {
         InitialArrangement = config.InitialArrangement;
         Bodies = InitialArrangement.GenerateInitialState(out var displayBound0, out var displayBound1).ToList();
-        DisplayBound0 = displayBound0;
-        DisplayBound1 = displayBound1;
+        InitialDisplayBound0 = displayBound0;
+        InitialDisplayBound1 = displayBound1;
         PhysicsConfig = config.PhysicsConfig;
 
         m = new double[Bodies.Count];

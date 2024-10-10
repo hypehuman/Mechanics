@@ -37,23 +37,29 @@ public class RenderVM : INotifyPropertyChanged
         SimulationVM = simulationVM;
         Perspective = perspective;
         BodyVMs = new(Simulation.Bodies.Select(b => new BodyVM(b, this)));
+
+        SimulationVM.PropertyChanged += SimulationVM_PropertyChanged;
     }
 
     public void Unhook()
     {
+        SimulationVM.PropertyChanged -= SimulationVM_PropertyChanged;
+
         foreach (var bodyVM in BodyVMs)
             bodyVM.Unhook();
     }
 
     private Simulation Simulation => SimulationVM.Model;
-    public Vector3D PanelDisplayBound0 => Perspective.SimToPanel(Simulation.DisplayBound0);
-    public Vector3D PanelDisplayBound1 => Perspective.SimToPanel(Simulation.DisplayBound1);
+    public Vector3D PanelDisplayBound0 => Perspective.SimToPanel(SimulationVM.DisplayBounds.bound0);
+    public Vector3D PanelDisplayBound1 => Perspective.SimToPanel(SimulationVM.DisplayBounds.bound1);
     public double GridWidth => Math.Abs(PanelDisplayBound1.X - PanelDisplayBound0.X);
     public double GridHeight => Math.Abs(PanelDisplayBound1.Y - PanelDisplayBound0.Y);
 
     private static readonly PropertyChangedEventArgs sCanvasTranslateXChangedArgs = new(nameof(CanvasTranslateX));
     private static readonly PropertyChangedEventArgs sCanvasTranslateYChangedArgs = new(nameof(CanvasTranslateY));
     private static readonly PropertyChangedEventArgs sCanvasScaleChangedArgs = new(nameof(CanvasScale));
+    private static readonly PropertyChangedEventArgs sGridWidthChangedArgs = new(nameof(GridWidth));
+    private static readonly PropertyChangedEventArgs sGridHeightChangedArgs = new(nameof(GridHeight));
 
     public void SetMousePosition(Point? value)
     {
@@ -104,6 +110,14 @@ public class RenderVM : INotifyPropertyChanged
             .ToList();
     }
 
+    private void SimulationVM_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e == SimulationVM.sDisplayBoundsChangedArgs)
+        {
+            RefreshBounds();
+        }
+    }
+
     private void RefreshBounds()
     {
         var panelBound0 = PanelDisplayBound0;
@@ -120,6 +134,8 @@ public class RenderVM : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, sCanvasTranslateXChangedArgs);
         PropertyChanged?.Invoke(this, sCanvasTranslateYChangedArgs);
         PropertyChanged?.Invoke(this, sCanvasScaleChangedArgs);
+        PropertyChanged?.Invoke(this, sGridWidthChangedArgs);
+        PropertyChanged?.Invoke(this, sGridHeightChangedArgs);
     }
 
     public static void Sort(double a, double b, out double min, out double max)

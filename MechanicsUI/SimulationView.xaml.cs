@@ -15,4 +15,9 @@ partial class SimulationView
     {
         SimulationVM?.LeapAndRefresh();
     }
+
+    private void ResetBoundsButton_Click(object sender, RoutedEventArgs e)
+    {
+        SimulationVM?.ResetBounds();
+    }
 }
