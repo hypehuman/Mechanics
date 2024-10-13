@@ -17,8 +17,8 @@ public class Body
 
     public double Volume
     {
-        get => Constants.SphereRadiusToVolume(Radius);
-        set => Radius = Constants.SphereVolumeToRadius(value);
+        get => MechanicsMath.SphereRadiusToVolume(Radius);
+        set => Radius = MechanicsMath.SphereVolumeToRadius(value);
     }
 
     public double Density => Mass / Volume;
