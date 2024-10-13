@@ -185,7 +185,7 @@ public static class ScenarioGallery
     public static Scenario Get_Collapsing_SolarSystem_Puffy(int? requestedSeed = null)
     {
         var volumeOfSolarSystemRegion = Constants.SolarSystemMass / Constants.MassDensityInSolarNeighborhood;
-        var radiusOfSolarSystemRegion = Constants.SphereVolumeToRadius(volumeOfSolarSystemRegion);
+        var radiusOfSolarSystemRegion = MechanicsMath.SphereVolumeToRadius(volumeOfSolarSystemRegion);
 
         // I arbitrarily choose a coefficient x in the range (0,1).
         // The stuff is in clumps that take up fraction x of the space,

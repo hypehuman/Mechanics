@@ -43,18 +43,12 @@ public static class Constants
 
     public const double SolarSystemMass = 1.0014 * SunMass;
 
-    #region Math
-
-    private const double FourThirdsPi = 4 * Math.PI / 3;
+    public const double FourThirdsPi = 4 * Math.PI / 3;
 
     /// <summary>
     /// Precompute the inverse of <see cref="FourThirdsPi"/> because multiplication is faster than division.
     /// </summary>
-    private const double ThreeOverFourPi = 1 / FourThirdsPi;
-
-    public static double SphereRadiusToVolume(double radius) => FourThirdsPi * radius * radius * radius;
-
-    public static double SphereVolumeToRadius(double volume) => Math.Cbrt(volume * ThreeOverFourPi);
+    public const double ThreeOverFourPi = 1 / FourThirdsPi;
 
     /// <summary>
     /// The golden ratio, (1 + Sqrt(5)) / 2.
@@ -68,6 +62,4 @@ public static class Constants
     /// The last digit is rounded up; with more precision, it would be 7, not 8.
     /// </summary>
     public const double NegPhiMod1 = 0.381966011250105151795413165634361882279690820194237138;
-
-    #endregion
 }

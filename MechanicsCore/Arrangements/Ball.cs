@@ -57,8 +57,8 @@ public class Ball : RandomArrangement
     {
         var bodyMass = _totalMass / _numBodies;
         var bodyVolume = _totalBodyVolume / _numBodies;
-        var bodyRadius = Constants.SphereVolumeToRadius(bodyVolume);
-        var solidRadius = Constants.SphereVolumeToRadius(_totalBodyVolume); // the radius we would get if all the bodies were to combine into one
+        var bodyRadius = MechanicsMath.SphereVolumeToRadius(bodyVolume);
+        var solidRadius = MechanicsMath.SphereVolumeToRadius(_totalBodyVolume); // the radius we would get if all the bodies were to combine into one
         var bound = (_systemRadius + solidRadius) * 2;
         displayBound1 = new(bound, bound, bound);
         displayBound0 = -displayBound1;
