@@ -42,14 +42,16 @@ public class MoonFromRing : RandomArrangement
         var fragmentVolume = Constants.MoonVolume / _numMoonFragments;
         var fragmentRadius = Constants.SphereVolumeToRadius(fragmentVolume);
         var bodies = new Body[_numMoonFragments + 1];
+        var getColor = RingColorSpace.Cam16UcsRing.GetFunc();
         for (int i = 0; i < _numMoonFragments; i++)
         {
-            var angle01 = Random.NextDouble();
-            var angleRad = angle01 * 2 * Math.PI;
-            var cos = Math.Cos(angleRad);
-            var sin = Math.Sin(angleRad);
+            var angle_0_1 = Random.NextDouble();
+            var hue_0_1 = angle_0_1;
+            var angle_radians = angle_0_1 * 2 * Math.PI;
+            var cos = Math.Cos(angle_radians);
+            var sin = Math.Sin(angle_radians);
             bodies[i] = new(NextBodyID,
-                color: BodyColors.GetCloseCyclicColor((int)(angle01 * 256)),
+                color: getColor(hue_0_1),
                 mass: fragmentMass,
                 radius: fragmentRadius,
                 position: new(Constants.MoonOrbitEarthDistance * cos, Constants.MoonOrbitEarthDistance * sin, 0),
