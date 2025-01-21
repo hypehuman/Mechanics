@@ -47,7 +47,7 @@ public class TwoBodies : RandomArrangement
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var numBodies = 2;
-        var solidRadius = Constants.SphereVolumeToRadius(_totalBodyVolume); // the radius we would get if all the bodies were to combine into one
+        var solidRadius = Constants.SphereVolumeToRadius(_totalBodyVolume); // the radius we would get if all the bodies were to combine into one, assuming volumes add (MassVolumePower = 1)
         var bound = (_systemRadius + solidRadius) * 2;
         displayBound1 = new(bound, bound, bound);
         displayBound0 = -displayBound1;

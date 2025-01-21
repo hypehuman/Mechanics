@@ -201,7 +201,7 @@ public class Simulation
                 }
             }
             Check(overlapping.Keys.First());
-            CombineBodies(group);
+            CombineBodies(group, PhysicsConfig);
         }
 
         for (var i = Bodies.Count - 1; i >= 0; i--)
@@ -212,12 +212,13 @@ public class Simulation
         }
     }
 
-    internal static void CombineBodies(List<Body> group)
+    internal static void CombineBodies(List<Body> group, PhysicsConfiguration config)
     {
         var combinedMass = group.Sum(b => b.Mass);
 
         // If the total mass is zero, don't combine; let the bodies just pass through each other.
-        // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero.
+        // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero,
+        // and V = k*m^p can't relate volume to a mass of zero.
         if (combinedMass == 0)
         {
             return;
@@ -241,8 +242,28 @@ public class Simulation
         kept.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
+
+        if (config.MassVolumePower == 1)
+        {
+            // Degenerate case for the default value, where the volumes simply add.
+            // Supports masses of zero.
+            // This case also guarantees that scenarios that use the default MassVolumePower
+            //     continue to behave identically to how they did before MassVolumePower was introduced.
+            // Removing this case would introduce floating-point imprecision and cause the results to change subtly.
+            kept.Volume = group.Sum(b => b.Volume);
+        }
+        else
+        {
+            // V = k*m^p
+            // k = V/(m^p)
+            // k = V*m^(-p)
+            var k = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -config.MassVolumePower), b => b.Mass);
+            kept.Volume = k * Math.Pow(combinedMass, config.MassVolumePower);
+        }
+
+        // Don't assign kept.Mass until after the other properties are computed,
+        // since most of them need the original mass of every body in the group, including this one.
         kept.Mass = combinedMass;
-        kept.Volume = group.Sum(b => b.Volume);
     }
 
     /// <summary>

@@ -213,6 +213,7 @@ public static class ScenarioGallery
                 StepTime = 1000000000000 / 4,
                 GravityConfig = GravityType.Newton_Pointlike,
                 CollisionConfig = CollisionType.Combine,
+                MassVolumePower = 0.5,
             },
             10
         );

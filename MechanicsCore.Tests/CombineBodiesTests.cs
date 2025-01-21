@@ -1,4 +1,5 @@
 ﻿using MathNet.Spatial.Euclidean;
+using MechanicsCore.PhysicsConfiguring;
 
 namespace MechanicsCore.Tests;
 
@@ -21,21 +22,38 @@ public class CombineBodiesTests
     private const double RelativeTolerance = 1e-12;
 
     [TestMethod]
-    public void IdenticalBodies_FinalVolumeDoesNotDependOnOrder()
+    [DataRow(0.5)]
+    [DataRow(1.0)]
+    [DataRow(2.0)]
+    public void IdenticalBodies_FinalVolumeDoesNotDependOnOrder(double massVolumePower)
     {
+        var config = new PhysicsConfiguration
+        {
+            MassVolumePower = massVolumePower,
+        };
+
         const double mass = 3e24;
         const double volume = 1.1e21;
         static Body[] CreateBodies() => Enumerable.Range(0, 4).Select(id => CreateBody(id, mass, volume)).ToArray();
 
-        var expected = volume * 4;
-        AssertVolume(expected, CombineOneAtATime(CreateBodies()), "one at a time");
-        AssertVolume(expected, CombineInPairs(CreateBodies()), "in pairs");
-        AssertVolume(expected, CombineAllAtOnce(CreateBodies()), "all at once");
+        // Every body has the same k = V/m^p, so the final body does too: V = k*(4m)^p = V*4^p.
+        var expected = volume * Math.Pow(4, config.MassVolumePower);
+        AssertVolume(expected, CombineOneAtATime(CreateBodies(), config), "one at a time");
+        AssertVolume(expected, CombineInPairs(CreateBodies(), config), "in pairs");
+        AssertVolume(expected, CombineAllAtOnce(CreateBodies(), config), "all at once");
     }
 
     [TestMethod]
-    public void DifferentBodies_FinalVolumeDoesNotDependOnOrder()
+    [DataRow(0.5)]
+    [DataRow(1.0)]
+    [DataRow(2.0)]
+    public void DifferentBodies_FinalVolumeDoesNotDependOnOrder(double massVolumePower)
     {
+        var config = new PhysicsConfiguration
+        {
+            MassVolumePower = massVolumePower,
+        };
+
         static Body[] CreateBodies() =>
         [
             CreateBody(0, 1e24, 2e20),
@@ -44,19 +62,26 @@ public class CombineBodiesTests
             CreateBody(3, 3e24, 5e20),
         ];
 
-        var expected = CreateBodies().Sum(b => b.Volume);
-        AssertVolume(expected, CombineOneAtATime(CreateBodies()), "one at a time");
-        AssertVolume(expected, CombineInPairs(CreateBodies()), "in pairs");
-        AssertVolume(expected, CombineAllAtOnce(CreateBodies()), "all at once");
+        var expected = CombineAllAtOnce(CreateBodies(), config).Volume;
+        AssertVolume(expected, CombineOneAtATime(CreateBodies(), config), "one at a time");
+        AssertVolume(expected, CombineInPairs(CreateBodies(), config), "in pairs");
     }
 
     [TestMethod]
-    public void AllMasslessBodies_DoNotCombine()
+    [DataRow(0.5)]
+    [DataRow(1.0)]
+    [DataRow(2.0)]
+    public void AllMasslessBodies_DoNotCombine(double massVolumePower)
     {
+        var config = new PhysicsConfiguration
+        {
+            MassVolumePower = massVolumePower,
+        };
+
         // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero,
-        // so the bodies are left as they are.
+        // so the bodies are left as they are, whatever p is.
         var bodies = CreateMasslessBodies();
-        Simulation.CombineBodies(bodies.ToList());
+        Simulation.CombineBodies(bodies.ToList(), config);
 
         var expected = CreateMasslessBodies();
         for (var i = 0; i < bodies.Length; i++)
@@ -87,35 +112,35 @@ public class CombineBodiesTests
     /// <summary>
     /// (A, B, C, D) → (AB, C, D) → (ABC, D) → (ABCD)
     /// </summary>
-    private static Body CombineOneAtATime(Body[] bodies)
+    private static Body CombineOneAtATime(Body[] bodies, PhysicsConfiguration config)
     {
-        var ab = Combine(bodies[0], bodies[1]);
-        var abc = Combine(ab, bodies[2]);
-        return Combine(abc, bodies[3]);
+        var ab = Combine(config, bodies[0], bodies[1]);
+        var abc = Combine(config, ab, bodies[2]);
+        return Combine(config, abc, bodies[3]);
     }
 
     /// <summary>
     /// (A, B, C, D) → (AB, CD) → (ABCD)
     /// </summary>
-    private static Body CombineInPairs(Body[] bodies)
+    private static Body CombineInPairs(Body[] bodies, PhysicsConfiguration config)
     {
-        var ab = Combine(bodies[0], bodies[1]);
-        var cd = Combine(bodies[2], bodies[3]);
-        return Combine(ab, cd);
+        var ab = Combine(config, bodies[0], bodies[1]);
+        var cd = Combine(config, bodies[2], bodies[3]);
+        return Combine(config, ab, cd);
     }
 
     /// <summary>
     /// (A, B, C, D) → (ABCD)
     /// </summary>
-    private static Body CombineAllAtOnce(Body[] bodies) =>
-        Combine(bodies);
+    private static Body CombineAllAtOnce(Body[] bodies, PhysicsConfiguration config) =>
+        Combine(config, bodies);
 
     /// <summary>
     /// Combines the group and returns the one body that still exists.
     /// </summary>
-    private static Body Combine(params Body[] group)
+    private static Body Combine(PhysicsConfiguration config, params Body[] group)
     {
-        Simulation.CombineBodies(group.ToList());
+        Simulation.CombineBodies(group.ToList(), config);
         return group.Single(b => b.Exists);
     }
 

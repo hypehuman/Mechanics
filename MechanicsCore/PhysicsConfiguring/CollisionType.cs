@@ -6,7 +6,8 @@ public enum CollisionType
 {
     None,
     [GuiHelp(
-        "When bodies come into contact, they form a single body with the combined mass and volume.",
+        "When bodies come into contact, they form a single body with their combined mass.",
+        $"The combined volume depends on {nameof(PhysicsConfiguration.MassVolumePower)}.",
         "Bodies whose total mass is 0 don't combine."
     )]
     Combine,

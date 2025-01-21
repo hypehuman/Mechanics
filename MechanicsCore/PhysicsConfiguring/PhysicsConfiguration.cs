@@ -11,7 +11,7 @@ public class PhysicsConfiguration : IGetConstructorParameters
 
     public object?[] GetConstructorParameters()
     {
-        return new object?[] { StepTime, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
+        return new object?[] { StepTime, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient, MassVolumePower };
     }
 
     public PhysicsConfiguration(
@@ -28,7 +28,17 @@ public class PhysicsConfiguration : IGetConstructorParameters
         double buoyantGravityRatio,
         CollisionType collisionConfig,
         [GuiHelp("Only relevant if collisionConfig is Drag.")]
-        double dragCoefficient
+        double dragCoefficient,
+        [GuiHelp(
+            $"Volume = k * Mass^{nameof(MassVolumePower)}.",
+            $"Only relevant if {nameof(collisionConfig)} is {nameof(CollisionType.Combine)}.",
+            "Below 1: Heavier bodies are denser. When a light body combines with a heavy one, " +
+            "it contributes less than its own volume.",
+            "At 1 (the default): Density doesn't depend on mass, so volumes simply add, even for massless bodies.",
+            "Above 1: Heavier bodies are less dense. When a light body combines with a heavy one, " +
+            "it contributes more than its own volume, and massless bodies aren't supported."
+        )]
+        double massVolumePower
     )
     {
         StepTime = stepTime;
@@ -36,11 +46,13 @@ public class PhysicsConfiguration : IGetConstructorParameters
         BuoyantGravityRatio = buoyantGravityRatio;
         CollisionConfig = collisionConfig;
         DragCoefficient = dragCoefficient;
+        MassVolumePower = massVolumePower;
     }
 
     public double StepTime { get; set; }
 
     public GravityType GravityConfig { get; set; }
+
     /// <summary>
     /// Only relevant if <see cref="GravityConfig"/> is <see cref="GravityType.Newton_Buoyant"/>
     /// Increasing this to 10 lets us line up more moons without them collapsing in on each other.
@@ -48,10 +60,44 @@ public class PhysicsConfiguration : IGetConstructorParameters
     public double BuoyantGravityRatio { get; set; } = 1;
 
     public CollisionType CollisionConfig { get; set; }
+
     /// <summary>
     /// Only relevant if <see cref="CollisionConfig"/> is <see cref="CollisionType.Drag"/>
     /// </summary>
     public double DragCoefficient { get; set; } = 1;
+
+    /// <summary>
+    /// Volume = k * Mass^<see cref="MassVolumePower"/>.
+    /// Only relevant if <see cref="CollisionConfig"/> is <see cref="CollisionType.Combine"/>
+    /// </summary>
+    /// <remarks>
+    /// When bodies combine, each one contributes V*(m/M)^(1-p) to the combined volume,
+    /// where m and V are its own mass and volume, M is the combined mass, and p is <see cref="MassVolumePower"/>.
+    /// So for a light body (m much smaller than M), there are three regimes:
+    /// <list type="bullet">
+    /// <item>p &lt; 1: Heavier bodies are denser.
+    /// A light body contributes less than its own volume.
+    /// (The heavy body's own contribution also shrinks a little, since it's now part of a heavier, denser body.)
+    /// At p = 0, volume doesn't depend on mass, so combining takes the mass-weighted average of the volumes.
+    /// If p &lt; 0, heavier bodies are smaller, so bodies with the same k shrink when they combine.</item>
+    /// <item>p = 1 (the default): Density doesn't depend on mass, so the volumes simply add, even for massless bodies.</item>
+    /// <item>p &gt; 1: Heavier bodies are less dense.
+    /// A light body contributes more than its own volume, without limit as its mass approaches 0,
+    /// so massless bodies aren't supported (they would contribute ∞).
+    /// Bodies that are light but not massless can make the combined volume enormous:
+    /// at p = 2, the 1 kg pebble in the table below contributes 5.5 times the volume of the Earth-like body.</item>
+    /// </list>
+    /// For example, here's how much a 1-liter pebble contributes, in m³,
+    /// when it combines with an Earth-like body (5.97e24 kg, 1.08e21 m³):
+    /// <code>
+    /// pebble mass   p = 0.9   p = 0.99   p = 1   p = 1.01   p = 1.1   p = 2
+    /// 1 kg          3.3e-6    5.7e-4     1e-3    1.8e-3     0.3       6e21 (5.5 Earths)
+    /// 1e-30 kg      3.3e-9    2.8e-4     1e-3    3.5e-3     300       6e51
+    /// </code>
+    /// For any body with mass, the contribution changes smoothly with p,
+    /// but the lighter the body, the more steeply it changes around p = 1.
+    /// </remarks>
+    public double MassVolumePower { get; set; } = 1;
 
     public IEnumerable<string> GetConfigLines()
     {
@@ -64,6 +110,8 @@ public class PhysicsConfiguration : IGetConstructorParameters
         yield return $"Collision handling: {CollisionConfig}";
         if (CollisionConfig == CollisionType.Drag)
             yield return $"Drag coefficient: {Simulation.DoubleToString(DragCoefficient)}";
+        else if (CollisionConfig == CollisionType.Combine)
+            yield return $"Mass-volume relation power: {Simulation.DoubleToString(MassVolumePower)}";
     }
 
     public bool CanTakeSimpleShortcut() =>
