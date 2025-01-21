@@ -207,7 +207,7 @@ public class Simulation
         }
     }
 
-    private static void CombineBodies(List<Body> group)
+    private void CombineBodies(List<Body> group)
     {
         var kept = group.MaxBy(b => b.Mass);
         foreach (var body in group)
@@ -223,13 +223,59 @@ public class Simulation
                     WeightedAverage(group, b => b.Color.B, b => b.Mass)
                 );
                 body.Mass = group.Sum(b => b.Mass);
-                body.Volume = group.Sum(b => b.Volume);
+                if (PhysicsConfig.MassVolumePower == 1)
+                {
+                    // Degenerate case for the default value, where the volumes simply add.
+                    // Supports masses of zero.
+                    body.Volume = group.Sum(b => b.Volume);
+                }
+                else
+                {
+                    // V = k*m^p
+                    // k = V/(m^p)
+                    // k = V*m^(-p)
+                    var k = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -PhysicsConfig.MassVolumePower), b => b.Mass);
+                    body.Volume = k * Math.Pow(body.Mass, PhysicsConfig.MassVolumePower);
+                }
             }
             else
             {
                 body.Exists = false;
             }
         }
+    }
+
+    /// <summary>
+    /// Adapted from https://stackoverflow.com/a/3604761
+    /// </summary>
+    public static double WeightedAverage<T>(IEnumerable<T> records, Func<T, double> value, Func<T, double> weight)
+    {
+        if (records == null)
+            throw new ArgumentNullException(nameof(records), $"{nameof(records)} is null.");
+
+        int count = 0;
+        double valueSum = 0;
+        double weightSum = 0;
+
+        foreach (var record in records)
+        {
+            count++;
+            double recordWeight = weight(record);
+
+            valueSum += recordWeight * value(record);
+            weightSum += recordWeight;
+        }
+
+        if (count == 0)
+            throw new ArgumentException($"{nameof(records)} is empty.");
+
+        if (count == 1)
+            return value(records.Single());
+
+        if (weightSum != 0)
+            return valueSum / weightSum;
+        else
+            throw new DivideByZeroException($"Division of {valueSum} by zero.");
     }
 
     /// <summary>

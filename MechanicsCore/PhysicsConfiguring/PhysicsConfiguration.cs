@@ -11,7 +11,7 @@ public class PhysicsConfiguration : IGetConstructorParameters
 
     public object?[] GetConstructorParameters()
     {
-        return new object?[] { StepTime, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient };
+        return new object?[] { StepTime, GravityConfig, BuoyantGravityRatio, CollisionConfig, DragCoefficient, MassVolumePower };
     }
 
     public PhysicsConfiguration(
@@ -28,7 +28,12 @@ public class PhysicsConfiguration : IGetConstructorParameters
         double buoyantGravityRatio,
         CollisionType collisionConfig,
         [GuiHelp("Only relevant if collisionConfig is Drag.")]
-        double dragCoefficient
+        double dragCoefficient,
+        [GuiHelp(
+            $"Volume = k * Mass^{nameof(MassVolumePower)}.",
+            $"Only relevant if {nameof(collisionConfig)} is {nameof(CollisionType.Combine)}."
+        )]
+        double massVolumePower
     )
     {
         StepTime = stepTime;
@@ -36,6 +41,7 @@ public class PhysicsConfiguration : IGetConstructorParameters
         BuoyantGravityRatio = buoyantGravityRatio;
         CollisionConfig = collisionConfig;
         DragCoefficient = dragCoefficient;
+        MassVolumePower = massVolumePower;
     }
 
     public double StepTime { get; set; }
@@ -52,6 +58,11 @@ public class PhysicsConfiguration : IGetConstructorParameters
     /// Only relevant if <see cref="CollisionConfig"/> is <see cref="CollisionType.Drag"/>
     /// </summary>
     public double DragCoefficient { get; set; } = 1;
+    /// <summary>
+    /// Volume = k * Mass^<see cref="MassVolumePower"/>.
+    /// Only relevant if <see cref="CollisionConfig"/> is <see cref="CollisionType.Combine"/>
+    /// </summary>
+    public double MassVolumePower { get; set; } = 1;
 
     public IEnumerable<string> GetConfigLines()
     {
@@ -64,6 +75,8 @@ public class PhysicsConfiguration : IGetConstructorParameters
         yield return $"Collision handling: {CollisionConfig}";
         if (CollisionConfig == CollisionType.Drag)
             yield return $"Drag coefficient: {Simulation.DoubleToString(DragCoefficient)}";
+        else if (CollisionConfig == CollisionType.Combine)
+            yield return $"Mass-volume relation power: {Simulation.DoubleToString(MassVolumePower)}";
     }
 
     public bool CanTakeSimpleShortcut() =>
