@@ -201,7 +201,7 @@ public class Simulation
                 }
             }
             Check(overlapping.Keys.First());
-            CombineBodies(group);
+            CombineBodies(group, PhysicsConfig);
         }
 
         for (var i = Bodies.Count - 1; i >= 0; i--)
@@ -212,7 +212,7 @@ public class Simulation
         }
     }
 
-    internal static void CombineBodies(List<Body> group)
+    internal static void CombineBodies(List<Body> group, PhysicsConfiguration config)
     {
         // Notation conventions:
         //     Subscript ᵢ (for "index") marks a body in `group` (before we modify it).
@@ -223,7 +223,8 @@ public class Simulation
         var mᵣ = group.Sum(b => b.Mass);
 
         // If mᵣ is zero, don't combine; let the bodies just pass through each other.
-        // Position, velocity, and color are mass-weighted averages, which are undefined when mᵣ is zero.
+        // Position, velocity, and color are mass-weighted averages, which are undefined when mᵣ is zero,
+        // and V = k*m^p (see `GetCombinedVolume`) can't relate volume to a mass of zero.
         if (mᵣ == 0)
         {
             return;
@@ -247,8 +248,81 @@ public class Simulation
         kept.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
+        kept.Volume = GetCombinedVolume(group, config, mᵣ);
+
+        // Don't assign `kept.Mass` until after the other properties are computed,
+        // since most of them need the original mass of every body in `group`, including this one.
         kept.Mass = mᵣ;
-        kept.Volume = group.Sum(b => b.Volume);
+    }
+
+    private static double GetCombinedVolume(List<Body> group, PhysicsConfiguration config, double mᵣ)
+    {
+        double Vᵣ; // combined volume
+        if (config.MassVolumePower == 1)
+        {
+            // Degenerate case for the default value, where the volumes simply add:
+            //     Vᵣ = ΣVᵢ
+            // Summation is associative and commutative,
+            //     and therefore the combined volume doesn't depend on the order in which bodies combine
+            //     (ignoring floating point imprecision).
+            // Mass is not used, so massless bodies behave well.
+            // This case also guarantees that scenarios that use the default `MassVolumePower`
+            //     continue to behave identically to how they did before `MassVolumePower` was introduced.
+            // Removing this case would introduce floating-point imprecision and cause the results to change subtly.
+            Vᵣ = group.Sum(b => b.Volume);
+            return Vᵣ;
+        }
+
+        // We can describe any body's mass-volume relationship thus:
+        //     V = k*m^p, where:
+        //         V is the body's volume (`Body.Volume`)
+        //         m is the body's mass (`Body.Mass`)
+        //         p is a global constant (`PhysicsConfiguration.MassVolumePower`)
+        //         k is a body-specific constant (not stored in memory)
+        // Rearrange to define k in terms of values that are known for any existing `Body`:
+        //     k = V*m^(-p)
+        // Notation conventions:
+        //     V, m, and k without a subscript mean any body.
+        //     Subscript ᵢ (for "index") marks a body in `group` (before we modify it).
+        //     Subscript ᵣ (for "result") marks the body they will combine into.
+        // We want kᵣ to be the mass-weighted average of the kᵢ's:
+        //     kᵣ = Σ(mᵢ*kᵢ)/Σmᵢ
+        // The following code will compute the volume using these steps:
+        //     mᵣ = Σmᵢ (already computed above)
+        //     kᵢ = Vᵢ*mᵢ^(-p)
+        //     kᵣ = Σ(mᵢ*kᵢ)/Σmᵢ (Σmᵢ is computed a second time)
+        //     Vᵣ = kᵣ*mᵣ^p
+        // Vᵣ doesn't depend on the order in which the bodies combine, except possibly in the last few digits. Proof:
+        //     The reasoning below is exact for real numbers, but in practice we're using `double`s,
+        //         so its conclusion holds only approximately: combining in a different order performs different
+        //         additions, multiplications, divisions, and `Math.Pow` calls,
+        //         each of which rounds, so Vᵣ can in fact differ slightly depending on the order of the bodies.
+        //     For this code, all that matters about a body is two quantities, m and m*k:
+        //         the weighted average only uses mᵢ and mᵢ*kᵢ,
+        //         and the combined body's volume follows from mᵣ and mᵣ*kᵣ: Vᵣ = kᵣ*mᵣ^p = (mᵣ*kᵣ)*mᵣ^(p-1).
+        //     This code adds up both quantities over the bodies being combined:
+        //         mᵣ = Σmᵢ
+        //         mᵣ*kᵣ = mᵣ*Σ(mᵢ*kᵢ)/mᵣ = Σ(mᵢ*kᵢ)
+        //     Summation is associative and commutative,
+        //         so combining in stages ends with the same two quantities as combining all at once,
+        //         and therefore the combined volume doesn't depend on the order in which bodies combine.
+        // How massless bodies behave:
+        //     p < 0
+        //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a positive value) = Vᵢ*0 = 0
+        //         mᵢ*kᵢ = 0*0 = 0
+        //         Massless bodies add nothing to the sum, so they behave well as long as mᵣ isn't zero.
+        //     p = 0
+        //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^0 = Vᵢ*1 = Vᵢ
+        //         mᵢ*kᵢ = 0*Vᵢ = 0
+        //         Massless bodies add nothing to the sum, so they behave well as long as mᵣ isn't zero.
+        //     p > 0
+        //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
+        //         mᵢ*kᵢ = 0*kᵢ = 0*(∞ or NaN) = NaN
+        //         Massless bodies result in a Vᵣ of NaN.
+        var p = config.MassVolumePower;
+        var kᵣ = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -p), b => b.Mass);
+        Vᵣ = kᵣ * Math.Pow(mᵣ, p);
+        return Vᵣ;
     }
 
     /// <summary>
