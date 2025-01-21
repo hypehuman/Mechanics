@@ -151,11 +151,6 @@ public class Simulation
 
         ApplyPositionsAndVelocities();
 
-        if (PhysicsConfig.CollisionConfig == CollisionType.Combine)
-        {
-            CombineOverlappingBodies();
-        }
-
         NumStepsPerformed++;
     }
 
@@ -334,6 +329,10 @@ public class Simulation
 
         for (int i = 0; i < requestedNumSteps; i++)
         {
+            if (PhysicsConfig.CollisionConfig == CollisionType.Combine)
+            {
+                CombineOverlappingBodies();
+            }
             if (!TryComputeStep())
             {
                 return false;
