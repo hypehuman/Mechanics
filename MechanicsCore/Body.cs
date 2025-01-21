@@ -26,7 +26,7 @@ public class Body
     public Body(int id, string? name = null, BodyColor? color = null, double mass = 0, double radius = 0, Vector3D position = default, Vector3D velocity = default)
     {
         ID = id;
-        Name = name ?? ID.ToString();
+        Name = name ?? "1";
         Color = color ?? BodyColors.FromID(ID, BodyHueOrder.GoldenSpaced, RingColorSpace.Cam16UcsRing);
         Mass = mass;
         Radius = radius;

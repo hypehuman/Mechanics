@@ -100,7 +100,7 @@ public class RenderVM : INotifyPropertyChanged
                 var dy = b.PanelCenterXY.Y - _mousePosition.Value.Y;
                 return Math.Sqrt(dx * dx + dy * dy);
             })
-            .Take(10)
+            .Take(100)
             .ToList();
     }
 
