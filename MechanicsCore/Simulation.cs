@@ -201,7 +201,7 @@ public class Simulation
                 }
             }
             Check(overlapping.Keys.First());
-            CombineBodies(group);
+            CombineBodies(group, PhysicsConfig);
         }
 
         for (var i = Bodies.Count - 1; i >= 0; i--)
@@ -212,14 +212,15 @@ public class Simulation
         }
     }
 
-    internal static void CombineBodies(List<Body> group)
+    internal static void CombineBodies(List<Body> group, PhysicsConfiguration config)
     {
         // Combined mass:
         // m = Σmᵢ
         var m = group.Sum(b => b.Mass);
 
         // If the total mass is zero, don't combine; let the bodies just pass through each other.
-        // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero.
+        // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero,
+        // and V = k*m^p can't relate volume to a mass of zero.
         if (m == 0)
         {
             return;
@@ -243,8 +244,64 @@ public class Simulation
         kept.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
+
+        double V; // combined volume
+        var p = config.MassVolumePower;
+        if (p == 1)
+        {
+            // Degenerate case for the default value, where the volumes simply add:
+            //     V = ΣVᵢ
+            // Summation is associative and commutative,
+            //     and therefore the combined volume doesn't depend on the order in which bodies combine
+            //     (ignoring floating point imprecision).
+            // Mass is not used, so massless bodies behave well.
+            // This case also guarantees that scenarios that use the default MassVolumePower
+            //     continue to behave identically to how they did before MassVolumePower was introduced.
+            // Removing this case would introduce floating-point imprecision and cause the results to change subtly.
+            V = group.Sum(b => b.Volume);
+        }
+        else
+        {
+            // Any body, initial or combined, has V = k*m^p, hence k = V*m^(-p).
+            // The combined body's k is the mass-weighted average of the kᵢ's:
+            //     k = Σ(mᵢ*kᵢ)/Σmᵢ
+            // The following code will compute the volume using these steps:
+            //     m = Σmᵢ (already computed above)
+            //     kᵢ = Vᵢ*mᵢ^(-p)
+            //     k = Σ(mᵢ*kᵢ)/Σmᵢ (Σmᵢ is computed a second time)
+            //     V = k*m^p
+            // Order independence (ignoring floating point imprecision):
+            //     For this code, all that matters about a body is two quantities, m and m*k:
+            //         the weighted average only uses mᵢ and mᵢ*kᵢ,
+            //         and the combined body's volume follows from its own m and m*k: V = k*m^p = (m*k)*m^(p-1).
+            //     This code adds up both quantities over the bodies being combined:
+            //         m = Σmᵢ
+            //         m*k = m*Σ(mᵢ*kᵢ)/m = Σ(mᵢ*kᵢ)
+            //     Summation is associative and commutative,
+            //         so combining in stages ends with the same two quantities as combining all at once,
+            //         and therefore the combined volume doesn't depend on the order in which bodies combine
+            //         (ignoring floating point imprecision).
+            // How massless bodies behave:
+            //     p < 0
+            //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a positive value) = Vᵢ*0 = 0
+            //         mᵢ*kᵢ = 0*0 = 0
+            //         Massless bodies add nothing to the sum, so they behave well as long as the total mass isn't zero.
+            //     p = 0
+            //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^0 = Vᵢ*1 = Vᵢ
+            //         mᵢ*kᵢ = 0*Vᵢ = 0
+            //         Massless bodies add nothing to the sum, so they behave well as long as the total mass isn't zero.
+            //     p > 0
+            //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
+            //         mᵢ*kᵢ = 0*kᵢ = 0*(∞ or NaN) = NaN
+            //         Massless bodies result in a combined body volume of NaN.
+            var k = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -p), b => b.Mass);
+            V = k * Math.Pow(m, p);
+        }
+        kept.Volume = V;
+
+        // Don't assign kept.Mass until after the other properties are computed,
+        // since most of them need the original mass of every body in the group, including this one.
         kept.Mass = m;
-        kept.Volume = group.Sum(b => b.Volume);
     }
 
     /// <summary>
