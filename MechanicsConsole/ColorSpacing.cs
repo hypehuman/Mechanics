@@ -1,4 +1,6 @@
-﻿namespace MechanicsConsole;
+﻿using MechanicsCore;
+
+namespace MechanicsConsole;
 
 internal static class ColorSpacing
 {
@@ -62,5 +64,48 @@ internal static class ColorSpacing
                 yield return diff;
             }
         }
+    }
+
+    public static void ExportColorWheel(int numColors = 1024)
+    {
+        var numColorsNumChars = numColors.ToString().Length;
+        var getColor = RingColorSpace.Cam16UcsRing.GetFunc();
+        var distSqrFreq = new Dictionary<double, int>();
+        BodyColor prev = default;
+        var outBytes = new byte[numColors * 3];
+        for (var i = 0; i < numColors + 1; i++)
+        {
+            var curr = getColor((double)i / numColors);
+            if (i != numColors)
+            {
+                var label = (i + 1).ToString().PadLeft(numColorsNumChars);
+                System.Diagnostics.Debug.WriteLine($"{label}: #{curr.R:X2}{curr.G:X2}{curr.B:X2}");
+                outBytes[3 * i + 0] = curr.R;
+                outBytes[3 * i + 1] = curr.G;
+                outBytes[3 * i + 2] = curr.B;
+            }
+            if (i != 0)
+            {
+                var dr = curr.R - prev.R;
+                var dg = curr.G - prev.G;
+                var db = curr.B - prev.B;
+                var distSqr = dr * dr + dg * dg + db * db;
+                distSqrFreq.TryAdd(distSqr, 0);
+                distSqrFreq[distSqr]++;
+            }
+            prev = curr;
+        }
+        var distSqrNumChars = distSqrFreq.Keys.Max().ToString().Length;
+        var nNumChars = distSqrFreq.Values.Max().ToString().Length;
+        foreach (var pair in distSqrFreq.OrderBy(x => x.Key))
+        {
+            var distSqrStr = pair.Key.ToString().PadLeft(distSqrNumChars);
+            var nStr = pair.Value.ToString().PadLeft(nNumChars);
+            Console.WriteLine($"d² {distSqrStr} n {nStr}");
+        }
+        var outPath = @"colors.bin";
+        File.Delete(outPath);
+        File.WriteAllBytes(outPath, outBytes);
+        Console.WriteLine("Wrote to " + Path.GetFullPath(outPath));
     }
 }
