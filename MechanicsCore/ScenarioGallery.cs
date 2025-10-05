@@ -8,6 +8,20 @@ public static class ScenarioGallery
 {
     public static Scenario Default() => TwoBodies_Buoyant_Drag_0;
 
+    public static Scenario Network => new(
+        new Network(
+            numBodies: 2,
+            bodyMass: 1,
+            bodyRadius: 1,
+            linkStrength: 0.1
+        ),
+        new()
+        {
+            StepTime = 0.001,
+        },
+        1024
+    );
+
     public static Scenario TwoBodies_Pointlike_0 => new(
         new TwoBodies(
             Constants.EarthRadius * 2,

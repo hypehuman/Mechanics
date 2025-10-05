@@ -47,7 +47,7 @@ public class Body
 
     public Vector3D ComputeMomentum() => Mass * Velocity;
 
-    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies, PhysicsConfiguration config)
+    public Vector3D ComputeAcceleration(IEnumerable<Body> allBodies, IReadOnlyDictionary<BodyPair, Link> linksByPair, PhysicsConfiguration config)
     {
         var a = default(Vector3D);
         foreach (var body2 in allBodies)
@@ -56,7 +56,8 @@ public class Body
             {
                 continue;
             }
-            a += GetAccelerationOn1DueTo2(this, body2, config);
+            var link = linksByPair.GetValueOrDefault(new(this, body2));
+            a += GetAccelerationOn1DueTo2(this, body2, link, config);
         }
         return a;
     }
@@ -82,12 +83,12 @@ public class Body
         Velocity = v;
     }
 
-    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2, PhysicsConfiguration config)
+    private static Vector3D GetAccelerationOn1DueTo2(Body body1, Body body2, Link? link, PhysicsConfiguration config)
     {
         var displacement = body2.Position - body1.Position;
         var m2 = body2.Mass;
 
-        if (config.CanTakeSimpleShortcut())
+        if (link == null && config.CanTakeSimpleShortcut())
         {
             // Shortcut for simpler simulations
             return ComputePointlikeNewtonianGravitationalAcceleration(displacement, m2);
@@ -112,7 +113,7 @@ public class Body
             return ag;
         }
 
-        var others = ComputeOtherForces(body1, body2, displacement, distance, config);
+        var others = ComputeOtherForces(body1, body2, link, displacement, distance, config);
         others /= m1; // convert others from a force to an acceleration
         return ag + others;
     }
@@ -198,9 +199,14 @@ public class Body
 #endif
     }
 
-    private static Vector3D ComputeOtherForces(Body body1, Body body2, Vector3D displacement, double distance, PhysicsConfiguration config)
+    private static Vector3D ComputeOtherForces(Body body1, Body body2, Link? link, Vector3D displacement, double distance, PhysicsConfiguration config)
     {
-        return ComputeDragForce(body1, body2, displacement, distance, config);
+        var sum = ComputeDragForce(body1, body2, displacement, distance, config);
+
+        if (link != null)
+            sum += link.ComputeForce(displacement, distance, config);
+
+        return sum;
     }
 
     private static Vector3D ComputeDragForce(Body body1, Body body2, Vector3D displacement, double distance, PhysicsConfiguration config)

@@ -20,6 +20,7 @@ public class Simulation
     public Vector3D DisplayBound1 { get; }
 
     public List<Body> Bodies { get; }
+    public Dictionary<BodyPair, Link> LinksByPair { get; }
 
     public bool HasError { get; private set; }
     public string? LatestErrorMessage { get; private set; }
@@ -31,6 +32,7 @@ public class Simulation
         InitialArrangement = config.InitialArrangement;
         var initialState = InitialArrangement.GenerateInitialState(out var displayBound0, out var displayBound1);
         Bodies = initialState.Bodies.ToList();
+        LinksByPair = initialState.Links.ToDictionary(l => l.Bodies);
         DisplayBound0 = displayBound0;
         DisplayBound1 = displayBound1;
         PhysicsConfig = config.PhysicsConfig;
@@ -124,7 +126,7 @@ public class Simulation
             Parallel.For(0, n, i =>
             {
                 var body = Bodies[i];
-                a[i] = body.ComputeAcceleration(Bodies, PhysicsConfig);
+                a[i] = body.ComputeAcceleration(Bodies, LinksByPair, PhysicsConfig);
             });
         }
 

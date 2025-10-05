@@ -13,7 +13,7 @@ public static class Constants
 {
     public const double SecondsPerYear = 31556925;
 
-    public const double GravitationalConstant = 6.6743e-11;
+    public const double GravitationalConstant = -6.6743e-11;
 
     public const double SunMass = 1.9885e30;
     public const double SunRadius = 6.957e8;
