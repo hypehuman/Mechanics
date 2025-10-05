@@ -34,7 +34,7 @@ public class MoonFromRing : RandomArrangement
         _numMoonFragments = numMoonFragments;
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         displayBound1 = new(Constants.MoonOrbitEarthDistance * 1.1, Constants.MoonOrbitEarthDistance * 1.1, Constants.EarthRadius * 1.1);
         displayBound0 = -displayBound1;
@@ -65,6 +65,6 @@ public class MoonFromRing : RandomArrangement
             radius: Constants.EarthRadius
         );
         BodySystem.SetNetZeroMomentum(bodies);
-        return bodies;
+        return new(bodies);
     }
 }

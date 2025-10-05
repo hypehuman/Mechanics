@@ -33,7 +33,7 @@ public partial class ModernSolarSystem : Arrangement
         _numBodies = numBodies;
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var bodies = CreateBodies();
         if (_numBodies != null)
@@ -43,6 +43,6 @@ public partial class ModernSolarSystem : Arrangement
         var maxDist = 1.1 * bodies.Select(p => p.Position.Length).Max();
         displayBound0 = new(-maxDist, -maxDist, -maxDist);
         displayBound1 = new(maxDist, maxDist, maxDist);
-        return bodies;
+        return new(bodies);
     }
 }

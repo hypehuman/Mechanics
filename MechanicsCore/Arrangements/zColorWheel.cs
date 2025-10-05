@@ -50,7 +50,7 @@ public class zColorWheel : Arrangement
         _numColorsPerWheel = numColorsPerWheel;
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var bodyRadius = Math.PI / _numColorsPerWheel;
 
@@ -81,7 +81,7 @@ public class zColorWheel : Arrangement
             }
         }
 
-        return bodies;
+        return new(bodies);
     }
 
     private double GetDisanceFromCenter(int wheelI, double angle01, double bodyRadius) =>

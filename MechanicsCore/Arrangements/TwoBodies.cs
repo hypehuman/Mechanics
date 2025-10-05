@@ -44,7 +44,7 @@ public class TwoBodies : RandomArrangement
         _totalBodyVolume = totalBodyVolume;
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var numBodies = 2;
         var solidRadius = Constants.SphereVolumeToRadius(_totalBodyVolume); // the radius we would get if all the bodies were to combine into one
@@ -66,6 +66,6 @@ public class TwoBodies : RandomArrangement
                 position: position
             );
         }
-        return bodies;
+        return new(bodies);
     }
 }

@@ -29,7 +29,8 @@ public class Simulation
     public Simulation(Scenario config)
     {
         InitialArrangement = config.InitialArrangement;
-        Bodies = InitialArrangement.GenerateInitialState(out var displayBound0, out var displayBound1).ToList();
+        var initialState = InitialArrangement.GenerateInitialState(out var displayBound0, out var displayBound1);
+        Bodies = initialState.Bodies.ToList();
         DisplayBound0 = displayBound0;
         DisplayBound1 = displayBound1;
         PhysicsConfig = config.PhysicsConfig;

@@ -18,5 +18,5 @@ public abstract class Arrangement : IGetConstructorParameters
 
     public abstract object?[] GetConstructorParameters();
 
-    public abstract IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1);
+    public abstract InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1);
 }

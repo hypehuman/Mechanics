@@ -122,7 +122,7 @@ public class SunEarthMoon : Arrangement
         _moonVelocityZ = moonVelocityZ;
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var bodies = new Body[] {
             new(NextBodyID,
@@ -166,6 +166,6 @@ public class SunEarthMoon : Arrangement
         displayBound0 -= displayBoundPaddingFactor * displaySize;
         displayBound1 += displayBoundPaddingFactor * displaySize;
 
-        return bodies;
+        return new(bodies);
     }
 }

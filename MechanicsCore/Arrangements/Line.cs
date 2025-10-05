@@ -38,7 +38,7 @@ public class Line : Arrangement
         _gradient = gradient;
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var bodies = new Body[_numBodies];
         for (var i = 0; i < _numBodies; i++)
@@ -64,6 +64,6 @@ public class Line : Arrangement
             }
         }
 
-        return bodies;
+        return new(bodies);
     }
 }

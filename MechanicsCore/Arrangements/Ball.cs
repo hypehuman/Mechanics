@@ -53,7 +53,7 @@ public class Ball : RandomArrangement
         _maxSpeed = maxSpeed;
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         var bodyMass = _totalMass / _numBodies;
         var bodyVolume = _totalBodyVolume / _numBodies;
@@ -75,7 +75,7 @@ public class Ball : RandomArrangement
             );
         }
         BodySystem.SetNetZeroMomentum(bodies);
-        return bodies;
+        return new(bodies);
     }
 
     public static Vector3D RandomPointInBall(Random random, double radius)

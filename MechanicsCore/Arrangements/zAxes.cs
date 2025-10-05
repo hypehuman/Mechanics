@@ -9,11 +9,11 @@ public class zAxes : Arrangement
         return Array.Empty<object?[]>();
     }
 
-    public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+    public override InitialState GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
     {
         displayBound1 = new(1.5, 1.5, 1.5);
         displayBound0 = -displayBound1;
-        return new Body[]
+        var bodies = new Body[]
         {
             // origin: small black
             NewBody(0.0, 0.0, 0.0, false),
@@ -27,6 +27,7 @@ public class zAxes : Arrangement
             NewBody(0.0, 0.0, 0.5, true),
             NewBody(0.0, 0.0, 1.0, false),
         };
+        return new(bodies);
     }
 
     private Body NewBody(double x, double y, double z, bool big)
