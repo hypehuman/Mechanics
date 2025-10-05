@@ -1,5 +1,6 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.PhysicsConfiguring;
+using Rendering;
 #if !DISABLE_RUST
 using MechanicsCore.Rust.mechanics_fast;
 #endif
@@ -264,13 +265,13 @@ public class Simulation
     /// <summary>
     /// Adapted from https://stackoverflow.com/a/3604761
     /// </summary>
-    public static byte WeightedAveragePixelChannelValue<T>(IEnumerable<T> records, Func<T, byte> getValue, Func<T, double> getWeight)
+    public static double WeightedAverage<T>(IEnumerable<T> records, Func<T, double> getValue, Func<T, double> getWeight)
     {
         if (records == null)
             throw new ArgumentNullException(nameof(records), $"{nameof(records)} is null.");
 
         int count = 0;
-        double valueSum = 0;
+        double valueSum = default;
         double weightSum = 0;
 
         foreach (var record in records)
@@ -291,14 +292,20 @@ public class Simulation
         if (weightSum == 0)
             throw new DivideByZeroException($"Division of {valueSum} by zero.");
 
-        return Convert.ToByte(valueSum / weightSum);
+        return valueSum / weightSum;
     }
 
-    public static BodyColor WeightedAverage<T>(IEnumerable<T> records, Func<T, BodyColor> getColor, Func<T, double> getWeight) => new(
-        WeightedAveragePixelChannelValue(records, rec => getColor(rec).R, getWeight),
-        WeightedAveragePixelChannelValue(records, rec => getColor(rec).G, getWeight),
-        WeightedAveragePixelChannelValue(records, rec => getColor(rec).B, getWeight)
-    );
+    public static BodyColor WeightedAverage<T>(IEnumerable<T> records, Func<T, BodyColor> getColor, Func<T, double> getWeight)
+    {
+        WeightedAvgSrgbBuilder builder = default;
+        foreach (var record in records)
+        {
+            var color = getColor(record);
+            builder.Append(getWeight(record), new(color.R, color.G, color.B));
+        }
+        var averaged = builder.AverageLuminance().TransferSrgb24();
+        return new(averaged.R, averaged.G, averaged.B);
+    }
 
     public void Leap(int numSteps)
     {

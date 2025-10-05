@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GuiByReflection.Models\GuiByReflection.Models.csproj" />
+    <ProjectReference Include="..\Rendering\Rendering.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition="$(Configuration.ToUpperInvariant().Contains('DISABLE_RUST'))">
