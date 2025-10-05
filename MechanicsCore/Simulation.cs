@@ -217,11 +217,7 @@ public class Simulation
                 body.Position = WeightedAverage(group, b => b.Position, b => b.Mass);
                 body.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
                 body.Name = string.Join(" + ", group.Select(b => b.Name));
-                body.Color = new(
-                    WeightedAverage(group, b => b.Color.R, b => b.Mass),
-                    WeightedAverage(group, b => b.Color.G, b => b.Mass),
-                    WeightedAverage(group, b => b.Color.B, b => b.Mass)
-                );
+                body.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
                 body.Mass = group.Sum(b => b.Mass);
                 body.Volume = group.Sum(b => b.Volume);
             }
@@ -235,7 +231,7 @@ public class Simulation
     /// <summary>
     /// Adapted from https://stackoverflow.com/a/3604761
     /// </summary>
-    public static Vector3D WeightedAverage<T>(IEnumerable<T> records, Func<T, Vector3D> value, Func<T, double> weight)
+    public static Vector3D WeightedAverage<T>(IEnumerable<T> records, Func<T, Vector3D> getValue, Func<T, double> getWeight)
     {
         if (records == null)
             throw new ArgumentNullException(nameof(records), $"{nameof(records)} is null.");
@@ -247,9 +243,9 @@ public class Simulation
         foreach (var record in records)
         {
             count++;
-            double recordWeight = weight(record);
+            var recordWeight = getWeight(record);
 
-            valueSum += recordWeight * value(record);
+            valueSum += recordWeight * getValue(record);
             weightSum += recordWeight;
         }
 
@@ -257,18 +253,18 @@ public class Simulation
             throw new ArgumentException($"{nameof(records)} is empty.");
 
         if (count == 1)
-            return value(records.Single());
+            return getValue(records.Single());
 
-        if (weightSum != 0)
-            return valueSum / weightSum;
-        else
+        if (weightSum == 0)
             throw new DivideByZeroException($"Division of {valueSum} by zero.");
+
+        return valueSum / weightSum;
     }
 
     /// <summary>
     /// Adapted from https://stackoverflow.com/a/3604761
     /// </summary>
-    public static byte WeightedAverage<T>(IEnumerable<T> records, Func<T, byte> value, Func<T, double> weight)
+    public static byte WeightedAveragePixelChannelValue<T>(IEnumerable<T> records, Func<T, byte> getValue, Func<T, double> getWeight)
     {
         if (records == null)
             throw new ArgumentNullException(nameof(records), $"{nameof(records)} is null.");
@@ -280,9 +276,9 @@ public class Simulation
         foreach (var record in records)
         {
             count++;
-            double recordWeight = weight(record);
+            var recordWeight = getWeight(record);
 
-            valueSum += recordWeight * value(record);
+            valueSum += recordWeight * getValue(record);
             weightSum += recordWeight;
         }
 
@@ -290,13 +286,19 @@ public class Simulation
             throw new ArgumentException($"{nameof(records)} is empty.");
 
         if (count == 1)
-            return value(records.Single());
+            return getValue(records.Single());
 
-        if (weightSum != 0)
-            return Convert.ToByte(valueSum / weightSum);
-        else
+        if (weightSum == 0)
             throw new DivideByZeroException($"Division of {valueSum} by zero.");
+
+        return Convert.ToByte(valueSum / weightSum);
     }
+
+    public static BodyColor WeightedAverage<T>(IEnumerable<T> records, Func<T, BodyColor> getColor, Func<T, double> getWeight) => new(
+        WeightedAveragePixelChannelValue(records, rec => getColor(rec).R, getWeight),
+        WeightedAveragePixelChannelValue(records, rec => getColor(rec).G, getWeight),
+        WeightedAveragePixelChannelValue(records, rec => getColor(rec).B, getWeight)
+    );
 
     public void Leap(int numSteps)
     {
