@@ -8,6 +8,7 @@ namespace MechanicsCore.Arrangements;
 public class MoonFromRing : RandomArrangement
 {
     private readonly int _numMoonFragments;
+    private readonly bool _regularSpacing;
 
     public override IEnumerable<string> GetConfigLines()
     {
@@ -15,16 +16,19 @@ public class MoonFromRing : RandomArrangement
             yield return b;
 
         yield return $"Number of Moon fragments: {_numMoonFragments}";
+        yield return $"Spacing: {(_regularSpacing ? "regular" : "random")}";
     }
 
     public override object?[] GetConstructorParameters()
     {
-        return new object?[] { _numMoonFragments, _requestedSeed };
+        return new object?[] { _numMoonFragments, _regularSpacing, _requestedSeed };
     }
 
     public MoonFromRing(
         [GuiName("Number of Moon fragments")]
         int numMoonFragments,
+        [GuiHelp("If true, the fragments will be spaced evenly instead of randomly.")]
+        bool regularSpacing = false,
         [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]
         int? requestedSeed = null
@@ -32,6 +36,7 @@ public class MoonFromRing : RandomArrangement
         : base(requestedSeed)
     {
         _numMoonFragments = numMoonFragments;
+        _regularSpacing = regularSpacing;
     }
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
@@ -45,7 +50,10 @@ public class MoonFromRing : RandomArrangement
         var getColor = RingColorSpace.Cam16UcsRing.GetFunc();
         for (int i = 0; i < _numMoonFragments; i++)
         {
-            var angle_0_1 = Random.NextDouble();
+            var angle_0_1 =
+                _regularSpacing
+                ? (double)i / _numMoonFragments
+                : Random.NextDouble();
             var hue_0_1 = angle_0_1;
             var angle_radians = angle_0_1 * 2 * Math.PI;
             var cos = Math.Cos(angle_radians);
