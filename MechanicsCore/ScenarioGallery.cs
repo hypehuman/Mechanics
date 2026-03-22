@@ -217,4 +217,18 @@ public static class ScenarioGallery
             10
         );
     }
+
+    public static Scenario Approximate_Rod => new(
+        new Line(
+            numBodies: 16,
+            bodyMass: 1d / 16 / Constants.GravitationalConstant,
+            bodyRadius: 1d / 32,
+            gradient: false
+        ),
+        new()
+        {
+            StepTime = 0,
+            GravityConfig = GravityType.Newton_Pointlike,
+        }
+    );
 }
