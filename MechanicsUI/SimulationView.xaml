@@ -55,7 +55,10 @@
                     </StackPanel>
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Status">
-                    <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding StateSummary, Mode=OneWay}" />
+                    <StackPanel Orientation="Vertical">
+                        <TextBox Margin="5" Style="{StaticResource SelectableReadonlyText}" Text="{Binding StateSummary, Mode=OneWay}" />
+                        <Button Click="ExportBodyDataButton_Click">Export body data...</Button>
+                    </StackPanel>
                 </GroupBox>
             </StackPanel>
         </Expander>

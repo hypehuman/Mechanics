@@ -368,7 +368,7 @@ public class Simulation
             yield return s;
     }
 
-    public IEnumerable<string> GetStateSummaryLines()
+    public IEnumerable<string?> GetStateSummaryLines()
     {
         yield return $"Step {NumStepsPerformed}";
         yield return GetElapsedTimeString();
@@ -376,6 +376,49 @@ public class Simulation
         if (HasError)
         {
             yield return LatestErrorMessage;
+        }
+    }
+
+    public IEnumerable<IEnumerable<string>> GetBodyData()
+    {
+        yield return [
+            "ID",
+            "Name",
+            "Color.R",
+            "Color.G",
+            "Color.B",
+            "Mass",
+            "Radius",
+            // "Exists" is always true between steps.
+            "Position.X",
+            "Position.Y",
+            "Position.Z",
+            "Velocity.X",
+            "Velocity.Y",
+            "Velocity.Z",
+            // Acceleration values are not always available between steps.
+        ];
+
+        for (var i = 0; i < Bodies.Count; i++)
+        {
+            var b = Bodies[i];
+            yield return [
+                b.ID.ToRoundTripString(),
+                b.Name,
+                b.Color.R.ToRoundTripString(),
+                b.Color.G.ToRoundTripString(),
+                b.Color.B.ToRoundTripString(),
+                b.Mass.ToRoundTripString(),
+                b.Radius.ToRoundTripString(),
+                // "Exists" is always true between steps.
+                b.Position.X.ToRoundTripString(),
+                b.Position.Y.ToRoundTripString(),
+                b.Position.Z.ToRoundTripString(),
+                b.Velocity.X.ToRoundTripString(),
+                b.Velocity.Y.ToRoundTripString(),
+                b.Velocity.Z.ToRoundTripString(),
+                // Acceleration values are not always available between steps.
+            ];
         }
     }
 

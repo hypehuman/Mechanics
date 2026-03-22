@@ -14,6 +14,8 @@ public class Body
     public double Mass { get; set; }
     public double Radius { get; set; }
     public bool Exists { get; set; } = true;
+    public Vector3D Position { get; set; }
+    public Vector3D Velocity { get; set; }
 
     public double Volume
     {
@@ -41,9 +43,6 @@ public class Body
     /// As radius approaches infinity, GlowRadius approaches radius.
     /// </summary>
     public double ComputeGlowRadius(double minGlowRadius) => Math.Sqrt(Radius * Radius + minGlowRadius * minGlowRadius);
-
-    public Vector3D Position { get; set; }
-    public Vector3D Velocity { get; set; }
 
     public Vector3D ComputeMomentum() => Mass * Velocity;
 

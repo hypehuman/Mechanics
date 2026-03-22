@@ -136,6 +136,12 @@ public class SimulationVM : INotifyPropertyChanged
             rvm.NullableRenderVM?.RefreshSim();
         }
     }
+
+    public void ExportBodyData(string filePath)
+    {
+        var rows = Model.GetBodyData();
+        CsvHelper.WriteCsv(filePath, rows);
+    }
 }
 
 public class SimulationVM_RenderGridSizeConverter : IMultiValueConverter
