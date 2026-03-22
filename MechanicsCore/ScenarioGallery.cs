@@ -229,6 +229,11 @@ public static class ScenarioGallery
         {
             StepTime = 0,
             GravityConfig = GravityType.Newton_Pointlike,
-        }
+        },
+        SamplerLattice: new(
+            new(-1, 0, 0),
+            new(2, 0, 0),
+            12, 0, 0
+        )
     );
 }

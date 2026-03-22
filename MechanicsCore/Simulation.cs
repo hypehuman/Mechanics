@@ -34,6 +34,17 @@ public class Simulation
         DisplayBound1 = displayBound1;
         PhysicsConfig = config.PhysicsConfig;
 
+        var sl = config.SamplerLattice;
+        if (sl != null)
+        {
+            Bodies.AddRange(sl.GenerateSamplerBodies(Bodies.Max(b => b.ID) + 1));
+            DisplayBound0 = new Vector3D(
+                Math.Min(DisplayBound0.X, sl.Min.X),
+                Math.Min(DisplayBound0.Y, sl.Min.Y),
+                Math.Min(DisplayBound0.Z, sl.Min.Z)
+            );
+        }
+
         m = new double[Bodies.Count];
         p = new Vector3D[Bodies.Count];
         v = new Vector3D[Bodies.Count];
