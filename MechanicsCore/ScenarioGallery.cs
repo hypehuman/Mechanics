@@ -221,7 +221,7 @@ public static class ScenarioGallery
     public static Scenario Approximate_Rod => new(
         new Line(
             numBodies: 16,
-            bodyMass: 1d / 16 / Constants.GravitationalConstant,
+            bodyMass: 1d / 16,
             bodyRadius: 1d / 32,
             gradient: false
         ),
