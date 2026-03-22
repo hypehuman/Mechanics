@@ -7,7 +7,12 @@
     <UseWPF>true</UseWPF>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <Configurations>Debug;Release;Debug_DISABLE_RUST;Release_DISABLE_RUST</Configurations>
+    <ApplicationIcon>mechanics.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="mechanics.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.17.1" />

@@ -7,7 +7,12 @@
     <Nullable>enable</Nullable>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <Configurations>Debug;Release;Debug_DISABLE_RUST;Release_DISABLE_RUST</Configurations>
+    <ApplicationIcon>mechanics.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="mechanics.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
