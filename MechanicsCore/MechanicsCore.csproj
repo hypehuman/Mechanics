@@ -24,7 +24,7 @@
   </PropertyGroup>
 
   <Target Condition="!$(Configuration.ToUpperInvariant().Contains('DISABLE_RUST'))" Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd &quot;$(SolutionDir)\Rust\mechanics_fast&quot;&#xD;&#xA;cargo build --release" />
+    <Exec Command="cd &quot;$(SolutionDir)\Rust\mechanics_fast&quot;&#xD;&#xA;cargo build --release --frozen" />
   </Target>
 
 </Project>
