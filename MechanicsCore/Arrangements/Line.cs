@@ -12,6 +12,7 @@ public class Line : Arrangement
     private readonly int _numBodies;
     private readonly double _bodyMass;
     private readonly double _bodyRadius;
+    private readonly bool _gradient;
 
     public override IEnumerable<string> GetConfigLines()
     {
@@ -21,18 +22,20 @@ public class Line : Arrangement
         yield return $"Number of bodies: {_numBodies}";
         yield return $"Body mass: {Simulation.DoubleToString(_bodyMass)}";
         yield return $"Body radius: {Simulation.DoubleToString(_bodyRadius)}";
+        yield return $"Gradient: {_gradient}";
     }
 
     public override object?[] GetConstructorParameters()
     {
-        return new object?[] { _numBodies, _bodyMass, _bodyRadius };
+        return new object?[] { _numBodies, _bodyMass, _bodyRadius, _gradient };
     }
 
-    public Line(int numBodies, double bodyMass, double bodyRadius)
+    public Line(int numBodies, double bodyMass, double bodyRadius, bool gradient)
     {
         _numBodies = numBodies;
         _bodyMass = bodyMass;
         _bodyRadius = bodyRadius;
+        _gradient = gradient;
     }
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
@@ -48,6 +51,19 @@ public class Line : Arrangement
         }
         displayBound0 = new(0, -_bodyRadius, -_bodyRadius);
         displayBound1 = new(_numBodies * 2 * _bodyRadius, _bodyRadius, _bodyRadius);
+
+        if (_gradient)
+        {
+            var red = new BodyColor(255, 0, 0);
+            var green = new BodyColor(0, 255, 0);
+            var redAndGreen = new[] { red, green };
+            foreach (var body in bodies)
+            {
+                var factor = (double)body.ID / (_numBodies - 1);
+                body.Color = Simulation.WeightedAverage(redAndGreen, x => x, x => x == red ? 1 - factor : factor);
+            }
+        }
+
         return bodies;
     }
 }
