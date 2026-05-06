@@ -397,6 +397,9 @@ public class Simulation
             "Velocity.Y",
             "Velocity.Z",
             // Acceleration values are not always available between steps.
+            "Acceleration.X",
+            "Acceleration.Y",
+            "Acceleration.Z",
         ];
 
         for (var i = 0; i < Bodies.Count; i++)
@@ -418,6 +421,10 @@ public class Simulation
                 b.Velocity.Y.ToRoundTripString(),
                 b.Velocity.Z.ToRoundTripString(),
                 // Acceleration values are not always available between steps.
+                // This array may or may not contain them:
+                a[i].X.ToRoundTripString(),
+                a[i].Y.ToRoundTripString(),
+                a[i].Z.ToRoundTripString(),
             ];
         }
     }
