@@ -172,23 +172,43 @@ public static class ScenarioGallery
         128
     );
 
-    [GuiName("Collapsing: Solar System")]
+    [GuiName("Collapsing: Solar System (combine)")]
     [GuiHelp(
         "Formation of the solar system, assuming it's all gas and doesn't compress.",
         "I had hoped to see an accretion disc form, but I think that would require some repulsive forces.",
         "Dividing the solar system's mass by the regional mass density gives us the approximate volume of the gas that formed the solar system.",
         "Matter outside this region would have fallen into other stars.",
-        "We need a lot of bodies; with 1000 bodies, none of them will weigh less than Jupiter."
+        "We need a lot of bodies; even with 1000 bodies, each body weighs more than Jupiter."
     )]
-    public static Scenario Collapsing_SolarSystem_Puffy => Get_Collapsing_SolarSystem_Puffy();
+    public static Scenario Collapsing_SolarSystem_Combine => Get_Collapsing_SolarSystem();
 
-    public static Scenario Get_Collapsing_SolarSystem_Puffy(int? requestedSeed = null)
+    [GuiName("Collapsing: Solar System (buoyancy and drag)")]
+    [GuiHelp(
+        "Formation of the solar system, assuming it's all gas and doesn't compress.",
+        "Add buoyancy and drag in hopes of seeing an accretion disc."
+    )]
+    public static Scenario Collapsing_SolarSystem_BuoyancyAndDrag
+    {
+        get
+        {
+            var spin = Constants.SolarSystemAngularMomentum;
+            // TODO: Add spin...
+            var x = Get_Collapsing_SolarSystem();
+            x.PhysicsConfig.GravityConfig = GravityType.Newton_Buoyant;
+            x.PhysicsConfig.BuoyantGravityRatio = 1;
+            x.PhysicsConfig.CollisionConfig = CollisionType.Drag;
+            x.PhysicsConfig.DragCoefficient = 0.01;
+            return x;
+        }
+    }
+
+    public static Scenario Get_Collapsing_SolarSystem(int? requestedSeed = null)
     {
         var volumeOfSolarSystemRegion = Constants.SolarSystemMass / Constants.MassDensityInSolarNeighborhood;
         var radiusOfSolarSystemRegion = Constants.SphereVolumeToRadius(volumeOfSolarSystemRegion);
 
         // I arbitrarily choose a coefficient x in the range (0,1).
-        // The stuff is in clumps that take up fraction x of the space,
+        // The stuff is in clumps that collectively take up fraction x of the space,
         // and the remaining (1-x) of the space is empty.
         // More realistic would be to start with x near 1 (uniformly distributed gas),
         // and to have it drop over time as the clouds combine and contract.

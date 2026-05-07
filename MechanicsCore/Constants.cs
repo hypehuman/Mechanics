@@ -43,6 +43,15 @@ public static class Constants
 
     public const double SolarSystemMass = 1.0014 * SunMass;
 
+    /// <summary>
+    /// 3.3212 x 10^45 kg m^2 s^-1
+    /// Source:
+    /// <para>
+    /// Cang, R., Guo, J., Hu, J., and He, C., “The Angular Momentum of the Solar System”, <i>Astronomy and Astrophysics (Hans Publishers)</i>, vol. 4, no. 2, pp. 33–40, 2016. doi:10.12677/AAS.2016.42004.
+    /// </para>
+    /// </summary>
+    public const double SolarSystemAngularMomentum = 3.3212e45;
+
     #region Math
 
     private const double FourThirdsPi = 4 * Math.PI / 3;

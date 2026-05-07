@@ -112,7 +112,7 @@ partial class SimulationLauncherView
     private void RunPerformanceTest()
     {
         var launcherVM = ViewModel;
-        var scenario = ScenarioGallery.Get_Collapsing_SolarSystem_Puffy(requestedSeed: 0);
+        var scenario = ScenarioGallery.Get_Collapsing_SolarSystem(requestedSeed: 0);
         launcherVM.LoadScenarioConfig(scenario);
         var simVM = LaunchButton_Click();
         foreach (var ronVM in simVM.RenderVMs)
