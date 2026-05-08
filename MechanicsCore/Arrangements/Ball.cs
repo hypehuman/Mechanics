@@ -1,4 +1,4 @@
-﻿using GuiByReflection.Models;
+using GuiByReflection.Models;
 using MathNet.Spatial.Euclidean;
 
 namespace MechanicsCore.Arrangements;
@@ -14,6 +14,7 @@ public class Ball : RandomArrangement
     private readonly double _totalMass;
     private readonly double _totalBodyVolume;
     private readonly double _maxSpeed;
+    private readonly double _angularMomentum;
 
     public override IEnumerable<string> GetConfigLines()
     {
@@ -25,11 +26,12 @@ public class Ball : RandomArrangement
         yield return $"Total mass: {Simulation.DoubleToString(_totalMass)}";
         yield return $"Total body volume: {Simulation.DoubleToString(_totalBodyVolume)}";
         yield return $"Max speed: {Simulation.DoubleToString(_maxSpeed)}";
+        yield return $"Angular momentum: {Simulation.DoubleToString(_angularMomentum)}";
     }
 
     public override object?[] GetConstructorParameters()
     {
-        return new object?[] { _systemRadius, _numBodies, _totalMass, _totalBodyVolume, _maxSpeed, _requestedSeed };
+        return new object?[] { _systemRadius, _numBodies, _totalMass, _totalBodyVolume, _maxSpeed, _angularMomentum, _requestedSeed };
     }
 
     public Ball(
@@ -40,6 +42,8 @@ public class Ball : RandomArrangement
         double totalBodyVolume,
         [GuiHelp("Initial velocities are distributed with speeds from 0 to maxSpeed (flat distribution) and random headings.")]
         double maxSpeed,
+        [GuiHelp("Angular momentum of the system in SI units (kg⋅m²/s). Converted to angular velocity assuming a solid sphere with the given total mass and radius.")]
+        double angularMomentum,
         [GuiName(RequestedSeedGuiName)]
         [GuiHelp(RequestedSeedGuiHelp)]
         int? requestedSeed = null
@@ -51,6 +55,24 @@ public class Ball : RandomArrangement
         _totalMass = totalMass;
         _totalBodyVolume = totalBodyVolume;
         _maxSpeed = maxSpeed;
+        _angularMomentum = angularMomentum;
+    }
+
+    /// <summary>
+    /// Computes the angular velocity from the angular momentum.
+    /// Assumes the system is a solid sphere with the given total mass and radius.
+    /// Moment of inertia for a solid sphere: I = (2/5) * mass * radius²
+    /// Angular velocity: ω = L / I
+    /// </summary>
+    public double ComputeAngularVelocity()
+    {
+        var solidRadius = Constants.SphereVolumeToRadius(_totalBodyVolume);
+        var momentOfInertia = (2.0 / 5.0) * _totalMass * solidRadius * solidRadius;
+        
+        if (momentOfInertia == 0)
+            return 0;
+        
+        return _angularMomentum / momentOfInertia;
     }
 
     public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
