@@ -68,10 +68,10 @@ public class Ball : RandomArrangement
     {
         var solidRadius = Constants.SphereVolumeToRadius(_totalBodyVolume);
         var momentOfInertia = (2.0 / 5.0) * _totalMass * solidRadius * solidRadius;
-        
+
         if (momentOfInertia == 0)
             return 0;
-        
+
         return _angularMomentum / momentOfInertia;
     }
 
