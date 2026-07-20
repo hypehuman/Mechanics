@@ -15,6 +15,7 @@ public class Simulation
     #region Current state
 
     public long NumStepsPerformed { get; private set; }
+    private long MaxNumStepsRemaining => long.MaxValue - NumStepsPerformed;
     public double ElapsedTime => NumStepsPerformed * PhysicsConfig.StepTime;
     public Vector3D DisplayBound0 { get; }
     public Vector3D DisplayBound1 { get; }
@@ -157,7 +158,10 @@ public class Simulation
             CombineOverlappingBodies();
         }
 
-        NumStepsPerformed++;
+        checked
+        {
+            NumStepsPerformed++;
+        }
     }
 
     private void CombineOverlappingBodies()
@@ -317,6 +321,12 @@ public class Simulation
 
     public bool TryLeap(int requestedNumSteps)
     {
+        if (requestedNumSteps > MaxNumStepsRemaining)
+        {
+            SetError($"{requestedNumSteps} more steps would take us over the maximum number of possible steps.");
+            return false;
+        }
+
 #if !DISABLE_RUST
         var numBodies = Bodies.Count;
         for (var i = 0; i < Bodies.Count; i++)
@@ -336,7 +346,10 @@ public class Simulation
             }
 
             ApplyPositionsAndVelocities();
-            NumStepsPerformed += requestedNumSteps;
+            checked
+            {
+                NumStepsPerformed += requestedNumSteps;
+            }
             return true;
         }
 #endif
