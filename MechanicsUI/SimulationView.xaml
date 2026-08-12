@@ -43,7 +43,7 @@
                                 </StackPanel>
                                 <Slider
                                     HorizontalAlignment="Left"
-                                    Width="111"
+                                    Width="144"
                                     Value="{Binding GlowFactorSliderVM.SliderPosition}"
                                     Minimum="{Binding GlowFactorSliderVM.MinSliderPosition}"
                                     Maximum="{Binding GlowFactorSliderVM.MaxSliderPosition}"
