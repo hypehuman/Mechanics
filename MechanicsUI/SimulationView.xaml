@@ -24,7 +24,7 @@
                         <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowRatioTooltip}" Margin="5">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Glow Ratio: "/>
+                                    <TextBlock Text="Glow Factor: "/>
                                     <TextBlock Text="{Binding MinGlowRadiusFractionOfFrame, StringFormat={}{0:0.0000}}" />
                                 </StackPanel>
                                 <Slider

@@ -23,11 +23,18 @@ public class SimulationVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
 
+    /// <summary>
+    /// Explains <see cref="MinGlowRadiusFractionOfFrame"/> and its relationship with <see cref="MinGlowRadius"/>.
+    /// </summary>
     public static string GlowRatioTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
-        "Set this to 0 to display actual sizes.";
+        "Set this to 0 to display actual sizes." + Environment.NewLine +
+        "This value is the ratio of the minimum glow radius to the length of the diagonal of the scenario's bounding box.";
 
     private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
+    /// <summary>
+    /// See explanation in <see cref="GlowRatioTooltip"/>.
+    /// </summary>
     public double MinGlowRadiusFractionOfFrame
     {
         get;
@@ -40,11 +47,13 @@ public class SimulationVM : INotifyPropertyChanged
     } = 0.002;
 
     private static readonly PropertyChangedEventArgs sMinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
+    /// <summary>
+    /// See explanation in <see cref="GlowRatioTooltip"/>.
+    /// </summary>
     public double MinGlowRadius
     {
         get
         {
-            // Minimum glow radius is a fraction of the longest straight path through the simulation bounds.
             var diagonalLength = (Model.DisplayBound1 - Model.DisplayBound0).Length;
             var minGlowRadius = MinGlowRadiusFractionOfFrame * diagonalLength;
             return minGlowRadius;
