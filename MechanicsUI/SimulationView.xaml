@@ -24,17 +24,30 @@
                         <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowFactorTooltip}" Margin="5">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Glow Factor: "/>
-                                    <TextBlock Text="{Binding GlowFactor_Text}" />
+                                    <CheckBox IsChecked="{Binding GlowIsEnabled}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Glow Factor: "/>
+                                            <TextBlock Text="{Binding GlowFactor_Text}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding GlowIsEnabled}" Value="False">
+                                                                <Setter Property="TextBlock.TextDecorations" Value="Strikethrough"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </CheckBox>
                                 </StackPanel>
                                 <Slider
                                     HorizontalAlignment="Left"
                                     Width="111"
-                                    Value="{Binding GlowFactor}"
-                                    Minimum="{Binding GlowFactor_Min}"
-                                    Maximum="{Binding GlowFactor_Max}"
-                                    IsSnapToTickEnabled="True"
-                                    TickFrequency="{Binding GlowFactor_Epsilon}"
+                                    Value="{Binding GlowFactorSliderVM.SliderPosition}"
+                                    Minimum="{Binding GlowFactorSliderVM.MinSliderPosition}"
+                                    Maximum="{Binding GlowFactorSliderVM.MaxSliderPosition}"
+                                    IsEnabled="{Binding GlowIsEnabled}"
                                 />
                             </StackPanel>
                         </gbrViews:GuiHelpTooltipWrapper>

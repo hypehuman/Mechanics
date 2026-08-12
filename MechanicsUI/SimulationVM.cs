@@ -18,6 +18,7 @@ public class SimulationVM : INotifyPropertyChanged
     public RenderOrNotVM RightRenderVM { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
+    public ExponentialSliderVM GlowFactorSliderVM { get; }
     public IValidationTextBoxVM<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxVM();
 
     private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
@@ -30,6 +31,18 @@ public class SimulationVM : INotifyPropertyChanged
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes." + Environment.NewLine +
         "This value is the ratio of the minimum glow radius to the length of the diagonal of the scenario's bounding box.";
+
+    private static readonly PropertyChangedEventArgs sGlowIsEnabledChangedArgs = new(nameof(GlowIsEnabled));
+    public bool GlowIsEnabled
+    {
+        get;
+        set
+        {
+            field = value;
+            PropertyChanged?.Invoke(this, sGlowIsEnabledChangedArgs);
+            PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
+        }
+    } = true;
 
     private static readonly PropertyChangedEventArgs sGlowFactorChangedArgs = new(nameof(GlowFactor));
     /// <summary>
@@ -50,23 +63,17 @@ public class SimulationVM : INotifyPropertyChanged
     /// <summary>
     /// Minimum allowed value of <see cref="GlowFactor"/>.
     /// </summary>
-    public static double GlowFactor_Min => 0;
+    private static double GlowFactor_Min => 0.0001;
 
     /// <summary>
     /// Maximum allowed value of <see cref="GlowFactor"/>.
     /// </summary>
-    public static double GlowFactor_Max => 0.01;
-
-    /// <summary>
-    /// Smallest allowed slider increment of <see cref="GlowFactor"/>.
-    /// </summary>
-    public static double GlowFactor_Epsilon => 0.0001;
+    private static double GlowFactor_Max => 0.01;
 
     /// <summary>
     /// String format for displaying <see cref="GlowFactor"/>.
-    /// Should display enough precision to show <see cref="GlowFactor_Epsilon"/>.
     /// </summary>
-    private static string GlowFactor_StringFormat => "0.0000";
+    private static string GlowFactor_StringFormat => "0.00000";
 
     private static readonly PropertyChangedEventArgs sGlowFactor_TextChangedArgs = new(nameof(GlowFactor_Text));
     public string GlowFactor_Text
@@ -82,6 +89,11 @@ public class SimulationVM : INotifyPropertyChanged
     {
         get
         {
+            if (!GlowIsEnabled)
+            {
+                return 0;
+            }
+
             var diagonalLength = (Model.DisplayBound1 - Model.DisplayBound0).Length;
             var minGlowRadius = GlowFactor * diagonalLength;
             return minGlowRadius;
@@ -111,6 +123,7 @@ public class SimulationVM : INotifyPropertyChanged
         AboveRenderVM = new(this, Perspective.Orthogonal_FromAbove) { ShouldRender = true };
         FrontRenderVM = new(this, Perspective.Orthogonal_FromFront);
         RightRenderVM = new(this, Perspective.Orthogonal_FromRight);
+        GlowFactorSliderVM = new(GlowFactor_Min, GlowFactor_Max, () => GlowFactor, x => GlowFactor = x);
         StepsPerLeapVM.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(StepsPerLeapVM.CurrentValue))
