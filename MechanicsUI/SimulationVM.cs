@@ -23,6 +23,10 @@ public class SimulationVM : INotifyPropertyChanged
     private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
 
+    public static string GlowRatioTooltip =>
+        "Increase this to improve the visibility of small bodies." + Environment.NewLine +
+        "Set this to 0 to display actual sizes.";
+
     private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
     public double MinGlowRadiusFractionOfFrame
     {
@@ -46,10 +50,6 @@ public class SimulationVM : INotifyPropertyChanged
             return minGlowRadius;
         }
     }
-
-    public static string GlowRatioTooltip =>
-        "Increase this to improve the visibility of small bodies." + Environment.NewLine +
-        "Set this to 0 to display actual sizes.";
 
     public string LeapTimeText =>
         "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);

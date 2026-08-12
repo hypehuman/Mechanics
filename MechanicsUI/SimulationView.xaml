@@ -29,10 +29,13 @@
                                 </StackPanel>
                             </gbrViews:GuiHelpTooltipWrapper>
                             <Slider
-                                HorizontalAlignment="Left" Width="111"
+                                HorizontalAlignment="Left"
+                                Width="111"
                                 Value="{Binding MinGlowRadiusFractionOfFrame}"
-                                Minimum="0" Maximum="0.01"
-                                IsSnapToTickEnabled="True" TickFrequency="0.0001"
+                                Minimum="0"
+                                Maximum="0.01"
+                                IsSnapToTickEnabled="True"
+                                TickFrequency="0.0001"
                             />
                         </StackPanel>
                         <!-- The presence of this ItemsControl, even if it's not bound to anything, somehow causes binding errors for BodyVM properties. -->
