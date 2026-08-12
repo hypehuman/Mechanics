@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:MechanicsUI"
     mc:Ignorable="d"
-    d:DataContext="{d:DesignInstance Type=local:DesignValidationTextBoxViewModel, IsDesignTimeCreatable=True}"
+    d:DataContext="{d:DesignInstance Type=local:DesignValidationTextBoxVM, IsDesignTimeCreatable=True}"
 >
     <UserControl.Resources>
         <local:HasErrorToBrushConverter x:Key="borderBrushConverter" />

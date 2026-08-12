@@ -21,7 +21,7 @@ public class SimulationLauncherVM : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public IValidationTextBoxViewModel<int> StepsPerLeapUponLaunchVM { get; } = new StepsPerLeapTextBoxViewModel();
+    public IValidationTextBoxVM<int> StepsPerLeapUponLaunchVM { get; } = new StepsPerLeapTextBoxVM();
     public bool IsAutoLeapingUponLaunch { get; set; }
 
     public IReadOnlyList<IPropertyVM> SavedScenarioVMs { get; }

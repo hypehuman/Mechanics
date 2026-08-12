@@ -1,8 +1,8 @@
 ﻿namespace MechanicsUI;
 
-public class StepsPerLeapTextBoxViewModel : ValidationTextBoxViewModel<int>
+public class StepsPerLeapTextBoxVM : ValidationTextBoxVM<int>
 {
-    public StepsPerLeapTextBoxViewModel()
+    public StepsPerLeapTextBoxVM()
         : base(TryParseStepsPerLeap, initialValue: 1)
     {
     }

@@ -18,7 +18,7 @@ public class SimulationVM : INotifyPropertyChanged
     public RenderOrNotVM RightRenderVM { get; }
     public string Title => GetTitleOrConfig(", ");
     public string Config => GetTitleOrConfig(Environment.NewLine);
-    public IValidationTextBoxViewModel<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxViewModel();
+    public IValidationTextBoxVM<int> StepsPerLeapVM { get; } = new StepsPerLeapTextBoxVM();
 
     private static readonly PropertyChangedEventArgs sStateSummaryChangedArgs = new(nameof(StateSummary));
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());

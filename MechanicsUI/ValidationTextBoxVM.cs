@@ -4,23 +4,23 @@ using System.Runtime.CompilerServices;
 
 namespace MechanicsUI;
 
-public interface IValidationTextBoxViewModel : INotifyPropertyChanged
+public interface IValidationTextBoxVM : INotifyPropertyChanged
 {
     public bool HasError { get; }
     public string? TooltipText { get; }
     public string TextboxText { get; set; }
 }
 
-public interface IValidationTextBoxViewModel<T> : IValidationTextBoxViewModel
+public interface IValidationTextBoxVM<T> : IValidationTextBoxVM
 {
     public T CurrentValue { get; set; }
 }
 
-public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
+public class ValidationTextBoxVM<T> : IValidationTextBoxVM<T>
 {
     public delegate bool TryParseDelegate(string s, out T parsed, out string message);
 
-    private readonly ValidationTextBoxViewModel<T>.TryParseDelegate _tryParse;
+    private readonly ValidationTextBoxVM<T>.TryParseDelegate _tryParse;
     private readonly Func<T, string> _valueToString;
     private bool _hasError;
     private string? _tooltipText;
@@ -28,7 +28,7 @@ public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
     private string _textboxText;
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public ValidationTextBoxViewModel(TryParseDelegate tryParse, Func<T, string>? valueToString = null, T initialValue = default)
+    public ValidationTextBoxVM(TryParseDelegate tryParse, Func<T, string>? valueToString = null, T initialValue = default)
     {
         _currentValue = initialValue;
         _tryParse = tryParse;
@@ -131,7 +131,7 @@ public class ValidationTextBoxViewModel<T> : IValidationTextBoxViewModel<T>
     }
 }
 
-public class DesignValidationTextBoxViewModel : IValidationTextBoxViewModel
+public class DesignValidationTextBoxVM : IValidationTextBoxVM
 {
     public bool HasError => true;
     public string? TooltipText => "Design tooltip text";
