@@ -48,7 +48,7 @@ public class SimulationVM : INotifyPropertyChanged
         }
     }
 
-    public string GlowRatioTooltip =>
+    public static string GlowRatioTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes.";
 
