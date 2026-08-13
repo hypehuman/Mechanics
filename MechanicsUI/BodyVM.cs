@@ -39,15 +39,14 @@ public class BodyVM : INotifyPropertyChanged
     private Vector3D PositionOnPanel => RenderVM.Perspective.SimToPanel(Model.Position);
 
     private static readonly PropertyChangedEventArgs sPanelCenterXYChangedArgs = new(nameof(PanelCenterXY));
-    private Point _panelCenterXY;
     public Point PanelCenterXY
     {
-        get => _panelCenterXY;
+        get;
         private set
         {
-            if (_panelCenterXY == value)
+            if (field == value)
                 return;
-            _panelCenterXY = value;
+            field = value;
             PropertyChanged?.Invoke(this, sPanelCenterXYChangedArgs);
         }
     }
@@ -79,15 +78,14 @@ public class BodyVM : INotifyPropertyChanged
     }
 
     private static readonly PropertyChangedEventArgs sWinMediaColorChangedArgs = new(nameof(WinMediaColor));
-    private Color _winMediaColor;
     public Color WinMediaColor
     {
-        get => _winMediaColor;
+        get;
         private set
         {
-            if (_winMediaColor == value)
+            if (field == value)
                 return;
-            _winMediaColor = value;
+            field = value;
             PropertyChanged?.Invoke(this, sWinMediaColorChangedArgs);
         }
     }
