@@ -8,27 +8,20 @@ public class RenderOrNotVM : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
     public SimulationVM SimulationVM { get; }
     public Perspective Perspective { get; }
-    private RenderVM? _nullableRenderVM;
-
-    public RenderOrNotVM(SimulationVM simulationVM, Perspective perspective)
-    {
-        SimulationVM = simulationVM;
-        Perspective = perspective;
-    }
 
     public RenderVM? NullableRenderVM
     {
-        get => _nullableRenderVM;
+        get;
         set
         {
-            var old = _nullableRenderVM;
+            var old = field;
             if (old != null)
             {
                 old.PropertyChanged -= NullableRenderVM_OnPropertyChanged;
                 old.Unhook();
             }
 
-            _nullableRenderVM = value;
+            field = value;
 
             OnPropertyChanged();
             OnPropertyChanged(nameof(ShouldRender));
@@ -38,6 +31,12 @@ public class RenderOrNotVM : INotifyPropertyChanged
             if (value != null)
                 value.PropertyChanged += NullableRenderVM_OnPropertyChanged;
         }
+    }
+
+    public RenderOrNotVM(SimulationVM simulationVM, Perspective perspective)
+    {
+        SimulationVM = simulationVM;
+        Perspective = perspective;
     }
 
     public bool ShouldRender

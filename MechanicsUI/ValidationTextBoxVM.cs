@@ -22,11 +22,35 @@ public class ValidationTextBoxVM<T> : IValidationTextBoxVM<T>
 
     private readonly ValidationTextBoxVM<T>.TryParseDelegate _tryParse;
     private readonly Func<T, string> _valueToString;
-    private bool _hasError;
-    private string? _tooltipText;
     private T _currentValue;
     private string _textboxText;
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public bool HasError
+    {
+        get;
+        private set
+        {
+            if (value == field)
+                return;
+
+            field = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string? TooltipText
+    {
+        get;
+        private set
+        {
+            if (value == field)
+                return;
+
+            field = value;
+            OnPropertyChanged();
+        }
+    }
 
     public ValidationTextBoxVM(TryParseDelegate tryParse, Func<T, string>? valueToString = null, T initialValue = default)
     {
@@ -34,32 +58,6 @@ public class ValidationTextBoxVM<T> : IValidationTextBoxVM<T>
         _tryParse = tryParse;
         _valueToString = valueToString ?? new Func<T, string>(v => v?.ToString() ?? string.Empty);
         _textboxText = _valueToString(initialValue);
-    }
-
-    public bool HasError
-    {
-        get => _hasError;
-        private set
-        {
-            if (value == _hasError)
-                return;
-
-            _hasError = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public string? TooltipText
-    {
-        get => _tooltipText;
-        private set
-        {
-            if (value == _tooltipText)
-                return;
-
-            _tooltipText = value;
-            OnPropertyChanged();
-        }
     }
 
     public T CurrentValue

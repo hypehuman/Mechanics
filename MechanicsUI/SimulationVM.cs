@@ -24,17 +24,16 @@ public class SimulationVM : INotifyPropertyChanged
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
 
     private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
-    private double _minGlowRadiusFractionOfFrame = 0.002;
     public double MinGlowRadiusFractionOfFrame
     {
-        get => _minGlowRadiusFractionOfFrame;
+        get;
         set
         {
-            _minGlowRadiusFractionOfFrame = value;
+            field = value;
             PropertyChanged?.Invoke(this, sMinGlowRadiusFractionOfFrameChangedArgs);
             PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
         }
-    }
+    } = 0.002;
 
     private static readonly PropertyChangedEventArgs sMinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
     public double MinGlowRadius
@@ -43,12 +42,12 @@ public class SimulationVM : INotifyPropertyChanged
         {
             // Minimum glow radius is a fraction of the longest straight path through the simulation bounds.
             var diagonalLength = (Model.DisplayBound1 - Model.DisplayBound0).Length;
-            var minGlowRadius = _minGlowRadiusFractionOfFrame * diagonalLength;
+            var minGlowRadius = MinGlowRadiusFractionOfFrame * diagonalLength;
             return minGlowRadius;
         }
     }
 
-    public string GlowRatioTooltip =>
+    public static string GlowRatioTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes.";
 
@@ -56,13 +55,12 @@ public class SimulationVM : INotifyPropertyChanged
         "Leap time: " + Simulation.TimeToString(StepsPerLeapVM.CurrentValue * Model.PhysicsConfig.StepTime);
 
     private static readonly PropertyChangedEventArgs sIsAutoLeapingChangedArgs = new(nameof(IsAutoLeaping));
-    private bool _isAutoLeaping;
     public bool IsAutoLeaping
     {
-        get => _isAutoLeaping;
+        get;
         set
         {
-            _isAutoLeaping = value;
+            field = value;
             PropertyChanged?.Invoke(this, sIsAutoLeapingChangedArgs);
             DoAutoLeap(Dispatcher.CurrentDispatcher);
         }
@@ -110,7 +108,7 @@ public class SimulationVM : INotifyPropertyChanged
 
     private void DoAutoLeap(Dispatcher dispatcher)
     {
-        if (!_isAutoLeaping)
+        if (!IsAutoLeaping)
         {
             return;
         }
@@ -118,7 +116,7 @@ public class SimulationVM : INotifyPropertyChanged
         DoingAutoLeap?.Invoke(this, EventArgs.Empty);
 
         // Check again; the event subscriber may have turned auto-leap off.
-        if (!_isAutoLeaping)
+        if (!IsAutoLeaping)
         {
             return;
         }

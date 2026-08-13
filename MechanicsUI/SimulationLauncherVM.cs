@@ -28,26 +28,24 @@ public class SimulationLauncherVM : INotifyPropertyChanged
 
     public IReadOnlyList<ITypeVM> ArrangerVMs { get; }
 
-    private ITypeVM _selectedArranger;
     public ITypeVM SelectedArranger
     {
-        get => _selectedArranger;
+        get;
         set
         {
-            _selectedArranger = value;
+            field = value;
             OnPropertyChanged();
 
             ArrangementConstructorVM = new ConstructorVM(ConstructorVM.GetLongestPublicConstructor(value.Model));
         }
     }
 
-    private IMethodVM _arrangementConstructorVM;
     public IMethodVM ArrangementConstructorVM
     {
-        get => _arrangementConstructorVM;
+        get;
         set
         {
-            _arrangementConstructorVM = value;
+            field = value;
             OnPropertyChanged();
         }
     }
