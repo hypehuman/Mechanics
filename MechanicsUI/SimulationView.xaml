@@ -25,16 +25,16 @@
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Glow Factor: "/>
-                                    <TextBlock Text="{Binding GlowFactor, StringFormat={}{0:0.0000}}" />
+                                    <TextBlock Text="{Binding GlowFactor_Text}" />
                                 </StackPanel>
                                 <Slider
                                     HorizontalAlignment="Left"
                                     Width="111"
                                     Value="{Binding GlowFactor}"
-                                    Minimum="0"
-                                    Maximum="0.01"
+                                    Minimum="{Binding GlowFactor_Min}"
+                                    Maximum="{Binding GlowFactor_Max}"
                                     IsSnapToTickEnabled="True"
-                                    TickFrequency="0.0001"
+                                    TickFrequency="{Binding GlowFactor_Epsilon}"
                                 />
                             </StackPanel>
                         </gbrViews:GuiHelpTooltipWrapper>

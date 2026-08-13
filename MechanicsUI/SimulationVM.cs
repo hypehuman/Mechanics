@@ -42,9 +42,37 @@ public class SimulationVM : INotifyPropertyChanged
         {
             field = value;
             PropertyChanged?.Invoke(this, sGlowFactorChangedArgs);
+            PropertyChanged?.Invoke(this, sGlowFactor_TextChangedArgs);
             PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
         }
     } = 0.002;
+
+    /// <summary>
+    /// Minimum allowed value of <see cref="GlowFactor"/>.
+    /// </summary>
+    public static double GlowFactor_Min => 0;
+
+    /// <summary>
+    /// Maximum allowed value of <see cref="GlowFactor"/>.
+    /// </summary>
+    public static double GlowFactor_Max => 0.01;
+
+    /// <summary>
+    /// Smallest allowed slider increment of <see cref="GlowFactor"/>.
+    /// </summary>
+    public static double GlowFactor_Epsilon => 0.0001;
+
+    /// <summary>
+    /// String format for displaying <see cref="GlowFactor"/>.
+    /// Should display enough precision to show <see cref="GlowFactor_Epsilon"/>.
+    /// </summary>
+    private static string GlowFactor_StringFormat => "0.0000";
+
+    private static readonly PropertyChangedEventArgs sGlowFactor_TextChangedArgs = new(nameof(GlowFactor_Text));
+    public string GlowFactor_Text
+    {
+        get => GlowFactor.ToString(GlowFactor_StringFormat);
+    }
 
     private static readonly PropertyChangedEventArgs sMinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
     /// <summary>
