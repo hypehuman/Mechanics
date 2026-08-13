@@ -11,8 +11,31 @@ public class ParameterVM : IParameterVM
     private readonly IUserEntryHandler _userEntryHandler;
     private object? _userEntry;
     private object? _actualValue;
-    private bool _hasMessage;
-    private string? _message;
+
+    public bool HasMessage
+    {
+        get;
+        private set
+        {
+            if (field == value)
+                return;
+            field = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string? Message
+    {
+        get;
+        private set
+        {
+            if (field == value)
+                return;
+            field = value;
+            OnPropertyChanged();
+            HasMessage = !string.IsNullOrWhiteSpace(value);
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public Type ParameterType { get; }
@@ -69,31 +92,6 @@ public class ParameterVM : IParameterVM
         {
             SetUserEntry(actualValue, updateActualValue: false);
             Message = string.Empty;
-        }
-    }
-
-    public bool HasMessage
-    {
-        get => _hasMessage;
-        private set
-        {
-            if (_hasMessage == value)
-                return;
-            _hasMessage = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public string? Message
-    {
-        get => _message;
-        private set
-        {
-            if (_message == value)
-                return;
-            _message = value;
-            OnPropertyChanged();
-            HasMessage = !string.IsNullOrWhiteSpace(value);
         }
     }
 

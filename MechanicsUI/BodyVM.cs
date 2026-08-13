@@ -53,29 +53,27 @@ public class BodyVM : INotifyPropertyChanged
     }
 
     private static readonly PropertyChangedEventArgs sPanelZIndexChangedArgs = new(nameof(PanelZIndex));
-    private int _panelZIndex;
     public int PanelZIndex
     {
-        get => _panelZIndex;
+        get;
         private set
         {
-            if (_panelZIndex == value)
+            if (field == value)
                 return;
-            _panelZIndex = value;
+            field = value;
             PropertyChanged?.Invoke(this, sPanelZIndexChangedArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sLabelTextChangedArgs = new(nameof(LabelText));
-    private string _labelText;
     public string LabelText
     {
-        get => _labelText;
+        get;
         private set
         {
-            if (value == _labelText)
+            if (value == field)
                 return;
-            _labelText = value;
+            field = value;
             PropertyChanged?.Invoke(this, sLabelTextChangedArgs);
         }
     }
@@ -95,29 +93,27 @@ public class BodyVM : INotifyPropertyChanged
     }
 
     private static readonly PropertyChangedEventArgs sGlowRadiusChangedArgs = new(nameof(GlowRadius));
-    private double _glowRadius;
     public double GlowRadius
     {
-        get => _glowRadius;
+        get;
         private set
         {
-            if (_glowRadius == value)
+            if (field == value)
                 return;
-            _glowRadius = value;
+            field = value;
             PropertyChanged?.Invoke(this, sGlowRadiusChangedArgs);
         }
     }
 
     private static readonly PropertyChangedEventArgs sTrueRadiusOverGlowRadiusChangedArgs = new(nameof(TrueRadiusOverGlowRadius));
-    private double _trueRadiusOverGlowRadius;
     public double TrueRadiusOverGlowRadius
     {
-        get => _trueRadiusOverGlowRadius;
+        get;
         private set
         {
-            if (value == _trueRadiusOverGlowRadius)
+            if (value == field)
                 return;
-            _trueRadiusOverGlowRadius = value;
+            field = value;
             PropertyChanged?.Invoke(this, sTrueRadiusOverGlowRadiusChangedArgs);
         }
     }

@@ -8,10 +8,18 @@ public class MethodVM : IMethodVM
 {
     private readonly object? _object;
     private readonly MethodBase _methodInfo;
-    private IExceptionButtonVM? _latestExceptionVM;
-
     public event PropertyChangedEventHandler? PropertyChanged;
     public IReadOnlyList<IParameterVM> ParameterVMs { get; }
+
+    public IExceptionButtonVM? LatestExceptionVM
+    {
+        get;
+        private set
+        {
+            field = value;
+            OnPropertyChanged();
+        }
+    }
 
     /// <param name="obj">The object on which to call the method; null if the method is static.</param>
     public MethodVM(object? obj, MethodBase methodInfo, IParameterVMSelector? parameterVMSelector = null)
@@ -29,16 +37,6 @@ public class MethodVM : IMethodVM
                 parameterVMSelector.SelectParameterVM(_methodInfo, i, parameter);
         }
         ParameterVMs = parameterInfoVMs;
-    }
-
-    public IExceptionButtonVM? LatestExceptionVM
-    {
-        get => _latestExceptionVM;
-        private set
-        {
-            _latestExceptionVM = value;
-            OnPropertyChanged();
-        }
     }
 
     private Exception? LatestException
