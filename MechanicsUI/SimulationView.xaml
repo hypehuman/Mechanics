@@ -21,16 +21,16 @@
                 </GroupBox>
                 <GroupBox VerticalAlignment="Top" Margin="5" Header="Controls">
                     <StackPanel Margin="5">
-                        <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowRatioTooltip}" Margin="5">
+                        <gbrViews:GuiHelpTooltipWrapper ToolTip="{Binding GlowFactorTooltip}" Margin="5">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Glow Factor: "/>
-                                    <TextBlock Text="{Binding MinGlowRadiusFractionOfFrame, StringFormat={}{0:0.0000}}" />
+                                    <TextBlock Text="{Binding GlowFactor, StringFormat={}{0:0.0000}}" />
                                 </StackPanel>
                                 <Slider
                                     HorizontalAlignment="Left"
                                     Width="111"
-                                    Value="{Binding MinGlowRadiusFractionOfFrame}"
+                                    Value="{Binding GlowFactor}"
                                     Minimum="0"
                                     Maximum="0.01"
                                     IsSnapToTickEnabled="True"

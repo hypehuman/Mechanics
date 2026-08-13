@@ -24,38 +24,38 @@ public class SimulationVM : INotifyPropertyChanged
     public string StateSummary => string.Join(Environment.NewLine, Model.GetStateSummaryLines());
 
     /// <summary>
-    /// Explains <see cref="MinGlowRadiusFractionOfFrame"/> and its relationship with <see cref="MinGlowRadius"/>.
+    /// Explains <see cref="GlowFactor"/> and its relationship with <see cref="MinGlowRadius"/>.
     /// </summary>
-    public static string GlowRatioTooltip =>
+    public static string GlowFactorTooltip =>
         "Increase this to improve the visibility of small bodies." + Environment.NewLine +
         "Set this to 0 to display actual sizes." + Environment.NewLine +
         "This value is the ratio of the minimum glow radius to the length of the diagonal of the scenario's bounding box.";
 
-    private static readonly PropertyChangedEventArgs sMinGlowRadiusFractionOfFrameChangedArgs = new(nameof(MinGlowRadiusFractionOfFrame));
+    private static readonly PropertyChangedEventArgs sGlowFactorChangedArgs = new(nameof(GlowFactor));
     /// <summary>
-    /// See explanation in <see cref="GlowRatioTooltip"/>.
+    /// See explanation in <see cref="GlowFactorTooltip"/>.
     /// </summary>
-    public double MinGlowRadiusFractionOfFrame
+    public double GlowFactor
     {
         get;
         set
         {
             field = value;
-            PropertyChanged?.Invoke(this, sMinGlowRadiusFractionOfFrameChangedArgs);
+            PropertyChanged?.Invoke(this, sGlowFactorChangedArgs);
             PropertyChanged?.Invoke(this, sMinGlowRadiusChangedArgs);
         }
     } = 0.002;
 
     private static readonly PropertyChangedEventArgs sMinGlowRadiusChangedArgs = new(nameof(MinGlowRadius));
     /// <summary>
-    /// See explanation in <see cref="GlowRatioTooltip"/>.
+    /// See explanation in <see cref="GlowFactorTooltip"/>.
     /// </summary>
     public double MinGlowRadius
     {
         get
         {
             var diagonalLength = (Model.DisplayBound1 - Model.DisplayBound0).Length;
-            var minGlowRadius = MinGlowRadiusFractionOfFrame * diagonalLength;
+            var minGlowRadius = GlowFactor * diagonalLength;
             return minGlowRadius;
         }
     }
