@@ -247,75 +247,82 @@ public class Simulation
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
 
-        double V; // combined volume
         var p = config.MassVolumePower;
-        if (p == 1)
+        // Any body, initial or combined, has V = k*m^p, hence k = V*m^(-p).
+        // The combined body's k is the mass-weighted average of the kᵢ's:
+        //     k = Σ(mᵢ*kᵢ)/Σmᵢ
+        // However, computing that directly would give NaN if any body had a mass of 0 when p > 0.
+        // So instead, let's define Q = V*m^(1-p), again for any body. It has the following properties:
+        //     When m > 0, then Q = V*m^(1-p) = m*k, which is the summed term in our weighted average.
+        //     When m = 0, then Q = V*0^(1-p), which is the limit of V*m^(1-p) as m → 0.
+        // Noticing that Q is usually equal to m*k, let's replace m*k with Q in our weighted average.
+        // That way, a massless body behaves like a very light body with the same volume.
+        //     k = ΣQᵢ/Σmᵢ
+        //     m = Σmᵢ (by definition)
+        //     k = ΣQᵢ/m
+        //     V = k*m^p (by definition)
+        //     V = (ΣQᵢ/m)*m^p
+        //     V = (ΣQᵢ/m)/m^(-p)
+        //     V = ΣQᵢ/m^(1-p)
+        // It also follows that Q = ΣQᵢ. Proof:
+        //     Q = V*m^(1-p)
+        //     Q = (ΣQᵢ/m^(1-p))*m^(1-p)
+        //     Q = ΣQᵢ
+        // The following code will compute the volume using these steps:
+        //     m = Σmᵢ (already computed above)
+        //     (1-p) = 1-p
+        //     Qᵢ = Vᵢ*mᵢ^(1-p)
+        //     Q = ΣQᵢ
+        //     V = Q/m^(1-p)
+        // When p = 1, this gives exactly the same volumes as before MassVolumePower was introduced,
+        // even for massless bodies, and even accounting for floating point imprecision. Proof:
+        //     V = Σ(Vᵢ*mᵢ^(1-p))/m^(1-p)
+        //     V = Σ(Vᵢ*mᵢ^0)/m^0
+        //     In C#, Math.Pow(x, 0) is exactly 1 for every x, including 0.
+        //     V = Σ(Vᵢ*1)/1
+        //     In C#, multiplying or dividing by 1 is a no-op.
+        //     V = ΣVᵢ
+        //     We sum the same values as before, in the same order, so V has to be the same as before.
+        // Order independence (ignoring floating point imprecision):
+        //     For this code, all that matters about a body is two quantities, m and Q:
+        //         the code only sums mᵢ and Qᵢ,
+        //         and the combined body's volume follows from its own m and Q: V = Q*m^(p-1).
+        //     This code adds up both quantities over the bodies being combined:
+        //         m = Σmᵢ
+        //         Q = ΣQᵢ
+        //     Summation is associative and commutative,
+        //         so combining in stages ends with the same two quantities as combining all at once,
+        //         and therefore the combined volume doesn't depend on the order in which bodies combine
+        //         (ignoring floating point imprecision).
+        // How massless bodies behave:
+        //     p < 1
+        //         Qᵢ = Vᵢ*0^(a positive value) = Vᵢ*0 = 0
+        //         Massless bodies add nothing to the sum, so they behave well as long as the total mass isn't zero.
+        //     p = 1
+        //         Qᵢ = Vᵢ*0^0 = Vᵢ*1 = Vᵢ
+        //         Massless bodies add their volume, just like bodies with mass.
+        //         In fact, V is independent of mass, so bodies of any mass behave well.
+        //     p > 1
+        //         Qᵢ = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
+        //         Massless bodies result in a combined body volume of ∞ (or NaN if Vᵢ = 0).
+        var _1_minus_p = 1 - p;
+        var m_to_1_minus_p = Math.Pow(m, _1_minus_p);
+        Debug.WriteLine($"p={p}, m={m}, 1-p={_1_minus_p}, m^(1-p)={m_to_1_minus_p}");
+        var Q = 0d; // Q = ΣQᵢ
+        foreach (var b in group)
         {
-            // Degenerate case for the default value, where the volumes simply add:
-            //     V = ΣVᵢ
-            // Summation is associative and commutative,
-            //     and therefore the combined volume doesn't depend on the order in which bodies combine
-            //     (ignoring floating point imprecision).
-            // Mass is not used, so massless bodies behave well.
-            // This case also guarantees that scenarios that use the default MassVolumePower
-            //     continue to behave identically to how they did before MassVolumePower was introduced.
-            // Removing this case would introduce floating-point imprecision and cause the results to change subtly.
-            V = group.Sum(b => b.Volume);
+            var mᵢ = b.Mass;
+            var Vᵢ = b.Volume;
+            var mᵢ_to_1_minus_p = Math.Pow(mᵢ, _1_minus_p);
+            var Qᵢ = Vᵢ * mᵢ_to_1_minus_p;
+            // contrib is the additive contribution of this body towards V.
+            // It is not used in the calculation; it's there to double-check the comment in PhysicsConfig.
+            var contrib = Qᵢ / m_to_1_minus_p;
+            Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ^(1-p)={mᵢ_to_1_minus_p}, Qᵢ={Qᵢ}, Qᵢ/m^(1-p)={contrib}");
+            Q += Qᵢ;
         }
-        else
-        {
-            // Any body, initial or combined, has V = k*m^p, hence k = V*m^(-p).
-            // The combined body's k is the mass-weighted average of the kᵢ's:
-            //     k = Σ(mᵢ*kᵢ)/Σmᵢ
-            // The following code will compute the volume using these steps:
-            //     m = Σmᵢ (already computed above)
-            //     kᵢ = Vᵢ*mᵢ^(-p)
-            //     k = Σ(mᵢ*kᵢ)/m
-            //     V = k*m^p
-            // Order independence (ignoring floating point imprecision):
-            //     For this code, all that matters about a body is two quantities, m and m*k:
-            //         the weighted average only uses mᵢ and mᵢ*kᵢ,
-            //         and the combined body's volume follows from its own m and m*k: V = k*m^p = (m*k)*m^(p-1).
-            //     This code adds up both quantities over the bodies being combined:
-            //         m = Σmᵢ
-            //         m*k = m*Σ(mᵢ*kᵢ)/m = Σ(mᵢ*kᵢ)
-            //     Summation is associative and commutative,
-            //         so combining in stages ends with the same two quantities as combining all at once,
-            //         and therefore the combined volume doesn't depend on the order in which bodies combine
-            //         (ignoring floating point imprecision).
-            // How massless bodies behave:
-            //     p < 0
-            //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a positive value) = Vᵢ*0 = 0
-            //         mᵢ*kᵢ = 0*0 = 0
-            //         Massless bodies add nothing to the sum, so they behave well as long as the total mass isn't zero.
-            //     p = 0
-            //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^0 = Vᵢ*1 = Vᵢ
-            //         mᵢ*kᵢ = 0*Vᵢ = 0
-            //         Massless bodies add nothing to the sum, so they behave well as long as the total mass isn't zero.
-            //     p > 0
-            //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
-            //         mᵢ*kᵢ = 0*kᵢ = 0*(∞ or NaN) = NaN
-            //         Massless bodies result in a combined body volume of NaN.
-            var m_to_p = Math.Pow(m, p);
-            Debug.WriteLine($"p={p}, m={m}, m^p={m_to_p}");
-            var Σ_mᵢkᵢ = 0d;
-            foreach (var b in group)
-            {
-                var mᵢ = b.Mass;
-                var Vᵢ = b.Volume;
-                var mᵢ_to_minus_p = Math.Pow(mᵢ, -p);
-                var kᵢ = Vᵢ * mᵢ_to_minus_p;
-                var mᵢkᵢ = mᵢ * kᵢ;
-                // contrib is the additive contribution of this body towards V.
-                // It is not used in the calculation; it's there to double-check the comment in PhysicsConfig.
-                var contrib = mᵢkᵢ * m_to_p / m;
-                Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ^-p={mᵢ_to_minus_p}, kᵢ={kᵢ}, mᵢkᵢ={mᵢkᵢ}, mᵢkᵢ*m^p/m={contrib}");
-                Σ_mᵢkᵢ += mᵢkᵢ;
-            }
-            var k = Σ_mᵢkᵢ / m;
-            V = k * m_to_p;
-            Debug.WriteLine($"Σ(mᵢ*kᵢ)={Σ_mᵢkᵢ}, k={k}, V={V}");
-        }
+        var V = Q / m_to_1_minus_p;
+        Debug.WriteLine($"1-p={_1_minus_p}, Q={Q}, V={V}");
         kept.Volume = V;
 
         // Don't assign kept.Mass until after the other properties are computed,
