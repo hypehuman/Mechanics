@@ -36,7 +36,7 @@ public class PhysicsConfiguration : IGetConstructorParameters
             "it contributes less than its own volume, and a massless body contributes none.",
             "At 1 (the default): Density doesn't depend on mass, so volumes simply add, even for massless bodies.",
             "Above 1: Heavier bodies are less dense. When a light body combines with a heavy one, " +
-            "it contributes more than its own volume, and massless bodies aren't supported."
+            "it contributes more than its own volume, and massless bodies don't combine at all."
         )]
         double massVolumePower
     )
@@ -85,8 +85,8 @@ public class PhysicsConfiguration : IGetConstructorParameters
     /// <item>p = 1 (the default): Density doesn't depend on mass, so the volumes simply add, even for massless bodies.</item>
     /// <item>p &gt; 1: Heavier bodies are less dense.
     /// A light body contributes more than its own volume, without limit as its mass approaches 0,
-    /// so massless bodies aren't supported (they would contribute ∞).
-    /// Bodies that are light but not massless can make the combined volume enormous:
+    /// so massless bodies don't combine at all.
+    /// Bodies that are light but not massless still combine, and can make the combined volume enormous:
     /// at p = 2, the 1 kg pebble in the table below contributes 5.5 times the volume of the Earth-like body.
     /// Also, with masses like the Sun's (about 2e30 kg), the powers of mass leave the range of a double
     /// once p is above about 11.5, and the combined volume comes out as ∞ or NaN.</item>
@@ -97,7 +97,7 @@ public class PhysicsConfiguration : IGetConstructorParameters
     /// pebble mass   p = 0.9   p = 0.99   p = 1   p = 1.01   p = 1.1   p = 2
     /// 1 kg          3.3e-6    5.7e-4     1e-3    1.8e-3     0.3       6e21 (5.5 Earths)
     /// 1e-30 kg      3.3e-9    2.8e-4     1e-3    3.5e-3     300       6e51
-    /// 0 kg          0         0          1e-3    ∞ (not supported)
+    /// 0 kg          0         0          1e-3    doesn't combine (it would contribute ∞)
     /// </code>
     /// For any body with mass, the contribution changes smoothly with p,
     /// but the lighter the body, the more steeply it changes around p = 1.

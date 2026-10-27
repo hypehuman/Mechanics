@@ -131,6 +131,50 @@ public class CombineBodiesTests
         }
     }
 
+    [TestMethod]
+    [DataRow(1.5)]
+    [DataRow(2.0)]
+    public void MasslessBodies_PowerAboveOne_CannotCombine(double massVolumePower)
+    {
+        var config = new PhysicsConfiguration
+        {
+            MassVolumePower = massVolumePower,
+        };
+
+        // When p > 1, a massless body's Q = V*0^(1-p) would be ∞, so massless bodies can't combine.
+        // CombineBodies refuses them, before changing any body.
+        var bodies = CreateBodiesWithSomeMassless();
+        Assert.ThrowsExactly<ArgumentException>(() => Simulation.CombineBodies(bodies.ToList(), config));
+        Assert.IsTrue(bodies.All(b => b.Exists));
+    }
+
+    [TestMethod]
+    [DataRow(0.5, 1)]
+    [DataRow(1.0, 1)]
+    [DataRow(1.5, 3)]
+    [DataRow(2.0, 3)]
+    public void MasslessBodyTouchingTwoOthers_CombinesOnlyWhenPowerIsAtMostOne(double massVolumePower, int expectedNumBodies)
+    {
+        // A and C have mass and don't touch each other. B is massless, and touches both of them.
+        // When p <= 1, B links all three into one group, which combines into one body.
+        // When p > 1, B can't combine, so it doesn't count as touching anything, and all three bodies are left as they are.
+        var simulation = new Simulation(new Scenario(
+            new FixedArrangement(
+                CreateBody(0, 4e24, 1e21, new(0, 0, 0)),
+                CreateBody(1, 0, 1e21, new(1e7, 0, 0)),
+                CreateBody(2, 3e24, 1e21, new(2e7, 0, 0))
+            ),
+            new PhysicsConfiguration
+            {
+                StepTime = 1,
+                CollisionConfig = CollisionType.Combine,
+                MassVolumePower = massVolumePower,
+            }
+        ));
+        simulation.Leap(1);
+        Assert.AreEqual(expectedNumBodies, simulation.Bodies.Count);
+    }
+
     /// <summary>
     /// A and C are massless. In every order, each of them combines with at least one body that has mass.
     /// (A group of only massless bodies doesn't combine at all; see <see cref="AllMasslessBodies_DoNotCombine"/>.)
@@ -195,4 +239,19 @@ public class CombineBodiesTests
 
     private static void AssertVolume(double expected, Body actual, string order) =>
         Assert.AreEqual(expected, actual.Volume, expected * RelativeTolerance, $"Final volume when combining {order}.");
+
+    /// <summary>
+    /// An arrangement whose initial state is just the given bodies.
+    /// </summary>
+    private class FixedArrangement(params Body[] bodies) : Arrangement
+    {
+        public override object?[] GetConstructorParameters() => [];
+
+        public override IReadOnlyList<Body> GenerateInitialState(out Vector3D displayBound0, out Vector3D displayBound1)
+        {
+            displayBound0 = default;
+            displayBound1 = default;
+            return bodies;
+        }
+    }
 }

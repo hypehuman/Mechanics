@@ -166,14 +166,20 @@ public class Simulation
 
     private void CombineOverlappingBodies()
     {
+        // Bodies that can't combine don't count as overlapping anything,
+        // so they can't link two other bodies into one group.
         var n = Bodies.Count;
         for (int i = 0; i < n; i++)
         {
             var body1 = Bodies[i];
+            if (!CanCombine(body1, PhysicsConfig))
+            {
+                continue;
+            }
             for (int j = i + 1; j < n; j++)
             {
                 var body2 = Bodies[j];
-                if ((body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
+                if (CanCombine(body2, PhysicsConfig) && (body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
                 {
                     if (!overlapping.ContainsKey(body1)) overlapping.Add(body1, new());
                     if (!overlapping.ContainsKey(body2)) overlapping.Add(body2, new());
@@ -212,6 +218,13 @@ public class Simulation
         }
     }
 
+    /// <summary>
+    /// When p > 1, a massless body's Q = V*0^(1-p) would be ∞ (see <see cref="CombineBodies"/>),
+    /// so massless bodies don't combine at all. They just pass through other bodies.
+    /// </summary>
+    internal static bool CanCombine(Body body, PhysicsConfiguration config) =>
+        body.Mass != 0 || config.MassVolumePower <= 1;
+
     internal static void CombineBodies(List<Body> group, PhysicsConfiguration config)
     {
         var combinedMass = group.Sum(b => b.Mass);
@@ -222,6 +235,11 @@ public class Simulation
         if (combinedMass == 0)
         {
             return;
+        }
+
+        if (!group.All(b => CanCombine(b, config)))
+        {
+            throw new ArgumentException("When MassVolumePower > 1, massless bodies can't combine.", nameof(group));
         }
 
         // Decide which body to keep.
@@ -261,7 +279,7 @@ public class Simulation
         //     This also gives exactly the same volumes as before MassVolumePower was introduced
         //     (Math.Pow(m, 0) is exactly 1, so the sum of Q is the plain sum of the volumes, in the same order).
         // When p < 1, it also supports massless bodies, as long as the total mass isn't zero.
-        // When p > 1, massless bodies would have Q = ∞, so they aren't supported.
+        // When p > 1, massless bodies would have Q = ∞, so they don't combine at all (see CanCombine).
         var oneMinusP = 1 - p;
         var combinedQ = group.Sum(b => b.Volume * Math.Pow(b.Mass, oneMinusP));
         kept.Volume = combinedQ / Math.Pow(combinedMass, oneMinusP);
