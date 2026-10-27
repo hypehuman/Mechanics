@@ -212,7 +212,7 @@ public class Simulation
         }
     }
 
-    private static void CombineBodies(List<Body> group)
+    internal static void CombineBodies(List<Body> group)
     {
         var kept = group.MaxBy(b => b.Mass);
         foreach (var body in group)

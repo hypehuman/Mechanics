@@ -19,6 +19,10 @@
     <ProjectReference Include="..\Rendering\Rendering.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MechanicsCore.Tests" />
+  </ItemGroup>
+
   <PropertyGroup Condition="$(Configuration.ToUpperInvariant().Contains('DISABLE_RUST'))">
     <DefineConstants>DISABLE_RUST</DefineConstants>
   </PropertyGroup>
