@@ -30,25 +30,25 @@ public class CombineBodiesTests
     [DataRow(0.00,     0, 1.08321e21)]
     [DataRow(0.01,     1, 1.08321e21)]
     [DataRow(0.01, 1e-30, 1.08321e21)]
-    [DataRow(0.01,     0, double.NaN)]
+    [DataRow(0.01,     0, 1.08321e21)]
     [DataRow(0.90,     1, 1.08321e21)]
     [DataRow(0.90, 1e-30, 1.08321e21)]
-    [DataRow(0.90,     0, double.NaN)]
+    [DataRow(0.90,     0, 1.08321e21)]
     [DataRow(0.99,     1, 1.08321e21)]
     [DataRow(0.99, 1e-30, 1.08321e21)]
-    [DataRow(0.99,     0, double.NaN)]
+    [DataRow(0.99,     0, 1.08321e21)]
     [DataRow(1.00,     1, 1.08321e21)]
     [DataRow(1.00, 1e-30, 1.08321e21)]
     [DataRow(1.00,     0, 1.08321e21)]
     [DataRow(1.01,     1, 1.08321e21)]
     [DataRow(1.01, 1e-30, 1.08321e21)]
-    [DataRow(1.01,     0, double.NaN)]
+    [DataRow(1.01,     0, double.PositiveInfinity)]
     [DataRow(1.10,     1, 1.08321e21)]
     [DataRow(1.10, 1e-30, 1.08321e21)]
-    [DataRow(1.10,     0, double.NaN)]
+    [DataRow(1.10,     0, double.PositiveInfinity)]
     [DataRow(2.00,     1, 7.05561E+21)]
     [DataRow(2.00, 1e-30, 5.9724E+51)]
-    [DataRow(2.00,     0, double.NaN)]
+    [DataRow(2.00,     0, double.PositiveInfinity)]
     public void TestEarthAndPebble(double massVolumePower, double pebbleMass, double expectedCombinedVolume)
     {
         var config = new PhysicsConfiguration
@@ -115,16 +115,32 @@ public class CombineBodiesTests
     }
 
     [TestMethod]
+    public void MasslessBodies_PowerOfOne_AddTheirVolume()
+    {
+        var config = new PhysicsConfiguration
+        {
+            MassVolumePower = 1,
+        };
+
+        // When p = 1, then Qᵢ = Vᵢ*mᵢ^0 = Vᵢ, even when mᵢ = 0, so the volumes simply add.
+        var expected = CreateBodiesWithSomeMassless().Sum(b => b.Volume);
+        AssertVolume(expected, CombineOneAtATime(CreateBodiesWithSomeMassless(), config), "one at a time");
+        AssertVolume(expected, CombineInPairs(CreateBodiesWithSomeMassless(), config), "in pairs");
+        AssertVolume(expected, CombineAllAtOnce(CreateBodiesWithSomeMassless(), config), "all at once");
+    }
+
+    [TestMethod]
     [DataRow(-0.5)]
     [DataRow(0.0)]
-    public void MasslessBodies_PowerZeroOrBelow_AddNoVolume(double massVolumePower)
+    [DataRow(0.5)]
+    public void MasslessBodies_PowerBelowOne_AddNoVolume(double massVolumePower)
     {
         var config = new PhysicsConfiguration
         {
             MassVolumePower = massVolumePower,
         };
 
-        // When p ≤ 0, then mᵢ*kᵢ = 0 when mᵢ = 0, so massless bodies don't change the final volume.
+        // When p < 1, then Qᵢ = Vᵢ*mᵢ^(1-p) = 0 when mᵢ = 0, so massless bodies don't change the final volume.
         // It's as if only the bodies with mass (B and D) had combined.
         var bodies = CreateBodiesWithSomeMassless();
         var expected = Combine(config, bodies[1], bodies[3]).Volume;
@@ -228,13 +244,6 @@ public class CombineBodiesTests
     private static void AssertVolume(double expected, Body actual, string order)
     {
         var actualVolume = actual.Volume;
-
-        if (double.IsNaN(expected))
-        {
-            Assert.IsTrue(double.IsNaN(actualVolume), $"Actual: {actualVolume}");
-            return;
-        }
-
         Assert.AreEqual(expected, actualVolume, expected * RelativeTolerance, $"Final volume when combining {order}.");
     }
 }

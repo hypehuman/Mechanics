@@ -259,22 +259,6 @@ public class Simulation
 
     private static double GetCombinedVolume(List<Body> group, PhysicsConfiguration config, double mᵣ)
     {
-        double Vᵣ; // combined volume
-        if (config.MassVolumePower == 1)
-        {
-            // Degenerate case for the default value, where the volumes simply add:
-            //     Vᵣ = ΣVᵢ
-            // Summation is associative and commutative,
-            //     and therefore the combined volume doesn't depend on the order in which bodies combine
-            //     (ignoring floating point imprecision).
-            // Mass is not used, so massless bodies behave well.
-            // This case also guarantees that scenarios that use the default `MassVolumePower`
-            //     continue to behave identically to how they did before `MassVolumePower` was introduced.
-            // Removing this case would introduce floating-point imprecision and cause the results to change subtly.
-            Vᵣ = group.Sum(b => b.Volume);
-            return Vᵣ;
-        }
-
         // We can describe any body's mass-volume relationship thus:
         //     V = k*m^p, where:
         //         V is the body's volume (`Body.Volume`)
@@ -289,58 +273,84 @@ public class Simulation
         //     Subscript ᵣ (for "result") marks the body they will combine into.
         // We want kᵣ to be the mass-weighted average of the kᵢ's:
         //     kᵣ = Σ(mᵢ*kᵢ)/Σmᵢ
+        // However, computing that directly would give NaN if any body had a mass of 0 when p > 0:
+        //     kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(-p) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
+        //     mᵢ*kᵢ = 0*(∞ or NaN) = NaN
+        // So instead, let's define Q = V*m^(1-p), again for any body. It has the following properties:
+        //     When m > 0, then Q = V*m^(1-p) = m*k, which is the summed term in our weighted average.
+        //     When m = 0, then Q = V*0^(1-p), which is the limit of V*m^(1-p) as m → 0.
+        // Noticing that Q is usually equal to m*k, let's replace m*k with Q in our weighted average.
+        // That way, a massless body behaves like a very light body with the same volume.
+        //     kᵣ = ΣQᵢ/Σmᵢ
+        //     mᵣ = Σmᵢ (by definition)
+        //     kᵣ = ΣQᵢ/mᵣ
+        //     Vᵣ = kᵣ*mᵣ^p (by definition)
+        //     Vᵣ = (ΣQᵢ/mᵣ)*mᵣ^p
+        //     Vᵣ = (ΣQᵢ/mᵣ)/mᵣ^(-p)
+        //     Vᵣ = ΣQᵢ/mᵣ^(1-p)
+        // It also follows that Qᵣ = ΣQᵢ. Proof:
+        //     Qᵣ = Vᵣ*mᵣ^(1-p)
+        //     Qᵣ = [ΣQᵢ/mᵣ^(1-p)]*mᵣ^(1-p)
+        //     Qᵣ = ΣQᵢ
         // The following code will compute the volume using these steps:
         //     mᵣ = Σmᵢ (already computed above)
-        //     kᵢ = Vᵢ*mᵢ^(-p)
-        //     kᵣ = Σ(mᵢ*kᵢ)/mᵣ
-        //     Vᵣ = kᵣ*mᵣ^p
+        //     (1-p) = 1-p
+        //     Qᵢ = Vᵢ*mᵢ^(1-p)
+        //     Qᵣ = ΣQᵢ
+        //     Vᵣ = Qᵣ/mᵣ^(1-p)
+        // When p = 1, this gives exactly the same volumes as before `MassVolumePower` was introduced,
+        // even for massless bodies, and even accounting for floating point imprecision. Proof:
+        //     Vᵣ = Σ[Vᵢ*mᵢ^(1-p)]/mᵣ^(1-p)
+        //     Vᵣ = Σ(Vᵢ*mᵢ^0)/mᵣ^0
+        //     In C#, `Math.Pow(x, 0)` is exactly 1 for every x, including 0.
+        //     Vᵣ = Σ(Vᵢ*1)/1
+        //     In C#, multiplying or dividing by 1 is a no-op.
+        //     Vᵣ = ΣVᵢ
+        //     We sum the same values as before, in the same order, so Vᵣ has to be the same as before.
         // Vᵣ doesn't depend on the order in which the bodies combine, except possibly in the last few digits. Proof:
         //     The reasoning below is exact for real numbers, but in practice we're using `double`s,
         //         so its conclusion holds only approximately: combining in a different order performs different
         //         additions, multiplications, divisions, and `Math.Pow` calls,
         //         each of which rounds, so Vᵣ can in fact differ slightly depending on the order of the bodies.
-        //     For this code, all that matters about a body is two quantities, m and m*k:
-        //         the weighted average only uses mᵢ and mᵢ*kᵢ,
-        //         and the combined body's volume follows from mᵣ and mᵣ*kᵣ: Vᵣ = kᵣ*mᵣ^p = (mᵣ*kᵣ)*mᵣ^(p-1).
+        //     For this code, all that matters about a body is two quantities, m and Q:
+        //         the code only sums mᵢ and Qᵢ,
+        //         and the combined body's volume follows from its own mᵣ and Qᵣ: Vᵣ = Qᵣ*mᵣ^(p-1).
         //     This code adds up both quantities over the bodies being combined:
         //         mᵣ = Σmᵢ
-        //         mᵣ*kᵣ = mᵣ*Σ(mᵢ*kᵢ)/mᵣ = Σ(mᵢ*kᵢ)
+        //         Qᵣ = ΣQᵢ
         //     Summation is associative and commutative,
         //         so combining in stages ends with the same two quantities as combining all at once,
         //         and therefore the combined volume doesn't depend on the order in which bodies combine.
         // How massless bodies behave:
-        //     p < 0
-        //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a positive value) = Vᵢ*0 = 0
-        //         mᵢ*kᵢ = 0*0 = 0
+        //     p < 1
+        //         Qᵢ = Vᵢ*0^(a positive value) = Vᵢ*0 = 0
         //         Massless bodies add nothing to the sum, so they behave well as long as mᵣ isn't zero.
-        //     p = 0
-        //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^0 = Vᵢ*1 = Vᵢ
-        //         mᵢ*kᵢ = 0*Vᵢ = 0
-        //         Massless bodies add nothing to the sum, so they behave well as long as mᵣ isn't zero.
-        //     p > 0
-        //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
-        //         mᵢ*kᵢ = 0*kᵢ = 0*(∞ or NaN) = NaN
-        //         Massless bodies result in a Vᵣ of NaN.
+        //     p = 1
+        //         Qᵢ = Vᵢ*0^0 = Vᵢ*1 = Vᵢ
+        //         Massless bodies add their volume, just like bodies with mass.
+        //         In fact, Vᵣ is independent of mᵢ, so bodies of any mass behave well.
+        //     p > 1
+        //         Qᵢ = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
+        //         Massless bodies result in a Vᵣ of ∞ (or NaN if Vᵢ = 0).
         var p = config.MassVolumePower;
-        var mᵣ_to_p = Math.Pow(mᵣ, p);
-        Debug.WriteLine($"p={p}, mᵣ={mᵣ}, mᵣ^p={mᵣ_to_p}");
-        var Σ_mᵢkᵢ = 0d;
+        var _1_minus_p = 1 - p;
+        var mᵣ_to_1_minus_p = Math.Pow(mᵣ, _1_minus_p);
+        Debug.WriteLine($"p={p}, 1-p={_1_minus_p}, mᵣ={mᵣ}, mᵣ^(1-p)={mᵣ_to_1_minus_p}");
+        var Qᵣ = 0d; // Start at 0, then add each Qᵢ to get Qᵣ = ΣQᵢ.
         foreach (var b in group)
         {
             var mᵢ = b.Mass;
             var Vᵢ = b.Volume;
-            var mᵢ_to_minus_p = Math.Pow(mᵢ, -p);
-            var kᵢ = Vᵢ * mᵢ_to_minus_p;
-            var mᵢkᵢ = mᵢ * kᵢ;
+            var mᵢ_to_1_minus_p = Math.Pow(mᵢ, _1_minus_p);
+            var Qᵢ = Vᵢ * mᵢ_to_1_minus_p;
             // contrib is the additive contribution of this body towards Vᵣ.
             // It is not used in the calculation; it's there to double-check the comment on `PhysicsConfiguration.MassVolumePower`.
-            var contrib = mᵢkᵢ * mᵣ_to_p / mᵣ;
-            Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ^-p={mᵢ_to_minus_p}, kᵢ={kᵢ}, mᵢkᵢ={mᵢkᵢ}, mᵢkᵢ*mᵣ^p/mᵣ={contrib}");
-            Σ_mᵢkᵢ += mᵢkᵢ;
+            var contrib = Qᵢ / mᵣ_to_1_minus_p;
+            Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ^(1-p)={mᵢ_to_1_minus_p}, Qᵢ={Qᵢ}, Qᵢ/mᵣ^(1-p)={contrib}");
+            Qᵣ += Qᵢ;
         }
-        var kᵣ = Σ_mᵢkᵢ / mᵣ;
-        Vᵣ = kᵣ * mᵣ_to_p;
-        Debug.WriteLine($"Σ(mᵢ*kᵢ)={Σ_mᵢkᵢ}, kᵣ={kᵣ}, Vᵣ={Vᵣ}");
+        var Vᵣ = Qᵣ / mᵣ_to_1_minus_p;
+        Debug.WriteLine($"Qᵣ={Qᵣ}, Vᵣ={Vᵣ}");
         return Vᵣ;
     }
 
