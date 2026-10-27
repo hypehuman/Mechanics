@@ -68,6 +68,40 @@ public class CombineBodiesTests
     }
 
     [TestMethod]
+    public void MasslessBodies_PowerOfOne_AddTheirVolume()
+    {
+        var config = new PhysicsConfiguration
+        {
+            MassVolumePower = 1,
+        };
+
+        // When p = 1, Q = V*m^0 = V, even when m = 0, so the volumes simply add.
+        var expected = CreateBodiesWithSomeMassless().Sum(b => b.Volume);
+        AssertVolume(expected, CombineOneAtATime(CreateBodiesWithSomeMassless(), config), "one at a time");
+        AssertVolume(expected, CombineInPairs(CreateBodiesWithSomeMassless(), config), "in pairs");
+        AssertVolume(expected, CombineAllAtOnce(CreateBodiesWithSomeMassless(), config), "all at once");
+    }
+
+    [TestMethod]
+    [DataRow(0.0)]
+    [DataRow(0.5)]
+    public void MasslessBodies_PowerBelowOne_AddNoVolume(double massVolumePower)
+    {
+        var config = new PhysicsConfiguration
+        {
+            MassVolumePower = massVolumePower,
+        };
+
+        // When p < 1, Q = V*m^(1-p) = 0 when m = 0, so massless bodies don't change the final volume.
+        // It's as if only the bodies with mass (B and D) had combined.
+        var bodies = CreateBodiesWithSomeMassless();
+        var expected = Combine(config, bodies[1], bodies[3]).Volume;
+        AssertVolume(expected, CombineOneAtATime(CreateBodiesWithSomeMassless(), config), "one at a time");
+        AssertVolume(expected, CombineInPairs(CreateBodiesWithSomeMassless(), config), "in pairs");
+        AssertVolume(expected, CombineAllAtOnce(CreateBodiesWithSomeMassless(), config), "all at once");
+    }
+
+    [TestMethod]
     [DataRow(0.5)]
     [DataRow(1.0)]
     [DataRow(2.0)]
@@ -96,6 +130,18 @@ public class CombineBodiesTests
             Assert.AreEqual(expected[i].Color, bodies[i].Color, message);
         }
     }
+
+    /// <summary>
+    /// A and C are massless. In every order, each of them combines with at least one body that has mass.
+    /// (A group of only massless bodies doesn't combine at all; see <see cref="AllMasslessBodies_DoNotCombine"/>.)
+    /// </summary>
+    private static Body[] CreateBodiesWithSomeMassless() =>
+    [
+        CreateBody(0, 0, 2e20),
+        CreateBody(1, 4e24, 1e21),
+        CreateBody(2, 0, 3e21),
+        CreateBody(3, 3e24, 5e20),
+    ];
 
     /// <summary>
     /// Four massless bodies with different volumes, positions and velocities.

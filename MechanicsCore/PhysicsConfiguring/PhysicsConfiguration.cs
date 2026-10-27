@@ -33,7 +33,7 @@ public class PhysicsConfiguration : IGetConstructorParameters
             $"Volume = k * Mass^{nameof(MassVolumePower)}.",
             $"Only relevant if {nameof(collisionConfig)} is {nameof(CollisionType.Combine)}.",
             "Below 1: Heavier bodies are denser. When a light body combines with a heavy one, " +
-            "it contributes less than its own volume.",
+            "it contributes less than its own volume, and a massless body contributes none.",
             "At 1 (the default): Density doesn't depend on mass, so volumes simply add, even for massless bodies.",
             "Above 1: Heavier bodies are less dense. When a light body combines with a heavy one, " +
             "it contributes more than its own volume, and massless bodies aren't supported."
@@ -76,16 +76,20 @@ public class PhysicsConfiguration : IGetConstructorParameters
     /// So for a light body (m much smaller than M), there are three regimes:
     /// <list type="bullet">
     /// <item>p &lt; 1: Heavier bodies are denser.
-    /// A light body contributes less than its own volume.
+    /// A light body contributes less than its own volume, and a massless body contributes none.
     /// (The heavy body's own contribution also shrinks a little, since it's now part of a heavier, denser body.)
     /// At p = 0, volume doesn't depend on mass, so combining takes the mass-weighted average of the volumes.
-    /// If p &lt; 0, heavier bodies are smaller, so bodies with the same k shrink when they combine.</item>
+    /// If p &lt; 0, heavier bodies are smaller, so bodies with the same k shrink when they combine.
+    /// With masses like the Sun's (about 2e30 kg), the powers of mass leave the range of a double
+    /// once p is below about -8, and the combined volume comes out as ∞ or NaN.</item>
     /// <item>p = 1 (the default): Density doesn't depend on mass, so the volumes simply add, even for massless bodies.</item>
     /// <item>p &gt; 1: Heavier bodies are less dense.
     /// A light body contributes more than its own volume, without limit as its mass approaches 0,
     /// so massless bodies aren't supported (they would contribute ∞).
     /// Bodies that are light but not massless can make the combined volume enormous:
-    /// at p = 2, the 1 kg pebble in the table below contributes 5.5 times the volume of the Earth-like body.</item>
+    /// at p = 2, the 1 kg pebble in the table below contributes 5.5 times the volume of the Earth-like body.
+    /// Also, with masses like the Sun's (about 2e30 kg), the powers of mass leave the range of a double
+    /// once p is above about 11.5, and the combined volume comes out as ∞ or NaN.</item>
     /// </list>
     /// For example, here's how much a 1-liter pebble contributes, in m³,
     /// when it combines with an Earth-like body (5.97e24 kg, 1.08e21 m³):
@@ -93,9 +97,11 @@ public class PhysicsConfiguration : IGetConstructorParameters
     /// pebble mass   p = 0.9   p = 0.99   p = 1   p = 1.01   p = 1.1   p = 2
     /// 1 kg          3.3e-6    5.7e-4     1e-3    1.8e-3     0.3       6e21 (5.5 Earths)
     /// 1e-30 kg      3.3e-9    2.8e-4     1e-3    3.5e-3     300       6e51
+    /// 0 kg          0         0          1e-3    ∞ (not supported)
     /// </code>
     /// For any body with mass, the contribution changes smoothly with p,
     /// but the lighter the body, the more steeply it changes around p = 1.
+    /// A massless body is the extreme case, where it jumps.
     /// </remarks>
     public double MassVolumePower { get; set; } = 1;
 

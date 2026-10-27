@@ -243,23 +243,28 @@ public class Simulation
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
 
-        if (config.MassVolumePower == 1)
-        {
-            // Degenerate case for the default value, where the volumes simply add.
-            // Supports masses of zero.
-            // This case also guarantees that scenarios that use the default MassVolumePower
-            //     continue to behave identically to how they did before MassVolumePower was introduced.
-            // Removing this case would introduce floating-point imprecision and cause the results to change subtly.
-            kept.Volume = group.Sum(b => b.Volume);
-        }
-        else
-        {
-            // V = k*m^p
-            // k = V/(m^p)
-            // k = V*m^(-p)
-            var k = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -config.MassVolumePower), b => b.Mass);
-            kept.Volume = k * Math.Pow(combinedMass, config.MassVolumePower);
-        }
+        var p = config.MassVolumePower;
+        // Each body has its own V = k*m^p, hence its own k = V*m^(-p).
+        // The combined body's k should be the mass-weighted average of the k's, which suggests the following code:
+        //     var k = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -config.MassVolumePower), b => b.Mass);
+        //     kept.Volume = k * Math.Pow(combinedMass, config.MassVolumePower);
+        // However, that would give NaN if any body had a mass of 0 when p > 0.
+        // So instead, let's invent a quantity Q = m*k = V*m^(1-p).
+        //     Q can be thought of as the volume the body's material would have if it were broken into 1 kg lumps,
+        //     each with the same k as the original body.
+        // The mass-weighted average of the k's is just (sum of Q)/M,
+        //     so the combined volume is V = ((sum of Q)/M)*M^p = (sum of Q)/M^(1-p).
+        //     This avoids the singularity at m = 0 when p ≤ 1,
+        //     while keeping the property where the final volume doesn't depend on the order in which bodies combine
+        //     (ignoring floating point imprecision).
+        // When p = 1, Q = V, so the volumes simply add. This supports massless bodies, since 0^0 = 1.
+        //     This also gives exactly the same volumes as before MassVolumePower was introduced
+        //     (Math.Pow(m, 0) is exactly 1, so the sum of Q is the plain sum of the volumes, in the same order).
+        // When p < 1, it also supports massless bodies, as long as the total mass isn't zero.
+        // When p > 1, massless bodies would have Q = ∞, so they aren't supported.
+        var oneMinusP = 1 - p;
+        var combinedQ = group.Sum(b => b.Volume * Math.Pow(b.Mass, oneMinusP));
+        kept.Volume = combinedQ / Math.Pow(combinedMass, oneMinusP);
 
         // Don't assign kept.Mass until after the other properties are computed,
         // since most of them need the original mass of every body in the group, including this one.
