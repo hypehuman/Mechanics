@@ -214,23 +214,26 @@ public class Simulation
 
     internal static void CombineBodies(List<Body> group)
     {
-        var kept = group.MaxBy(b => b.Mass);
+        // Decide which body to keep.
+        var kept = group.MaxBy(b => b.Mass) ?? throw new InvalidOperationException("Could not find a most massive object.");
+
+        // Mark the other bodies as no longer existing.
         foreach (var body in group)
         {
-            if (body == kept)
-            {
-                body.Position = WeightedAverage(group, b => b.Position, b => b.Mass);
-                body.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
-                body.Name = string.Join(" + ", group.Select(b => b.Name));
-                body.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
-                body.Mass = group.Sum(b => b.Mass);
-                body.Volume = group.Sum(b => b.Volume);
-            }
-            else
+            if (body != kept)
             {
                 body.Exists = false;
             }
         }
+
+        // Modify the kept body to represent the combination of all bodies in the group.
+
+        kept.Position = WeightedAverage(group, b => b.Position, b => b.Mass);
+        kept.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
+        kept.Name = string.Join(" + ", group.Select(b => b.Name));
+        kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
+        kept.Mass = group.Sum(b => b.Mass);
+        kept.Volume = group.Sum(b => b.Volume);
     }
 
     /// <summary>
