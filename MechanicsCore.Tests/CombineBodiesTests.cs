@@ -1,4 +1,6 @@
-﻿namespace MechanicsCore.Tests;
+﻿using MathNet.Spatial.Euclidean;
+
+namespace MechanicsCore.Tests;
 
 /// <summary>
 /// When bodies combine, the final body's volume shouldn't depend on the order in which they combine.
@@ -48,6 +50,40 @@ public class CombineBodiesTests
         AssertVolume(expected, CombineAllAtOnce(CreateBodies()), "all at once");
     }
 
+    [TestMethod]
+    public void AllMasslessBodies_DoNotCombine()
+    {
+        // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero,
+        // so the bodies are left as they are.
+        var bodies = CreateMasslessBodies();
+        Simulation.CombineBodies(bodies.ToList());
+
+        var expected = CreateMasslessBodies();
+        for (var i = 0; i < bodies.Length; i++)
+        {
+            var message = $"Body {i}.";
+            Assert.IsTrue(bodies[i].Exists, message);
+            Assert.AreEqual(expected[i].Name, bodies[i].Name, message);
+            Assert.AreEqual(expected[i].Mass, bodies[i].Mass, message);
+            Assert.AreEqual(expected[i].Volume, bodies[i].Volume, message);
+            Assert.AreEqual(expected[i].Position, bodies[i].Position, message);
+            Assert.AreEqual(expected[i].Velocity, bodies[i].Velocity, message);
+            Assert.AreEqual(expected[i].Color, bodies[i].Color, message);
+        }
+    }
+
+    /// <summary>
+    /// Four massless bodies with different volumes, positions and velocities.
+    /// Each one overlaps the next, so in a simulation they would form one group.
+    /// </summary>
+    private static Body[] CreateMasslessBodies() =>
+    [
+        CreateBody(0, 0, 1e20, new(0, 0, 0), new(0, 4e3, 0)),
+        CreateBody(1, 0, 2e20, new(1e6, 0, 0), new(0, 3e3, 0)),
+        CreateBody(2, 0, 3e20, new(2e6, 0, 0), new(0, 2e3, 0)),
+        CreateBody(3, 0, 4e20, new(3e6, 0, 0), new(0, 1e3, 0)),
+    ];
+
     /// <summary>
     /// (A, B, C, D) → (AB, C, D) → (ABC, D) → (ABCD)
     /// </summary>
@@ -83,8 +119,8 @@ public class CombineBodiesTests
         return group.Single(b => b.Exists);
     }
 
-    private static Body CreateBody(int id, double mass, double volume) =>
-        new(id, mass: mass) { Volume = volume };
+    private static Body CreateBody(int id, double mass, double volume, Vector3D position = default, Vector3D velocity = default) =>
+        new(id, mass: mass, position: position, velocity: velocity) { Volume = volume };
 
     private static void AssertVolume(double expected, Body actual, string order) =>
         Assert.AreEqual(expected, actual.Volume, expected * RelativeTolerance, $"Final volume when combining {order}.");
