@@ -5,7 +5,10 @@ namespace MechanicsCore.PhysicsConfiguring;
 public enum CollisionType
 {
     None,
-    [GuiHelp("When bodies come into contact, they form a single body with the combined mass and volume.")]
+    [GuiHelp(
+        "When bodies come into contact, they form a single body with the combined mass and volume.",
+        "Bodies whose total mass is 0 don't combine."
+    )]
     Combine,
     [GuiHelp(
         "When bodies are in contact, they experience a force that reduces their relative velocity.",
