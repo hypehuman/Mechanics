@@ -214,6 +214,21 @@ public class Simulation
 
     internal static void CombineBodies(List<Body> group)
     {
+        // Notation conventions:
+        //     Subscript ᵢ (for "index") marks a body in `group` (before we modify it).
+        //     Subscript ᵣ (for "result") marks the body they will combine into.
+
+        // Combined mass:
+        // mᵣ = Σmᵢ
+        var mᵣ = group.Sum(b => b.Mass);
+
+        // If mᵣ is zero, don't combine; let the bodies just pass through each other.
+        // Position, velocity, and color are mass-weighted averages, which are undefined when mᵣ is zero.
+        if (mᵣ == 0)
+        {
+            return;
+        }
+
         // Decide which body to keep.
         var kept = group.MaxBy(b => b.Mass) ?? throw new InvalidOperationException("Could not find a most massive object.");
 
@@ -232,7 +247,7 @@ public class Simulation
         kept.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
-        kept.Mass = group.Sum(b => b.Mass);
+        kept.Mass = mᵣ;
         kept.Volume = group.Sum(b => b.Volume);
     }
 
