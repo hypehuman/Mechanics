@@ -166,14 +166,20 @@ public class Simulation
 
     private void CombineOverlappingBodies()
     {
+        // Bodies that can't combine don't count as overlapping anything,
+        // so they can't link two other bodies into one group.
         var n = Bodies.Count;
         for (int i = 0; i < n; i++)
         {
             var body1 = Bodies[i];
+            if (!CanCombine(body1, PhysicsConfig))
+            {
+                continue;
+            }
             for (int j = i + 1; j < n; j++)
             {
                 var body2 = Bodies[j];
-                if ((body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
+                if (CanCombine(body2, PhysicsConfig) && (body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
                 {
                     if (!overlapping.ContainsKey(body1)) overlapping.Add(body1, new());
                     if (!overlapping.ContainsKey(body2)) overlapping.Add(body2, new());
@@ -201,7 +207,7 @@ public class Simulation
                 }
             }
             Check(overlapping.Keys.First());
-            CombineBodies(group);
+            CombineBodies(group, PhysicsConfig);
         }
 
         for (var i = Bodies.Count - 1; i >= 0; i--)
@@ -212,15 +218,28 @@ public class Simulation
         }
     }
 
-    internal static void CombineBodies(List<Body> group)
+    /// <summary>
+    /// When p > 1, a massless body's Q = V*0^(1-p) would be ∞ (see <see cref="CombineBodies"/>),
+    /// so massless bodies don't combine at all. They just pass through other bodies.
+    /// </summary>
+    internal static bool CanCombine(Body body, PhysicsConfiguration config) =>
+        body.Mass != 0 || config.MassVolumePower <= 1;
+
+    internal static void CombineBodies(List<Body> group, PhysicsConfiguration config)
     {
         var combinedMass = group.Sum(b => b.Mass);
 
         // If the total mass is zero, don't combine; let the bodies just pass through each other.
-        // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero.
+        // Position, velocity, and color are mass-weighted averages, which are undefined when the total mass is zero,
+        // and V = k*m^p can't relate volume to a mass of zero.
         if (combinedMass == 0)
         {
             return;
+        }
+
+        if (!group.All(b => CanCombine(b, config)))
+        {
+            throw new ArgumentException("When MassVolumePower > 1, massless bodies can't combine.", nameof(group));
         }
 
         // Decide which body to keep.
@@ -241,8 +260,33 @@ public class Simulation
         kept.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
+
+        var p = config.MassVolumePower;
+        // Each body has its own V = k*m^p, hence its own k = V*m^(-p).
+        // The combined body's k should be the mass-weighted average of the k's, which suggests the following code:
+        //     var k = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -config.MassVolumePower), b => b.Mass);
+        //     kept.Volume = k * Math.Pow(combinedMass, config.MassVolumePower);
+        // However, that would give NaN if any body had a mass of 0 when p > 0.
+        // So instead, let's invent a quantity Q = m*k = V*m^(1-p).
+        //     Q can be thought of as the volume the body's material would have if it were broken into 1 kg lumps,
+        //     each with the same k as the original body.
+        // The mass-weighted average of the k's is just (sum of Q)/M,
+        //     so the combined volume is V = ((sum of Q)/M)*M^p = (sum of Q)/M^(1-p).
+        //     This avoids the singularity at m = 0 when p ≤ 1,
+        //     while keeping the property where the final volume doesn't depend on the order in which bodies combine
+        //     (ignoring floating point imprecision).
+        // When p = 1, Q = V, so the volumes simply add. This supports massless bodies, since 0^0 = 1.
+        //     This also gives exactly the same volumes as before MassVolumePower was introduced
+        //     (Math.Pow(m, 0) is exactly 1, so the sum of Q is the plain sum of the volumes, in the same order).
+        // When p < 1, it also supports massless bodies, as long as the total mass isn't zero.
+        // When p > 1, massless bodies would have Q = ∞, so they don't combine at all (see CanCombine).
+        var oneMinusP = 1 - p;
+        var combinedQ = group.Sum(b => b.Volume * Math.Pow(b.Mass, oneMinusP));
+        kept.Volume = combinedQ / Math.Pow(combinedMass, oneMinusP);
+
+        // Don't assign kept.Mass until after the other properties are computed,
+        // since most of them need the original mass of every body in the group, including this one.
         kept.Mass = combinedMass;
-        kept.Volume = group.Sum(b => b.Volume);
     }
 
     /// <summary>
