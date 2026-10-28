@@ -1,6 +1,7 @@
 ﻿using GuiByReflection.Models;
 using MechanicsCore.Arrangements;
 using MechanicsCore.PhysicsConfiguring;
+using System.Diagnostics;
 
 namespace MechanicsCore;
 
@@ -184,19 +185,19 @@ public static class ScenarioGallery
 
     public static Scenario Get_Collapsing_SolarSystem_Puffy(int? requestedSeed = null)
     {
-        var solarSystemMass = Constants.PlanetaryPhysicalParameters
-            .Select(x => x.massE24kg * 1e24)
-            .Append(Constants.SunMass)
-            .Order() // ascending order improves the precision of the sum
-            .Sum();
+        var sunAndPlanets = Constants.PlanetaryPhysicalParameters
+            .Select(x => new Body(-1, x.name, mass: x.massE24kg * 1e24, radius: x.radiusKm * 1e3))
+            .Append(new Body(-1, "Sun", mass: Constants.SunMass, radius: Constants.SunRadius))
+            .OrderBy(x => x.Mass) // ascending order improves the precision of the sum
+            .ToList();
+        var solarSystemMass = sunAndPlanets.Sum(b => b.Mass);
         var volumeOfSolarSystemRegion = solarSystemMass / Constants.MassDensityInSolarNeighborhood;
         var radiusOfSolarSystemRegion = Constants.SphereVolumeToRadius(volumeOfSolarSystemRegion);
 
         // I arbitrarily choose a coefficient x in the range (0,1).
         // The stuff is in clumps that take up fraction x of the space,
         // and the remaining (1-x) of the space is empty.
-        // More realistic might be to start with x near 1 (uniformly distributed gas),
-        // and to have it drop over time as the clouds combine and contract.
+        // More realistic might be to start with x near 1 (uniformly distributed gas).
         // In today's solar system, x=2.8e-24 (the sun's volume divided by the region's volume).
         const double x = 0.001;
         var stuffVolume = x * volumeOfSolarSystemRegion;
@@ -204,23 +205,118 @@ public static class ScenarioGallery
         // Maximum speed to keep most objects from escaping
         var orbitalSpeedAtBoundary = Math.Sqrt(Constants.GravitationalConstant * solarSystemMass / radiusOfSolarSystemRegion);
 
-        return new(
-            new Ball(
-                radiusOfSolarSystemRegion,
-                2048,
-                solarSystemMass,
-                stuffVolume,
-                orbitalSpeedAtBoundary, // Also try with 0 speed, which might be more realistic?
-                requestedSeed
-            ),
-            new()
-            {
-                StepTime = 1000000000000 / 4,
-                GravityConfig = GravityType.Newton_Pointlike,
-                CollisionConfig = CollisionType.Combine,
-                MassVolumePower = 0.5,
-            },
-            10
+        // Find the p where GetRelativeErrorOfVolume is close to zero.
+        var p = FindZero(GetRelativeErrorOfVolume, 1e-4, 100);
+
+        return new(GetInitialArrangement(), GetConfig(p));
+
+        Arrangement GetInitialArrangement() => new Ball(
+            radiusOfSolarSystemRegion,
+            2048,
+            solarSystemMass,
+            stuffVolume,
+            orbitalSpeedAtBoundary, // Also try with 0 speed, which might be more realistic?
+            requestedSeed
         );
+
+        static PhysicsConfiguration GetConfig(double p) => new()
+        {
+            StepTime = 1000000000000 / 4,
+            GravityConfig = GravityType.Newton_Pointlike,
+            CollisionConfig = CollisionType.Combine,
+            MassVolumePower = p,
+        };
+
+        // return the relative difference in combined volume between GetScenario's bodies and sunAndPlanets.
+        double GetRelativeErrorOfVolume(double p)
+        {
+            var initialBodies = GetInitialArrangement().GenerateInitialState(out _, out _);
+            var config = GetConfig(p);
+            var combinedVolume0 = Simulation.GetCombinedVolume(sunAndPlanets, config, solarSystemMass);
+            var combinedVolume1 = Simulation.GetCombinedVolume(initialBodies, config, solarSystemMass);
+            return (combinedVolume1 - combinedVolume0) / combinedVolume0;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to find a zero of function <paramref name="f"/>(x).
+    /// Assumes that <paramref name="f"/>(x) is monotonic.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static double FindZero(Func<double, double> f, double tolerance, int maxIterations)
+    {
+        var x0 = 0d;
+        var y0 = f(x0);
+        if (Math.Abs(y0) <= tolerance)
+        {
+            return x0;
+        }
+
+        var x1 = 1d;
+        var y1 = f(x1);
+        if (Math.Abs(y1) <= tolerance)
+        {
+            return x1;
+        }
+
+        for (var i = 0; i < maxIterations; i++)
+        {
+            if (y1 - y0 == 0)
+            {
+                throw new InvalidOperationException($"Gradient is flat after {maxIterations} iterations. x0={x0}, y0={y0}, x1={x1}, y1={y1}");
+            }
+
+            // g(x) is a linear approximation of f(x).
+            // It's a line passing through (x0,y0) and (x1,y1), which are both known to be points on f(x).
+            // Find x where g(x) is 0, and use that as our next prediction of where f(x) ought to be 0.
+            // g(x)-y0 = (y1-y0)/(x1-x0)*(x-x0)
+            // g(x) = 0
+            // 0-y0 = (y1-y0)/(x1-x0)*(x-x0)
+            // (y1-y0)/(x1-x0)*(x-x0) = 0-y0
+            // (y1-y0)/(x1-x0)*(x-x0) = -y0
+            // (y1-y0)*(x-x0) = -y0*(x1-x0)
+            // x-x0 = -y0*(x1-x0)/(y1-y0)
+            // x = -y0*(x1-x0)/(y1-y0)+x0
+            var xNext = -y0 * (x1 - x0) / (y1 - y0) + x0;
+            var yNext = f(xNext);
+            Debug.WriteLine($"x0={x0}, y0={y0}, x1={x1}, y1={y1}, xNext={xNext}, yNext={yNext}");
+            if (Math.Abs(yNext) <= tolerance)
+            {
+                return xNext;
+            }
+
+            if (Math.Sign(y0) != Math.Sign(y1))
+            {
+                // y0 and y1 have opposite signs, so xNext should be between x0 and x1.
+                // Replace the one that has the same sign as yNext.
+                if (Math.Sign(yNext) == Math.Sign(y0))
+                {
+                    x0 = xNext;
+                    y0 = yNext;
+                }
+                else
+                {
+                    x1 = xNext;
+                    y1 = yNext;
+                }
+            }
+            else
+            {
+                // y0 and y1 have the same sign, so xNext should be outside of them.
+                // Replace whichever one is farther from xNext.
+                if (Math.Abs(xNext - x0) > Math.Abs(xNext - x1))
+                {
+                    x0 = xNext;
+                    y0 = yNext;
+                }
+                else
+                {
+                    x1 = xNext;
+                    y1 = yNext;
+                }
+            }
+        }
+
+        throw new InvalidOperationException($"Failed to find zero after {maxIterations} iterations. x0={x0}, y0={y0}, x1={x1}, y1={y1}");
     }
 }

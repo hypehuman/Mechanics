@@ -44,27 +44,28 @@ public static class Constants
 
     /// <summary>
     /// Taken from to https://ssd.jpl.nasa.gov/planets/phys_par.html
+    /// "Mean Radius" here means Volumetric Radius.
     /// Represented in the non-SI units that are used in the source table.
     /// </summary>
-    public static IReadOnlyList<(string name, double massE24kg)> PlanetaryPhysicalParameters =>
+    public static IReadOnlyList<(string name, double radiusKm, double massE24kg)> PlanetaryPhysicalParameters =>
     [
-        // Planet | Mass (×10^24 kg) |
-        ("Mercury",    0.330103      ),
-        //        | +- 0.000021      |
-        ("Venus"  ,    4.86731       ),
-        //        | +- 0.00023       |
-        ("Earth"  ,    5.97217       ),
-        //        | +- 0.00028       |
-        ("Mars"   ,    0.641691      ),
-        //        | +- 0.000030      |
-        ("Jupiter", 1898.125         ),
-        //        | +- 0.088         |
-        ("Saturn" ,  568.317         ),
-        //        | +- 0.026         |
-        ("Uranus" ,   86.8099        ),
-        //        | +- 0.0040        |
-        ("Neptune",  102.4092        ),
-        //        | +- 0.0048        |
+        // Planet | Mean Radius (km) | Mass (×10^24 kg) |
+        ("Mercury",  2439.4          ,    0.330103      ),
+        //        | +-  0.1          | +- 0.000021      |
+        ("Venus"  ,  6051.8          ,    4.86731       ),
+        //        | +-  1.0          | +- 0.00023       |
+        ("Earth"  ,  6371.0084       ,    5.97217       ),
+        //        | +-  0.0001       | +- 0.00028       |
+        ("Mars"   ,  3389.50         ,    0.641691      ),
+        //        | +-  0.2          | +- 0.000030      |
+        ("Jupiter", 69911            , 1898.125         ),
+        //        | +-  6            | +- 0.088         |
+        ("Saturn" , 58232            ,  568.317         ),
+        //        | +-  6            | +- 0.026         |
+        ("Uranus" , 25362            ,   86.8099        ),
+        //        | +-  7            | +- 0.0040        |
+        ("Neptune", 24622            ,  102.4092        ),
+        //        | +- 19            | +- 0.0048        |
     ];
 
     #region Math

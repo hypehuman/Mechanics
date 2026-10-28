@@ -275,7 +275,7 @@ public class Simulation
         kept.Mass = mᵣ;
     }
 
-    private static double GetCombinedVolume(List<Body> group, PhysicsConfiguration config, double mᵣ)
+    internal static double GetCombinedVolume(IReadOnlyList<Body> group, PhysicsConfiguration config, double mᵣ)
     {
         // We can describe any body's mass-volume relationship thus:
         //     V = k*m^p, where:
