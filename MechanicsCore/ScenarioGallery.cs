@@ -190,30 +190,36 @@ public static class ScenarioGallery
         // I arbitrarily choose a coefficient x in the range (0,1).
         // The stuff is in clumps that take up fraction x of the space,
         // and the remaining (1-x) of the space is empty.
-        // More realistic would be to start with x near 1 (uniformly distributed gas),
-        // and to have it drop over time as the clouds combine and contract.
-        // In today's solar system, x=2.8e-24 (the sun's volume divided by the region's volume).
         const double x = 0.001;
         var stuffVolume = x * volumeOfSolarSystemRegion;
 
         // Maximum speed to keep most objects from escaping
         var orbitalSpeedAtBoundary = Math.Sqrt(Constants.GravitationalConstant * Constants.SolarSystemMass / radiusOfSolarSystemRegion);
 
+        // Arrange the initial state.
+        var initialArrangement = new Ball(
+            radiusOfSolarSystemRegion,
+            2048,
+            Constants.SolarSystemMass,
+            stuffVolume,
+            orbitalSpeedAtBoundary, // Also try with 0 speed, which might be more realistic?
+            requestedSeed
+        );
+
+        // Get the arrangement of bodies of the modern solar system.
+        var finalArrangement = new ModernSolarSystem();
+
+        // TODO: Find the p where initialArrangement and finalArrangement would each combine into a single body of the same volume.
+        var p = 0.5;
+
         return new(
-            new Ball(
-                radiusOfSolarSystemRegion,
-                2048,
-                Constants.SolarSystemMass,
-                stuffVolume,
-                orbitalSpeedAtBoundary, // Also try with 0 speed, which might be more realistic?
-                requestedSeed
-            ),
+            initialArrangement,
             new()
             {
                 StepTime = 1000000000000 / 4,
                 GravityConfig = GravityType.Newton_Pointlike,
                 CollisionConfig = CollisionType.Combine,
-                MassVolumePower = 0.5,
+                MassVolumePower = p,
             },
             10
         );
