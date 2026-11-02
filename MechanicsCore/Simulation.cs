@@ -168,14 +168,20 @@ public class Simulation
 
     private void CombineOverlappingBodies()
     {
+        // Bodies that can't combine don't count as overlapping anything,
+        // so they can't link two other bodies into one group.
         var n = Bodies.Count;
         for (int i = 0; i < n; i++)
         {
             var body1 = Bodies[i];
+            if (!CanCombine(body1, PhysicsConfig))
+            {
+                continue;
+            }
             for (int j = i + 1; j < n; j++)
             {
                 var body2 = Bodies[j];
-                if ((body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
+                if (CanCombine(body2, PhysicsConfig) && (body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
                 {
                     if (!overlapping.ContainsKey(body1)) overlapping.Add(body1, new());
                     if (!overlapping.ContainsKey(body2)) overlapping.Add(body2, new());
@@ -214,6 +220,13 @@ public class Simulation
         }
     }
 
+    /// <summary>
+    /// When p > 1, a massless body's Qᵢ = Vᵢ*0^(1-p) would be ∞ (see <see cref="CombineBodies"/>),
+    /// so massless bodies don't combine; they just pass through other bodies.
+    /// </summary>
+    internal static bool CanCombine(Body body, PhysicsConfiguration config) =>
+        body.Mass != 0 || config.MassVolumePower <= 1;
+
     internal static void CombineBodies(List<Body> group, PhysicsConfiguration config)
     {
         // Combined mass:
@@ -226,6 +239,11 @@ public class Simulation
         if (m == 0)
         {
             return;
+        }
+
+        if (!group.All(b => CanCombine(b, config)))
+        {
+            throw new ArgumentException("When MassVolumePower > 1, massless bodies can't combine.", nameof(group));
         }
 
         // Decide which body to keep.
@@ -304,7 +322,8 @@ public class Simulation
         //         In fact, V is independent of mass, so bodies of any mass behave well.
         //     p > 1
         //         Qᵢ = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
-        //         Massless bodies result in a combined body volume of ∞ (or NaN if Vᵢ = 0).
+        //         Massless bodies would result in a combined body volume of ∞ (or NaN if Vᵢ = 0),
+        //         so we don't allow them to combine (see CanCombine).
         var _1_minus_p = 1 - p;
         var m_to_1_minus_p = Math.Pow(m, _1_minus_p);
         Debug.WriteLine($"p={p}, m={m}, 1-p={_1_minus_p}, m^(1-p)={m_to_1_minus_p}");
