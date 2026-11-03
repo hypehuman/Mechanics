@@ -1,6 +1,8 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.PhysicsConfiguring;
 using Rendering;
+using System.Diagnostics;
+
 #if !DISABLE_RUST
 using MechanicsCore.Rust.mechanics_fast;
 #endif
@@ -268,7 +270,7 @@ public class Simulation
             // The following code will compute the volume using these steps:
             //     m = Σmᵢ (already computed above)
             //     kᵢ = Vᵢ*mᵢ^(-p)
-            //     k = Σ(mᵢ*kᵢ)/Σmᵢ (Σmᵢ is computed a second time)
+            //     k = Σ(mᵢ*kᵢ)/m
             //     V = k*m^p
             // Order independence (ignoring floating point imprecision):
             //     For this code, all that matters about a body is two quantities, m and m*k:
@@ -294,8 +296,25 @@ public class Simulation
             //         kᵢ = Vᵢ*mᵢ^(-p) = Vᵢ*0^(a negative value) = Vᵢ*∞ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
             //         mᵢ*kᵢ = 0*kᵢ = 0*(∞ or NaN) = NaN
             //         Massless bodies result in a combined body volume of NaN.
-            var k = WeightedAverage(group, b => b.Volume * Math.Pow(b.Mass, -p), b => b.Mass);
-            V = k * Math.Pow(m, p);
+            var m_to_p = Math.Pow(m, p);
+            Debug.WriteLine($"p={p}, m={m}, m^p={m_to_p}");
+            var Σ_mᵢkᵢ = 0d;
+            foreach (var b in group)
+            {
+                var mᵢ = b.Mass;
+                var Vᵢ = b.Volume;
+                var mᵢ_to_minus_p = Math.Pow(mᵢ, -p);
+                var kᵢ = Vᵢ * mᵢ_to_minus_p;
+                var mᵢkᵢ = mᵢ * kᵢ;
+                // contrib is the additive contribution of this body towards V.
+                // It is not used in the calculation; it's there to double-check the comment in PhysicsConfig.
+                var contrib = mᵢkᵢ * m_to_p / m;
+                Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ^-p={mᵢ_to_minus_p}, kᵢ={kᵢ}, mᵢkᵢ={mᵢkᵢ}, mᵢkᵢ*m^p/m={contrib}");
+                Σ_mᵢkᵢ += mᵢkᵢ;
+            }
+            var k = Σ_mᵢkᵢ / m;
+            V = k * m_to_p;
+            Debug.WriteLine($"Σ(mᵢ*kᵢ)={Σ_mᵢkᵢ}, k={k}, V={V}");
         }
         kept.Volume = V;
 
@@ -314,39 +333,6 @@ public class Simulation
 
         int count = 0;
         Vector3D valueSum = default;
-        double weightSum = 0;
-
-        foreach (var record in records)
-        {
-            count++;
-            var recordWeight = getWeight(record);
-
-            valueSum += recordWeight * getValue(record);
-            weightSum += recordWeight;
-        }
-
-        if (count == 0)
-            throw new ArgumentException($"{nameof(records)} is empty.");
-
-        if (count == 1)
-            return getValue(records.Single());
-
-        if (weightSum == 0)
-            throw new DivideByZeroException($"Division of {valueSum} by zero.");
-
-        return valueSum / weightSum;
-    }
-
-    /// <summary>
-    /// Adapted from https://stackoverflow.com/a/3604761
-    /// </summary>
-    public static double WeightedAverage<T>(IEnumerable<T> records, Func<T, double> getValue, Func<T, double> getWeight)
-    {
-        if (records == null)
-            throw new ArgumentNullException(nameof(records), $"{nameof(records)} is null.");
-
-        int count = 0;
-        double valueSum = default;
         double weightSum = 0;
 
         foreach (var record in records)
