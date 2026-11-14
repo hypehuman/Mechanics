@@ -93,8 +93,21 @@ public class CombineBodiesTests
         const double volume = 1.1e21;
         static Body[] CreateBodies() => Enumerable.Range(0, 4).Select(id => CreateBody(id, mass, volume)).ToArray();
 
-        // Every body has the same kᵢ = Vᵢ/mᵢ^p, so the combined body does too: Vᵣ = kᵣ*(4*mᵢ)^p = Vᵢ*4^p.
-        var expected = volume * Math.Pow(4, config.MassVolumePower);
+        // By definition,
+        //     mᵣ = Σmᵢ
+        //     kᵢ = mᵢ^(-p)*Vᵢ
+        //     kᵣ = Σ(mᵢ*kᵢ)/mᵣ
+        //     Vᵣ = kᵣ*mᵣ^p
+        // All four bodies have the same mᵢ and Vᵢ, and therefore the same kᵢ, so:
+        //     mᵣ = 4*mᵢ
+        //     kᵣ = kᵢ (a mass-weighted average of equal values)
+        // Substitute:
+        //     kᵣ = mᵢ^(-p)*Vᵢ
+        //     Vᵣ = mᵢ^(-p)*Vᵢ*(4*mᵢ)^p
+        // Simplify:
+        //     Vᵣ = mᵢ^(-p)*Vᵢ*4^p*mᵢ^p
+        //     Vᵣ = 4^p*Vᵢ
+        var expected = Math.Pow(4, config.MassVolumePower) * volume;
         AssertVolume(expected, CombineOneAtATime(CreateBodies(), config), "one at a time");
         AssertVolume(expected, CombineInPairs(CreateBodies(), config), "in pairs");
         AssertVolume(expected, CombineAllAtOnce(CreateBodies(), config), "all at once");
@@ -132,7 +145,7 @@ public class CombineBodiesTests
             MassVolumePower = 1,
         };
 
-        // When p = 1, then Qᵢ = Vᵢ*mᵢ^0 = Vᵢ, even when mᵢ = 0, so the volumes simply add.
+        // When p = 1, then cᵢ = (mᵢ/mᵣ)^0*Vᵢ = Vᵢ, even when mᵢ = 0, so the volumes simply add.
         var expected = CreateBodiesWithSomeMassless().Sum(b => b.Volume);
         AssertVolume(expected, CombineOneAtATime(CreateBodiesWithSomeMassless(), config), "one at a time");
         AssertVolume(expected, CombineInPairs(CreateBodiesWithSomeMassless(), config), "in pairs");
@@ -150,7 +163,7 @@ public class CombineBodiesTests
             MassVolumePower = massVolumePower,
         };
 
-        // When p < 1, then Qᵢ = Vᵢ*mᵢ^(1-p) = 0 when mᵢ = 0, so massless bodies don't change the final volume.
+        // When p < 1, then cᵢ = (mᵢ/mᵣ)^(1-p)*Vᵢ = 0 when mᵢ = 0, so massless bodies don't change the final volume.
         // It's as if only the bodies with mass (B and D) had combined.
         var bodies = CreateBodiesWithSomeMassless();
         var expected = Combine(config, bodies[1], bodies[3]).Volume;
@@ -199,7 +212,7 @@ public class CombineBodiesTests
             MassVolumePower = massVolumePower,
         };
 
-        // When p > 1, a massless body's Qᵢ = Vᵢ*0^(1-p) would be ∞, so massless bodies can't combine.
+        // When p > 1, a massless body's cᵢ = 0^(1-p)*Vᵢ would be ∞, so massless bodies can't combine.
         // `CombineBodies` refuses them, before changing any body.
         var bodies = CreateBodiesWithSomeMassless();
         Assert.ThrowsExactly<ArgumentException>(() => Simulation.CombineBodies(bodies.ToList(), config));

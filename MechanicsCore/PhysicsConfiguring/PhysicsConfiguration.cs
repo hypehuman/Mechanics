@@ -71,43 +71,45 @@ public class PhysicsConfiguration : IGetConstructorParameters
     /// Only relevant if <see cref="CollisionConfig"/> is <see cref="CollisionType.Combine"/>
     /// </summary>
     /// <remarks>
-    /// When bodies combine, each one contributes Vᵢ*(mᵢ/mᵣ)^(1-p) to the combined volume Vᵣ,
+    /// When bodies combine, each one contributes cᵢ = (mᵢ/mᵣ)^(1-p)*Vᵢ to the combined volume Vᵣ,
     /// where mᵢ and Vᵢ are its own mass and volume, mᵣ is the combined mass, and p is <see cref="MassVolumePower"/>.
     /// So for a light body (mᵢ much smaller than mᵣ), there are three regimes:
     /// <list type="bullet">
     /// <item>
     /// p &lt; 1: Heavier bodies are denser.
-    /// A light body contributes less than its own volume, and a massless body contributes none.
+    /// A light body contributes less than its own volume (cᵢ &lt; Vᵢ), and a massless body contributes none (cᵢ = 0).
     /// (The heavy body's own contribution also shrinks a little, since it's now part of a heavier, denser body.)
     /// If p &lt; 0, heavier bodies are smaller, so bodies with the same k shrink when they combine.
     /// At p = 0, V = k, so Vᵣ is just the mass-weighted average of the initial bodies' volumes.
-    /// With masses like the Sun's (about 2e30 kg), the powers of mass leave the range of a double
-    /// once p is below about -8, and Vᵣ comes out as ∞ or NaN.
     /// </item>
     /// <item>
-    /// p = 1 (the default): Density doesn't depend on mass, so the volumes simply add, even for massless bodies.
+    /// p = 1 (the default): Density doesn't depend on mass, so the volumes simply add (cᵢ = Vᵢ),
+    /// even for massless bodies.
     /// </item>
     /// <item>
     /// p &gt; 1: Heavier bodies are less dense.
-    /// A light body contributes more than its own volume, without limit as its mass approaches 0,
+    /// A light body contributes more than its own volume (cᵢ &gt; Vᵢ), without limit as its mass approaches 0,
     /// so light bodies can make Vᵣ enormous:
-    /// at p = 2, the 1 kg pebble in the table below contributes 5.5 times the volume of the Earth-like body.
+    /// at p = 2, the 1 kg pebble in the table below has a cᵢ of 5.5 times the volume of the Earth-like body.
     /// A massless body would make Vᵣ ∞, so we don't allow it to combine.
-    /// With masses like the Sun's (about 2e30 kg), the powers of mass leave the range of a double
-    /// once p is above about 11, and Vᵣ comes out as ∞ or NaN.
+    /// Vᵣ only comes out as ∞ or NaN when it's too large for a double,
+    /// or when a body is so light (relative to mᵣ) that its (mᵢ/mᵣ)^(1-p) leaves the range of a double,
+    /// or that mᵢ/mᵣ rounds to 0 (below about 2.5e-324).
+    /// With the Earth-like body in the table below, (mᵢ/mᵣ)^(1-p) leaves the range of a double
+    /// once p is above about 13.4 for the 1 kg pebble, or above about 6.6 for the 1e-30 kg pebble.
     /// </item>
     /// </list>
-    /// Here's how much a 1-liter pebble contributes in each regime, in m³,
+    /// Here's how much a 1-liter pebble contributes (cᵢ) in each regime, in m³,
     /// when it combines with an Earth-like body (5.97e24 kg, 1.08e21 m³):
     /// <code>
     /// pebble mass  p = -0.01  p = 0    p = 0.01  p = 0.9  p = 0.99  p = 1  p = 1.01  p = 1.1  p = 2
     /// 1 kg         9.5e-29    1.7e-28  3.0e-28   3.3e-6   5.7e-4    1e-3   1.8e-3    0.3      6e21 (5.5 Earths)
     /// 1e-30 kg     4.7e-59    1.7e-58  5.9e-58   3.3e-9   2.8e-4    1e-3   3.5e-3    300      6e51
-    /// 0 kg         0          0        0         0        0         1e-3   doesn't combine (would contribute ∞)
+    /// 0 kg         0          0        0         0        0         1e-3   doesn't combine (cᵢ would be ∞)
     /// </code>
-    /// For any body with mass, the contribution changes smoothly with p,
+    /// For any body with mass, cᵢ changes smoothly with p,
     /// but the lighter the body, the more steeply it changes around p = 1.
-    /// A massless body is the extreme case: the contribution is the limit as mᵢ → 0 (with p and Vᵢ fixed),
+    /// A massless body is the extreme case: cᵢ is the limit as mᵢ → 0 (with p and Vᵢ fixed),
     /// so it changes stepwise with p.
     /// (When p > 1, that limit is ∞ for any body with volume, so we don't allow massless bodies to combine.)
     /// </remarks>
