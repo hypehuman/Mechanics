@@ -123,7 +123,7 @@ public static class ScenarioGallery
     [GuiHelp(
         "I chose 13 bodies because then we often get 12 (the 3D kissing number) surrounding the middle one.",
         "4 and 6 bodies are also pretty because of their symmetry.",
-        "I gave them just enough speed that the combined body tends rotate comparably to Earth."
+        "I gave them just enough speed that the combined body tends to rotate comparably to Earth."
     )]
     public static Scenario EarthLattice => new(
         new Ball(
