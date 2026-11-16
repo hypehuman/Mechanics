@@ -184,26 +184,31 @@ public static class ScenarioGallery
 
     public static Scenario Get_Collapsing_SolarSystem_Puffy(int? requestedSeed = null)
     {
-        var volumeOfSolarSystemRegion = Constants.SolarSystemMass / Constants.MassDensityInSolarNeighborhood;
+        var solarSystemMass = Constants.PlanetaryPhysicalParameters
+            .Select(x => x.massE24kg * 1e24)
+            .Append(Constants.SunMass)
+            .Order() // ascending order improves the precision of the sum
+            .Sum();
+        var volumeOfSolarSystemRegion = solarSystemMass / Constants.MassDensityInSolarNeighborhood;
         var radiusOfSolarSystemRegion = Constants.SphereVolumeToRadius(volumeOfSolarSystemRegion);
 
         // I arbitrarily choose a coefficient x in the range (0,1).
         // The stuff is in clumps that take up fraction x of the space,
         // and the remaining (1-x) of the space is empty.
-        // More realistic would be to start with x near 1 (uniformly distributed gas),
+        // More realistic might be to start with x near 1 (uniformly distributed gas),
         // and to have it drop over time as the clouds combine and contract.
         // In today's solar system, x=2.8e-24 (the sun's volume divided by the region's volume).
         const double x = 0.001;
         var stuffVolume = x * volumeOfSolarSystemRegion;
 
         // Maximum speed to keep most objects from escaping
-        var orbitalSpeedAtBoundary = Math.Sqrt(Constants.GravitationalConstant * Constants.SolarSystemMass / radiusOfSolarSystemRegion);
+        var orbitalSpeedAtBoundary = Math.Sqrt(Constants.GravitationalConstant * solarSystemMass / radiusOfSolarSystemRegion);
 
         return new(
             new Ball(
                 radiusOfSolarSystemRegion,
                 2048,
-                Constants.SolarSystemMass,
+                solarSystemMass,
                 stuffVolume,
                 orbitalSpeedAtBoundary, // Also try with 0 speed, which might be more realistic?
                 requestedSeed

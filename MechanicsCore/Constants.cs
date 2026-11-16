@@ -1,6 +1,7 @@
 ﻿namespace MechanicsCore;
 
 /// <summary>
+/// Assume SI units unless otherwise specified.
 /// Our simulation treats all bodies as spheres of uniform density.
 /// But in reality, they tend to be more ellipsoidal.
 /// Therefore the radii here are the "volumetric radius",
@@ -41,7 +42,30 @@ public static class Constants
     /// </summary>
     public const double MassDensityInSolarNeighborhood = 4e-21;
 
-    public const double SolarSystemMass = 1.0014 * SunMass;
+    /// <summary>
+    /// Taken from to https://ssd.jpl.nasa.gov/planets/phys_par.html
+    /// Represented in the non-SI units that are used in the source table.
+    /// </summary>
+    public static IReadOnlyList<(string name, double massE24kg)> PlanetaryPhysicalParameters =>
+    [
+        // Planet | Mass (×10^24 kg) |
+        ("Mercury",    0.330103      ),
+        //        | +- 0.000021      |
+        ("Venus"  ,    4.86731       ),
+        //        | +- 0.00023       |
+        ("Earth"  ,    5.97217       ),
+        //        | +- 0.00028       |
+        ("Mars"   ,    0.641691      ),
+        //        | +- 0.000030      |
+        ("Jupiter", 1898.125         ),
+        //        | +- 0.088         |
+        ("Saturn" ,  568.317         ),
+        //        | +- 0.026         |
+        ("Uranus" ,   86.8099        ),
+        //        | +- 0.0040        |
+        ("Neptune",  102.4092        ),
+        //        | +- 0.0048        |
+    ];
 
     #region Math
 
