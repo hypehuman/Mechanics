@@ -199,7 +199,7 @@ public static class ScenarioGallery
         // and the remaining (1-x) of the space is empty.
         // More realistic might be to start with x near 1 (uniformly distributed gas).
         // In today's solar system, x=2.8e-24 (the sun's volume divided by the region's volume).
-        const double x = 0.001;
+        const double x = 1/8d;
         var stuffVolume = x * volumeOfSolarSystemRegion;
 
         // Maximum speed to keep most objects from escaping
