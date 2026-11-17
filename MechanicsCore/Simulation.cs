@@ -369,7 +369,7 @@ public class Simulation
             // cᵢ is the additive contribution of this body towards Vᵣ,
             // as described in the remarks on `PhysicsConfiguration.MassVolumePower`.
             var cᵢ = mᵢ_over_mᵣ_to_1_minus_p * Vᵢ;
-            Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ/mᵣ={mᵢ_over_mᵣ}, (mᵢ/mᵣ)^(1-p)={mᵢ_over_mᵣ_to_1_minus_p}, cᵢ={cᵢ}");
+            //Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ/mᵣ={mᵢ_over_mᵣ}, (mᵢ/mᵣ)^(1-p)={mᵢ_over_mᵣ_to_1_minus_p}, cᵢ={cᵢ}");
             Vᵣ += cᵢ;
         }
         Debug.WriteLine($"Vᵣ={Vᵣ}");
