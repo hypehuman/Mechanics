@@ -174,7 +174,7 @@ public static class ScenarioGallery
 
     [GuiName("Collapsing: Solar System")]
     [GuiHelp(
-        "Formation of the solar system, assuming it's all gas and doesn't compress.",
+        "Formation of the solar system, assuming it's all gas.",
         "I had hoped to see an accretion disc form, but I think that would require some repulsive forces.",
         "Dividing the solar system's mass by the regional mass density gives us the approximate volume of the gas that formed the solar system.",
         "Matter outside this region would have fallen into other stars.",
@@ -218,6 +218,7 @@ public static class ScenarioGallery
                 StepTime = 1000000000000 / 4,
                 GravityConfig = GravityType.Newton_Pointlike,
                 CollisionConfig = CollisionType.Combine,
+                MassVolumePower = 0.5,
             },
             10
         );

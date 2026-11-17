@@ -1,6 +1,8 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MechanicsCore.PhysicsConfiguring;
 using Rendering;
+using System.Diagnostics;
+
 #if !DISABLE_RUST
 using MechanicsCore.Rust.mechanics_fast;
 #endif
@@ -166,14 +168,20 @@ public class Simulation
 
     private void CombineOverlappingBodies()
     {
+        // Bodies that can't combine don't count as overlapping anything,
+        // so they can't link two other bodies into one group.
         var n = Bodies.Count;
         for (int i = 0; i < n; i++)
         {
             var body1 = Bodies[i];
+            if (!CanCombine(body1, PhysicsConfig))
+            {
+                continue;
+            }
             for (int j = i + 1; j < n; j++)
             {
                 var body2 = Bodies[j];
-                if ((body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
+                if (CanCombine(body2, PhysicsConfig) && (body1.Position - body2.Position).Length < (body1.Radius + body2.Radius))
                 {
                     if (!overlapping.ContainsKey(body1)) overlapping.Add(body1, new());
                     if (!overlapping.ContainsKey(body2)) overlapping.Add(body2, new());
@@ -201,7 +209,7 @@ public class Simulation
                 }
             }
             Check(overlapping.Keys.First());
-            CombineBodies(group);
+            CombineBodies(group, PhysicsConfig);
         }
 
         for (var i = Bodies.Count - 1; i >= 0; i--)
@@ -212,7 +220,14 @@ public class Simulation
         }
     }
 
-    internal static void CombineBodies(List<Body> group)
+    /// <summary>
+    /// When p > 1, a massless body's cᵢ = 0^(1-p)*Vᵢ would be ∞ or NaN (see <see cref="GetCombinedVolume"/>),
+    /// so massless bodies don't combine; they just pass through other bodies.
+    /// </summary>
+    internal static bool CanCombine(Body body, PhysicsConfiguration config) =>
+        body.Mass != 0 || config.MassVolumePower <= 1;
+
+    internal static void CombineBodies(List<Body> group, PhysicsConfiguration config)
     {
         // Notation conventions:
         //     Subscript ᵢ (for "index") marks a body in `group` (before we modify it).
@@ -223,10 +238,16 @@ public class Simulation
         var mᵣ = group.Sum(b => b.Mass);
 
         // If mᵣ is zero, don't combine; let the bodies just pass through each other.
-        // Position, velocity, and color are mass-weighted averages, which are undefined when mᵣ is zero.
+        // Position, velocity, and color are mass-weighted averages, which are undefined when mᵣ is zero,
+        // and V = k*m^p (see `GetCombinedVolume`) can't relate volume to a mass of zero.
         if (mᵣ == 0)
         {
             return;
+        }
+
+        if (!group.All(b => CanCombine(b, config)))
+        {
+            throw new ArgumentException("When MassVolumePower > 1, massless bodies can't combine.", nameof(group));
         }
 
         // Decide which body to keep.
@@ -247,8 +268,112 @@ public class Simulation
         kept.Velocity = WeightedAverage(group, b => b.Velocity, b => b.Mass);
         kept.Name = string.Join(" + ", group.Select(b => b.Name));
         kept.Color = WeightedAverage(group, b => b.Color, b => b.Mass);
+        kept.Volume = GetCombinedVolume(group, config, mᵣ);
+
+        // Don't assign `kept.Mass` until after the other properties are computed,
+        // since most of them need the original mass of every body in `group`, including this one.
         kept.Mass = mᵣ;
-        kept.Volume = group.Sum(b => b.Volume);
+    }
+
+    private static double GetCombinedVolume(List<Body> group, PhysicsConfiguration config, double mᵣ)
+    {
+        // We can describe any body's mass-volume relationship thus:
+        //     V = k*m^p, where:
+        //         V is the body's volume (`Body.Volume`)
+        //         m is the body's mass (`Body.Mass`)
+        //         p is a global constant (`PhysicsConfiguration.MassVolumePower`)
+        //         k is a body-specific constant (not stored in memory)
+        // Rearrange to define k in terms of values that are known for any existing `Body`:
+        //     k = m^(-p)*V
+        // Notation conventions:
+        //     V, m, and k without a subscript mean any body.
+        //     Subscript ᵢ (for "index") marks a body in `group` (before we modify it).
+        //     Subscript ᵣ (for "result") marks the body they will combine into.
+        // We want kᵣ to be the mass-weighted average of the kᵢ's:
+        //     kᵣ = Σ(mᵢ*kᵢ)/Σmᵢ
+        // However, computing that directly would give NaN if any body had a mass of 0 when p > 0:
+        //     kᵢ = mᵢ^(-p)*Vᵢ = 0^(-p)*Vᵢ = ∞*Vᵢ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
+        //     mᵢ*kᵢ = 0*(∞ or NaN) = NaN
+        // Let's derive an expression for the combined volume Vᵣ and simplify:
+        //     mᵣ = Σmᵢ (by definition)
+        //     kᵣ = Σ(mᵢ*kᵢ)/mᵣ
+        //     Vᵣ = kᵣ*mᵣ^p (by definition)
+        //     Vᵣ = [Σ(mᵢ*kᵢ)/mᵣ]*mᵣ^p
+        //     kᵢ = mᵢ^(-p)*Vᵢ (by definition)
+        //     kᵣ = Σ[mᵢ*mᵢ^(-p)*Vᵢ]/mᵣ
+        //     Vᵣ = {Σ[mᵢ*mᵢ^(-p)*Vᵢ]/mᵣ}*mᵣ^p
+        //     Vᵣ = Σ[mᵢ*mᵢ^(-p)*Vᵢ]/[mᵣ*mᵣ^(-p)]
+        // Now replace m*m^(-p) with m^(1-p), which is not just a simplification;
+        // for a massless body (when p > 0), mᵢ*mᵢ^(-p) = 0*∞ = NaN,
+        // so this replaces that NaN with the limit as mᵢ → 0.
+        //     Vᵣ = Σ[mᵢ^(1-p)*Vᵢ]/mᵣ^(1-p)
+        // Move the denominator into the sum and combine the powers, which is not just a simplification;
+        // this avoids computing mᵢ^(1-p) and mᵣ^(1-p),
+        // which could have overflowed or underflowed even if Vᵣ should be in the range of a double.
+        //     Vᵣ = Σ[(mᵢ/mᵣ)^(1-p)*Vᵢ]
+        // Extract the quantity cᵢ, which is the additive contribution that each body makes to the combined volume.
+        //     cᵢ = (mᵢ/mᵣ)^(1-p)*Vᵢ
+        //     Vᵣ = Σcᵢ
+        // The following code will compute the volume using these steps:
+        //     mᵣ = Σmᵢ (already computed above)
+        //     (1-p) = 1-p
+        //     cᵢ = (mᵢ/mᵣ)^(1-p)*Vᵢ
+        //     Vᵣ = Σcᵢ
+        // When p = 1, this gives exactly the same volumes as before `MassVolumePower` was introduced,
+        // even for massless bodies, and even accounting for floating point imprecision. Proof:
+        //     Vᵣ = Σ[(mᵢ/mᵣ)^(1-p)*Vᵢ]
+        //     Vᵣ = Σ[(mᵢ/mᵣ)^0*Vᵢ]
+        //     In C#, `Math.Pow(x, 0)` is exactly 1 for every x, including 0.
+        //     Vᵣ = Σ(1*Vᵢ)
+        //     In C#, multiplying by 1 is a no-op.
+        //     Vᵣ = ΣVᵢ
+        //     We sum the same values as before, in the same order, so Vᵣ has to be the same as before.
+        // Vᵣ doesn't depend on the order in which the bodies combine, except possibly in the last few digits. Proof:
+        //     The reasoning below is exact for real numbers, but in practice we're using `double`s,
+        //         so its conclusion holds only approximately: combining in a different order performs different
+        //         additions, multiplications, divisions, and `Math.Pow` calls,
+        //         each of which rounds, so Vᵣ can in fact differ slightly depending on the order of the bodies.
+        //     mᵣ = Σmᵢ and addition is associative and commutative,
+        //     so mᵣ is the total mass of the initial bodies, whatever the order in which they combine.
+        //     Suppose body i was itself combined from bodies j, so mᵢ = Σmⱼ and Vᵢ = Σ[(mⱼ/mᵢ)^(1-p)*Vⱼ].
+        //     Then it contributes the same as bodies j would if they combined here directly:
+        //         cᵢ = (mᵢ/mᵣ)^(1-p)*Vᵢ
+        //         cᵢ = (mᵢ/mᵣ)^(1-p)*Σ[(mⱼ/mᵢ)^(1-p)*Vⱼ]
+        //         Cancel out mᵢ. It's not 0, since bodies j wouldn't have combined if their total mass Σmⱼ were 0.
+        //         cᵢ = Σ[(mⱼ/mᵣ)^(1-p)*Vⱼ]
+        //     Applying this at every stage gives the same Vᵣ as if all the initial bodies had combined here at once,
+        //     so Vᵣ doesn't depend on the order in which they combined.
+        // How massless bodies behave:
+        //     mᵢ/mᵣ = 0/mᵣ = 0 (mᵣ isn't 0, or we would not have called this method), so cᵢ = 0^(1-p)*Vᵢ.
+        //     p < 1
+        //         cᵢ = 0^(a positive value)*Vᵢ = 0*Vᵢ = 0
+        //         Massless bodies add nothing to the sum, so they behave well as long as mᵣ isn't zero.
+        //     p = 1
+        //         cᵢ = 0^0*Vᵢ = 1*Vᵢ = Vᵢ
+        //         Massless bodies add their volume, just like bodies with mass.
+        //         In fact, Vᵣ is independent of mᵢ, so bodies of any mass behave well.
+        //     p > 1
+        //         cᵢ = 0^(a negative value)*Vᵢ = ∞*Vᵢ = (∞ if Vᵢ > 0, or NaN if Vᵢ = 0)
+        //         Massless bodies would result in a Vᵣ of ∞ (or NaN if Vᵢ = 0),
+        //         so we don't allow them to combine (see `CanCombine`).
+        var p = config.MassVolumePower;
+        var _1_minus_p = 1 - p;
+        Debug.WriteLine($"p={p}, 1-p={_1_minus_p}, mᵣ={mᵣ}");
+        var Vᵣ = 0d; // Start at 0, then add each cᵢ to get Vᵣ = Σcᵢ.
+        foreach (var b in group)
+        {
+            var mᵢ = b.Mass;
+            var Vᵢ = b.Volume;
+            var mᵢ_over_mᵣ = mᵢ / mᵣ;
+            var mᵢ_over_mᵣ_to_1_minus_p = Math.Pow(mᵢ_over_mᵣ, _1_minus_p);
+            // cᵢ is the additive contribution of this body towards Vᵣ,
+            // as described in the remarks on `PhysicsConfiguration.MassVolumePower`.
+            var cᵢ = mᵢ_over_mᵣ_to_1_minus_p * Vᵢ;
+            Debug.WriteLine($"    mᵢ={mᵢ}, Vᵢ={Vᵢ}, mᵢ/mᵣ={mᵢ_over_mᵣ}, (mᵢ/mᵣ)^(1-p)={mᵢ_over_mᵣ_to_1_minus_p}, cᵢ={cᵢ}");
+            Vᵣ += cᵢ;
+        }
+        Debug.WriteLine($"Vᵣ={Vᵣ}");
+        return Vᵣ;
     }
 
     /// <summary>
@@ -261,39 +386,6 @@ public class Simulation
 
         int count = 0;
         Vector3D valueSum = default;
-        double weightSum = 0;
-
-        foreach (var record in records)
-        {
-            count++;
-            var recordWeight = getWeight(record);
-
-            valueSum += recordWeight * getValue(record);
-            weightSum += recordWeight;
-        }
-
-        if (count == 0)
-            throw new ArgumentException($"{nameof(records)} is empty.");
-
-        if (count == 1)
-            return getValue(records.Single());
-
-        if (weightSum == 0)
-            throw new DivideByZeroException($"Division of {valueSum} by zero.");
-
-        return valueSum / weightSum;
-    }
-
-    /// <summary>
-    /// Adapted from https://stackoverflow.com/a/3604761
-    /// </summary>
-    public static double WeightedAverage<T>(IEnumerable<T> records, Func<T, double> getValue, Func<T, double> getWeight)
-    {
-        if (records == null)
-            throw new ArgumentNullException(nameof(records), $"{nameof(records)} is null.");
-
-        int count = 0;
-        double valueSum = default;
         double weightSum = 0;
 
         foreach (var record in records)
